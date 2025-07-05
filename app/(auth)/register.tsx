@@ -1,12 +1,7 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, Alert, ActivityIndicator } from 'react-native';
 import { Link } from 'expo-router';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { Input } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
-import { User, Mail, Lock, Phone } from 'lucide-react-native';
 
 export default function RegisterScreen() {
   const [formData, setFormData] = useState({
@@ -17,7 +12,32 @@ export default function RegisterScreen() {
     confirmPassword: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [socialLoading, setSocialLoading] = useState<{ google?: boolean; github?: boolean }>({});
   const { register, isLoading } = useAuth();
+
+  const formatPhoneNumber = (text: string) => {
+    const cleaned = text.replace(/\D/g, '');
+    const limited = cleaned.slice(0, 10);
+    
+    if (limited.length >= 6) {
+      return `${limited.slice(0, 3)} ${limited.slice(3, 6)} ${limited.slice(6)}`;
+    } else if (limited.length >= 3) {
+      return `${limited.slice(0, 3)} ${limited.slice(3)}`;
+    }
+    return limited;
+  };
+
+  const updateFormData = (field: string, value: string) => {
+    if (field === 'phone') {
+      value = formatPhoneNumber(value);
+    }
+    
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -32,10 +52,13 @@ export default function RegisterScreen() {
       newErrors.email = 'Please enter a valid email';
     }
 
-    if (!formData.phone.trim()) {
+    const cleanPhone = formData.phone.replace(/\D/g, '');
+    if (!cleanPhone) {
       newErrors.phone = 'Phone number is required';
-    } else if (!/^\+?[\d\s-()]+$/.test(formData.phone)) {
-      newErrors.phone = 'Please enter a valid phone number';
+    } else if (cleanPhone.length !== 10) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    } else if (!cleanPhone.match(/^[6-9]/)) {
+      newErrors.phone = 'Phone number must start with 6, 7, 8, or 9';
     }
 
     if (!formData.password.trim()) {
@@ -59,7 +82,7 @@ export default function RegisterScreen() {
       await register({
         name: formData.name.trim(),
         email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        phone: `+91${formData.phone.replace(/\D/g, '')}`,
         password: formData.password,
       });
     } catch (error: any) {
@@ -67,133 +90,214 @@ export default function RegisterScreen() {
     }
   };
 
-  const updateFormData = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+  const handleSocialRegister = async (provider: 'google' | 'github') => {
+    setSocialLoading(prev => ({ ...prev, [provider]: true }));
+    
+    try {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Mock registration with social provider
+      await register({
+        name: 'Social User',
+        email: `${provider}@example.com`,
+        phone: '+919876543210',
+        password: 'social_password',
+      });
+    } catch (error: any) {
+      Alert.alert('Registration Failed', `${provider} registration failed`);
+    } finally {
+      setSocialLoading(prev => ({ ...prev, [provider]: false }));
     }
   };
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.content}>
-        <View style={styles.header}>
-          <ThemedText type="title" style={styles.title}>
-            Create Account
-          </ThemedText>
-          <ThemedText style={styles.subtitle}>
-            Join us to start booking amazing hotels
-          </ThemedText>
-        </View>
+    <View className="flex-1 bg-white">
+      <View className="flex-1 p-4 pt-16">
+        <View className="w-full max-w-sm mx-auto">
+          {/* Header */}
+          <View className="mb-8">
+            <Text className="text-2xl font-bold text-gray-900 text-center">
+              Create Account
+            </Text>
+            <Text className="text-base text-gray-600 text-center mt-2">
+              Join us to start booking amazing hotels
+            </Text>
+          </View>
 
-        <View style={styles.form}>
-          <Input
-            label="Full Name"
-            value={formData.name}
-            onChangeText={(value) => updateFormData('name', value)}
-            placeholder="Enter your full name"
-            error={errors.name}
-            leftIcon={<User size={20} color="#8E8E93" />}
-          />
+          {/* Form Fields */}
+          <View className="space-y-4">
+            {/* Name */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">Full Name</Text>
+              <View className="rounded-lg border border-gray-300">
+                <TextInput
+                  className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  placeholder="Enter your full name"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.name}
+                  onChangeText={(value) => updateFormData('name', value)}
+                  autoCapitalize="words"
+                />
+              </View>
+              {errors.name && (
+                <Text className="text-sm text-red-500 mt-1">{errors.name}</Text>
+              )}
+            </View>
 
-          <Input
-            label="Email"
-            type="email"
-            value={formData.email}
-            onChangeText={(value) => updateFormData('email', value)}
-            placeholder="Enter your email"
-            error={errors.email}
-            leftIcon={<Mail size={20} color="#8E8E93" />}
-            autoCapitalize="none"
-          />
+            {/* Email */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+              <View className="rounded-lg border border-gray-300">
+                <TextInput
+                  className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.email}
+                  onChangeText={(value) => updateFormData('email', value)}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                />
+              </View>
+              {errors.email && (
+                <Text className="text-sm text-red-500 mt-1">{errors.email}</Text>
+              )}
+            </View>
 
-          <Input
-            label="Phone Number"
-            type="phone"
-            value={formData.phone}
-            onChangeText={(value) => updateFormData('phone', value)}
-            placeholder="Enter your phone number"
-            error={errors.phone}
-            leftIcon={<Phone size={20} color="#8E8E93" />}
-          />
+            {/* Phone */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">Phone Number</Text>
+              <View className="rounded-lg border border-gray-300">
+                <View className="flex-row">
+                  <View className="px-4 py-4 border-r border-gray-300">
+                    <Text className="text-base text-gray-900">+91</Text>
+                  </View>
+                  <TextInput
+                    className="flex-1 p-4 text-base text-gray-900 rounded-r-lg"
+                    placeholder="Phone number"
+                    placeholderTextColor="#9CA3AF"
+                    value={formData.phone}
+                    onChangeText={(value) => updateFormData('phone', value)}
+                    keyboardType="phone-pad"
+                  />
+                </View>
+              </View>
+              {errors.phone && (
+                <Text className="text-sm text-red-500 mt-1">{errors.phone}</Text>
+              )}
+            </View>
 
-          <Input
-            label="Password"
-            type="password"
-            value={formData.password}
-            onChangeText={(value) => updateFormData('password', value)}
-            placeholder="Create a password"
-            error={errors.password}
-            leftIcon={<Lock size={20} color="#8E8E93" />}
-          />
+            {/* Password */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">Password</Text>
+              <View className="rounded-lg border border-gray-300">
+                <TextInput
+                  className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  placeholder="Create a password"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.password}
+                  onChangeText={(value) => updateFormData('password', value)}
+                  secureTextEntry
+                />
+              </View>
+              {errors.password && (
+                <Text className="text-sm text-red-500 mt-1">{errors.password}</Text>
+              )}
+            </View>
 
-          <Input
-            label="Confirm Password"
-            type="password"
-            value={formData.confirmPassword}
-            onChangeText={(value) => updateFormData('confirmPassword', value)}
-            placeholder="Confirm your password"
-            error={errors.confirmPassword}
-            leftIcon={<Lock size={20} color="#8E8E93" />}
-          />
+            {/* Confirm Password */}
+            <View>
+              <Text className="text-sm font-medium text-gray-700 mb-2">Confirm Password</Text>
+              <View className="rounded-lg border border-gray-300">
+                <TextInput
+                  className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  placeholder="Confirm your password"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.confirmPassword}
+                  onChangeText={(value) => updateFormData('confirmPassword', value)}
+                  secureTextEntry
+                />
+              </View>
+              {errors.confirmPassword && (
+                <Text className="text-sm text-red-500 mt-1">{errors.confirmPassword}</Text>
+              )}
+            </View>
+          </View>
 
-          <Button
-            title="Create Account"
-            onPress={handleRegister}
-            loading={isLoading}
-            style={styles.registerButton}
-          />
-        </View>
+          {/* Register Button */}
+          <View className="mt-8">
+            <TouchableOpacity
+              className="w-full rounded-lg bg-[#FF5A5F] py-3.5 shadow-sm active:bg-red-600 disabled:opacity-50"
+              onPress={handleRegister}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <ActivityIndicator size="small" color="white" />
+              ) : (
+                <Text className="text-base font-bold text-white text-center">
+                  Create Account
+                </Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.footer}>
-          <ThemedText style={styles.footerText}>
-            Already have an account?{' '}
-            <Link href="/(auth)/login" style={styles.link}>
-              <ThemedText type="link">Sign In</ThemedText>
-            </Link>
-          </ThemedText>
+          {/* Divider */}
+          <View className="relative flex items-center justify-center my-6">
+            <View className="absolute inset-0 flex items-center">
+              <View className="w-full border-t border-gray-300" />
+            </View>
+            <View className="relative bg-white px-2">
+              <Text className="text-sm text-gray-500">or</Text>
+            </View>
+          </View>
+
+          {/* Social Registration */}
+          <View className="space-y-3">
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center rounded-lg border border-gray-300 bg-white py-3 shadow-sm active:bg-gray-50 disabled:opacity-50"
+              onPress={() => handleSocialRegister('google')}
+              disabled={socialLoading.google}
+            >
+              {socialLoading.google ? (
+                <ActivityIndicator size="small" color="#4285F4" />
+              ) : (
+                <>
+                  <Text className="mr-3">🔍</Text>
+                  <Text className="text-base font-medium text-gray-700">
+                    Continue with Google
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="w-full flex-row items-center justify-center rounded-lg border border-gray-300 bg-white py-3 shadow-sm active:bg-gray-50 disabled:opacity-50"
+              onPress={() => handleSocialRegister('github')}
+              disabled={socialLoading.github}
+            >
+              {socialLoading.github ? (
+                <ActivityIndicator size="small" color="#333" />
+              ) : (
+                <>
+                  <Text className="mr-3">⚡</Text>
+                  <Text className="text-base font-medium text-gray-700">
+                    Continue with Github
+                  </Text>
+                </>
+              )}
+            </TouchableOpacity>
+          </View>
+
+          {/* Footer */}
+          <View className="mt-8 items-center">
+            <Text className="text-sm text-gray-500">
+              Already have an account?{' '}
+              <Link href="/(auth)/login" className="text-[#FF5A5F] font-medium">
+                Sign In
+              </Link>
+            </Text>
+          </View>
         </View>
       </View>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-  },
-  header: {
-    marginBottom: 40,
-  },
-  title: {
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    textAlign: 'center',
-    fontSize: 16,
-    opacity: 0.7,
-  },
-  form: {
-    flex: 1,
-  },
-  registerButton: {
-    marginTop: 24,
-  },
-  footer: {
-    paddingBottom: 40,
-    alignItems: 'center',
-  },
-  footerText: {
-    fontSize: 16,
-  },
-  link: {
-    color: '#007AFF',
-  },
-});

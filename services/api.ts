@@ -135,7 +135,7 @@ class ApiService {
 
   private async getMockResponse<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1500));
 
     const url = config.url || '';
     const method = config.method?.toUpperCase() || 'GET';
@@ -152,11 +152,30 @@ class ApiService {
             name: 'John Doe',
             email: 'john@example.com',
             phone: '+1234567890',
-            avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=150',
+            avatar: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=200',
             hasOnboarded: true,
           }
         } as T,
         message: 'Login successful'
+      };
+    }
+
+    if (url.includes('/auth/register')) {
+      return {
+        success: true,
+        data: {
+          accessToken: 'mock_access_token_' + Date.now(),
+          refreshToken: 'mock_refresh_token_' + Date.now(),
+          user: {
+            id: '2',
+            name: 'New User',
+            email: 'newuser@example.com',
+            phone: '+919876543210',
+            avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200',
+            hasOnboarded: false,
+          }
+        } as T,
+        message: 'Registration successful'
       };
     }
 
@@ -171,7 +190,7 @@ class ApiService {
               location: 'New York, NY',
               rating: 4.8,
               price: 299,
-              image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800',
+              image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
               amenities: ['WiFi', 'Pool', 'Spa', 'Restaurant'],
               description: 'Luxury hotel in the heart of Manhattan'
             },
@@ -181,9 +200,29 @@ class ApiService {
               location: 'Miami, FL',
               rating: 4.6,
               price: 199,
-              image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=800',
+              image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
               amenities: ['Beach Access', 'Pool', 'Restaurant', 'Bar'],
               description: 'Beautiful beachfront resort with stunning ocean views'
+            },
+            {
+              id: '3',
+              name: 'Mountain Lodge Retreat',
+              location: 'Aspen, CO',
+              rating: 4.9,
+              price: 399,
+              image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
+              amenities: ['Ski Access', 'Fireplace', 'Hot Tub', 'Restaurant'],
+              description: 'Cozy mountain retreat with breathtaking alpine views'
+            },
+            {
+              id: '4',
+              name: 'City Center Boutique',
+              location: 'San Francisco, CA',
+              rating: 4.7,
+              price: 249,
+              image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=600',
+              amenities: ['WiFi', 'Gym', 'Business Center', 'Rooftop Bar'],
+              description: 'Modern boutique hotel in the heart of downtown'
             }
           ]
         } as T,
@@ -204,7 +243,7 @@ class ApiService {
               guests: 2,
               status: 'confirmed',
               totalAmount: 897,
-              image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=400'
+              image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=300'
             }
           ]
         } as T,
