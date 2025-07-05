@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/ui/Button';
 import { useAuth } from '@/contexts/AuthContext';
 import { Settings, LogOut, User, Mail, Phone, LocationEdit as Edit } from 'lucide-react-native';
-import ActionSheet from 'react-native-actions-sheet';
+import { SheetManager } from 'react-native-actions-sheet'; // ✅ Import SheetManager instead of ActionSheet
 import { SHEET_IDS } from '@/app/sheets';
 
 export default function ProfileScreen() {
@@ -27,7 +27,7 @@ export default function ProfileScreen() {
   };
 
   const showProfileOptions = () => {
-    ActionSheet.show(SHEET_IDS.PROFILE_OPTIONS, {
+    SheetManager.show(SHEET_IDS.PROFILE_OPTIONS, { // ✅ Use SheetManager.show instead of ActionSheet.show
       payload: {
         title: 'Profile Options',
         options: [
