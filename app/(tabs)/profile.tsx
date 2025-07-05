@@ -5,7 +5,7 @@ import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/ui/Button';
 import { ActionSheet } from '@/components/ui/ActionSheet';
 import { useAuth } from '@/contexts/AuthContext';
-import { Settings, LogOut, User, Mail, Phone, Edit } from 'lucide-react-native';
+import { Settings, LogOut, User, Mail, Phone, LocationEdit as Edit } from 'lucide-react-native';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();

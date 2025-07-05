@@ -7,7 +7,7 @@ import { IconSymbol } from '@/components/ui/IconSymbol';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { Home, Search, Calendar, User } from 'lucide-react-native';
+import { Chrome as Home, Search, Calendar, User } from 'lucide-react-native';
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
