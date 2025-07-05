@@ -21,7 +21,7 @@ export default function HomeScreen() {
         <ThemedText style={styles.subtitle}>
           Find your perfect stay
         </ThemedText>
-      </ThemedView>
+      </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <ThemedText type="subtitle" style={styles.sectionTitle}>
@@ -46,6 +46,7 @@ export default function HomeScreen() {
           </View>
         )}
       </ScrollView>
+    </ThemedView>
     </ThemedView>
   );
 }
