@@ -1,6 +1,9 @@
 import React from 'react';
 import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import React from 'react';
+import ActionSheet, { ActionSheetRef, SheetManager } from 'react-native-actions-sheet';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface ActionSheetOption {
   title: string;
@@ -26,6 +29,10 @@ interface ActionSheetPropsWithPayload extends CustomActionSheetProps {
   options: ActionSheetOption[];
   cancelText?: string;
 }
+
+
+
+// ... your interfaces remain the same ...
 
 export function CustomActionSheet({
   payload,
@@ -59,7 +66,7 @@ export function CustomActionSheet({
               ]}
               onPress={() => {
                 option.onPress();
-                ActionSheet.hide(sheetId);
+                SheetManager.hide(sheetId); // Use SheetManager instead of ActionSheet
               }}
               disabled={option.disabled}
             >
@@ -83,7 +90,7 @@ export function CustomActionSheet({
         
         <TouchableOpacity 
           style={styles.cancelButton} 
-          onPress={() => ActionSheet.hide(sheetId)}
+          onPress={() => SheetManager.hide(sheetId)} // Use SheetManager instead of ActionSheet
         >
           <Text style={styles.cancelText}>{cancelText}</Text>
         </TouchableOpacity>
@@ -91,7 +98,6 @@ export function CustomActionSheet({
     </ActionSheet>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     paddingHorizontal: 16,
