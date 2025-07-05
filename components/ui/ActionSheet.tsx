@@ -1,13 +1,6 @@
 import React from 'react';
-import {
-  Modal,
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Dimensions,
-  ScrollView,
-} from 'react-native';
+import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 interface ActionSheetOption {
   title: string;
@@ -17,115 +10,96 @@ interface ActionSheetOption {
   icon?: React.ReactNode;
 }
 
-interface ActionSheetProps {
-  visible: boolean;
-  onClose: () => void;
+interface CustomActionSheetProps {
+  payload?: {
+    title?: string;
+    message?: string;
+    options: ActionSheetOption[];
+    cancelText?: string;
+  };
+}
+
+interface ActionSheetPropsWithPayload extends CustomActionSheetProps {
+  sheetId: string;
   title?: string;
   message?: string;
   options: ActionSheetOption[];
   cancelText?: string;
 }
 
-const { height: screenHeight } = Dimensions.get('window');
-
-export function ActionSheet({
-  visible,
-  onClose,
-  title,
-  message,
-  options,
-  cancelText = 'Cancel',
-}: ActionSheetProps) {
-  const handleOptionPress = (option: ActionSheetOption) => {
-    option.onPress();
-    onClose();
-  };
+export function CustomActionSheet({
+  payload,
+  sheetId,
+}: CustomActionSheetProps & { sheetId: string }) {
+  const {
+    title,
+    message,
+    options = [],
+    cancelText = 'Cancel',
+  } = payload || {};
 
   return (
-    <Modal
-      visible={visible}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-    >
-      <View style={styles.overlay}>
-        <TouchableOpacity 
-          style={styles.backdrop} 
-          activeOpacity={1} 
-          onPress={onClose}
-        />
-        
-        <View style={styles.container}>
-          <View style={styles.sheet}>
-            {(title || message) && (
-              <View style={styles.header}>
-                {title && <Text style={styles.title}>{title}</Text>}
-                {message && <Text style={styles.message}>{message}</Text>}
-              </View>
-            )}
-            
-            <ScrollView style={styles.optionsContainer}>
-              {options.map((option, index) => (
-                <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.option,
-                    option.disabled && styles.optionDisabled,
-                    index === options.length - 1 && styles.lastOption,
-                  ]}
-                  onPress={() => handleOptionPress(option)}
-                  disabled={option.disabled}
-                >
-                  <View style={styles.optionContent}>
-                    {option.icon && (
-                      <View style={styles.optionIcon}>
-                        {option.icon}
-                      </View>
-                    )}
-                    <Text style={[
-                      styles.optionText,
-                      option.destructive && styles.destructiveText,
-                      option.disabled && styles.disabledText,
-                    ]}>
-                      {option.title}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+    <ActionSheet id={sheetId} containerStyle={styles.container}>
+      <View style={styles.content}>
+        {(title || message) && (
+          <View style={styles.header}>
+            {title && <Text style={styles.title}>{title}</Text>}
+            {message && <Text style={styles.message}>{message}</Text>}
           </View>
-          
-          <TouchableOpacity style={styles.cancelButton} onPress={onClose}>
-            <Text style={styles.cancelText}>{cancelText}</Text>
-          </TouchableOpacity>
+        )}
+        
+        <View style={styles.optionsContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.option,
+                option.disabled && styles.optionDisabled,
+                index === options.length - 1 && styles.lastOption,
+              ]}
+              onPress={() => {
+                option.onPress();
+                ActionSheet.hide(sheetId);
+              }}
+              disabled={option.disabled}
+            >
+              <View style={styles.optionContent}>
+                {option.icon && (
+                  <View style={styles.optionIcon}>
+                    {option.icon}
+                  </View>
+                )}
+                <Text style={[
+                  styles.optionText,
+                  option.destructive && styles.destructiveText,
+                  option.disabled && styles.disabledText,
+                ]}>
+                  {option.title}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
         </View>
+        
+        <TouchableOpacity 
+          style={styles.cancelButton} 
+          onPress={() => ActionSheet.hide(sheetId)}
+        >
+          <Text style={styles.cancelText}>{cancelText}</Text>
+        </TouchableOpacity>
       </View>
-    </Modal>
+    </ActionSheet>
   );
 }
 
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-  },
-  backdrop: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
   container: {
     paddingHorizontal: 16,
-    paddingBottom: 34, // Safe area padding
+    paddingBottom: 34,
   },
-  sheet: {
+  content: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
-    marginBottom: 8,
-    overflow: 'hidden',
   },
   header: {
     paddingHorizontal: 20,
@@ -147,7 +121,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   optionsContainer: {
-    maxHeight: screenHeight * 0.6,
+    paddingVertical: 8,
   },
   option: {
     paddingHorizontal: 20,
@@ -181,9 +155,10 @@ const styles = StyleSheet.create({
     color: '#8E8E93',
   },
   cancelButton: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#F2F2F7',
     borderRadius: 16,
     paddingVertical: 16,
+    marginTop: 8,
   },
   cancelText: {
     fontSize: 16,

@@ -3,13 +3,13 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 import { Button } from '@/components/ui/Button';
-import { ActionSheet } from '@/components/ui/ActionSheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { Settings, LogOut, User, Mail, Phone, LocationEdit as Edit } from 'lucide-react-native';
+import ActionSheet from 'react-native-actions-sheet';
+import { SHEET_IDS } from '@/app/sheets';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
-  const [showActionSheet, setShowActionSheet] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -26,24 +26,31 @@ export default function ProfileScreen() {
     );
   };
 
-  const actionSheetOptions = [
-    {
-      title: 'Edit Profile',
-      onPress: () => console.log('Edit Profile'),
-      icon: <Edit size={20} color="#007AFF" />,
-    },
-    {
-      title: 'Settings',
-      onPress: () => console.log('Settings'),
-      icon: <Settings size={20} color="#007AFF" />,
-    },
-    {
-      title: 'Logout',
-      onPress: handleLogout,
-      destructive: true,
-      icon: <LogOut size={20} color="#FF3B30" />,
-    },
-  ];
+  const showProfileOptions = () => {
+    ActionSheet.show(SHEET_IDS.PROFILE_OPTIONS, {
+      payload: {
+        title: 'Profile Options',
+        options: [
+          {
+            title: 'Edit Profile',
+            onPress: () => console.log('Edit Profile'),
+            icon: <Edit size={20} color="#007AFF" />,
+          },
+          {
+            title: 'Settings',
+            onPress: () => console.log('Settings'),
+            icon: <Settings size={20} color="#007AFF" />,
+          },
+          {
+            title: 'Logout',
+            onPress: handleLogout,
+            destructive: true,
+            icon: <LogOut size={20} color="#FF3B30" />,
+          },
+        ],
+      },
+    });
+  };
 
   return (
     <ThemedView style={styles.container}>
@@ -68,7 +75,7 @@ export default function ProfileScreen() {
           <Button
             title="More Options"
             variant="outline"
-            onPress={() => setShowActionSheet(true)}
+            onPress={showProfileOptions}
             style={styles.moreButton}
           />
         </View>
@@ -119,12 +126,6 @@ export default function ProfileScreen() {
         </View>
       </ScrollView>
 
-      <ActionSheet
-        visible={showActionSheet}
-        onClose={() => setShowActionSheet(false)}
-        title="Profile Options"
-        options={actionSheetOptions}
-      />
     </ThemedView>
   );
 }
