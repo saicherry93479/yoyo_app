@@ -1,9 +1,7 @@
 import React from 'react';
 import ActionSheet, { ActionSheetRef } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import React from 'react';
-import ActionSheet, { ActionSheetRef, SheetManager } from 'react-native-actions-sheet';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import  {  SheetManager } from 'react-native-actions-sheet';
 
 interface ActionSheetOption {
   title: string;
