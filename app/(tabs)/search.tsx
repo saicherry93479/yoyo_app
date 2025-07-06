@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView } from 'react-native';
 import { useNavigation, router } from 'expo-router';
-import { Search, MapPin, Star, Filter } from 'lucide-react-native';
+import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 
 // Mock search results data
