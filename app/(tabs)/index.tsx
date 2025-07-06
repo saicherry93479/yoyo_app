@@ -1,9 +1,10 @@
 import React, { useState, useLayoutEffect } from "react"
-import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView, Pressable } from "react-native"
+import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView, Pressable, Image } from "react-native"
 import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
+import { Star } from "lucide-react-native"
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -105,6 +106,103 @@ const StarIcon = ({ size = 16, color = "#EAB308" }) => (
   </Svg>
 )
 
+// Mock hotel data similar to explore tab
+const nearbyHotels = [
+  {
+    id: '1',
+    name: 'The Oberoi Mumbai',
+    location: 'Nariman Point, Mumbai',
+    rating: 4.8,
+    reviewCount: 1247,
+    price: 15000,
+    originalPrice: 18000,
+    image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: '2.1 km away',
+    offer: '20% OFF Summer Special'
+  },
+  {
+    id: '2',
+    name: 'Taj Mahal Palace',
+    location: 'Colaba, Mumbai',
+    rating: 4.9,
+    reviewCount: 2156,
+    price: 25000,
+    image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: '1.5 km away'
+  },
+  {
+    id: '3',
+    name: 'ITC Grand Central',
+    location: 'Parel, Mumbai',
+    rating: 4.7,
+    reviewCount: 892,
+    price: 12000,
+    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: '3.2 km away'
+  },
+  {
+    id: '4',
+    name: 'The St. Regis Mumbai',
+    location: 'Lower Parel, Mumbai',
+    rating: 4.8,
+    reviewCount: 1543,
+    price: 22000,
+    image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: '2.8 km away'
+  }
+];
+
+const latestHotels = [
+  {
+    id: '5',
+    name: 'Grand Hyatt Goa',
+    location: 'Bambolim, Goa',
+    rating: 4.6,
+    reviewCount: 987,
+    price: 8500,
+    image: 'https://images.pexels.com/photos/1134176/pexels-photo-1134176.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: 'Beachfront location',
+    offer: 'Limited Time: Free Breakfast'
+  },
+  {
+    id: '6',
+    name: 'The Leela Palace',
+    location: 'New Delhi',
+    rating: 4.9,
+    reviewCount: 1876,
+    price: 18000,
+    image: 'https://images.pexels.com/photos/1838554/pexels-photo-1838554.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: 'City center'
+  }
+];
+
+const offerHotels = [
+  {
+    id: '7',
+    name: 'Luxury Resort Udaipur',
+    location: 'Lake Pichola, Udaipur',
+    rating: 4.8,
+    reviewCount: 1432,
+    price: 14000,
+    originalPrice: 20000,
+    image: 'https://images.pexels.com/photos/1134176/pexels-photo-1134176.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: 'Lakefront paradise',
+    offer: '30% OFF Palace Experience'
+  },
+  {
+    id: '8',
+    name: 'Beach Resort Kerala',
+    location: 'Kovalam, Kerala',
+    rating: 4.7,
+    reviewCount: 1098,
+    price: 9500,
+    originalPrice: 13000,
+    image: 'https://images.pexels.com/photos/1838554/pexels-photo-1838554.jpeg?auto=compress&cs=tinysrgb&w=600',
+    distance: 'Beachfront location',
+    offer: 'Free Ayurveda Treatment'
+  }
+];
+
 export default function HotelBookingApp() {
   const [activeTab, setActiveTab] = useState('nearby')
   const navigation = useNavigation()
@@ -114,9 +212,7 @@ export default function HotelBookingApp() {
     navigation.setOptions({
       headerShadowVisible: false,
       headerTitle: () => (
-
-
-        <Pressable onPressIn={()=>SheetManager.show('search')} className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full">
+        <Pressable onPress={()=>SheetManager.show('search')} className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full shadow-sm">
           <View className="flex-row items-center gap-2">
             <View className="text-red-500">
               <MagnifyingGlassIcon size={24} color="#EF4444" />
@@ -130,82 +226,10 @@ export default function HotelBookingApp() {
             <FilterIcon />
           </TouchableOpacity>
         </Pressable>
-
-
       ),
       headerTitleAlign: 'left',
-
     });
   }, [navigation]);
-
-  const nearbyHotels = [
-    {
-      id: 1,
-      name: "Cozy Inn, New York",
-      location: "1.2 miles away",
-      rating: 4.8,
-      price: 120,
-      originalPrice: 150,
-      offer: "20% OFF Summer Special",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhcsD7EmnPc6ROcNp90satGseTUmu271XK4BavLgJoNulbsMfRRScec78pWz1jSXU-SShwBJO7sL306T4pmb6yaUmG_oJWUpPRQzsmuRPDkOFvunVfZHzhmRFEdLO9v8-Xfc0qk8S86fHUIhtQ49PlhLCvRHNpsbnQwi634a2tARuxrsyE1G2PcbN_zr0_WVYHAtQFOAWTMQTixfYu7g8kyT3GL5ROeaslDwvn0e65B6mX5BirCWJLLcCdpxTPpN7fCnibl3V95w"
-    },
-    {
-      id: 2,
-      name: "Boutique Hotel, Brooklyn",
-      location: "2.5 miles away",
-      rating: 4.6,
-      price: 95,
-      originalPrice: null,
-      offer: null,
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAiqHPvealkHwyJl8DZoUNobsVrB5lLptZOaeJf8URhB0lpKPI70bVXSDo7nM4mBNOr98BTS3Z-jOz5STq52tBXmQ_-brLeeqDYHxCTYAGO9eCPpe91EWCcxqw54lObixXyIedacK_dj4PU1EXiwoVcbRR9eIbhinBR1q5euJ535TuVXgkbK0NwVbQDVZnuiHaJfUkr9D8EEuahiNGI2532kWeJLpphixKEj2RTU4Y4myaGcJ8SWbu9PWda4Uh2D9CvOvUHtdpK3Q"
-    }
-  ]
-
-  const latestHotels = [
-    {
-      id: 3,
-      name: "Grand Plaza, Paris",
-      location: "Center of the city",
-      rating: 4.9,
-      price: 250,
-      originalPrice: null,
-      offer: "Limited Time Offer: Free Breakfast",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuAiqHPvealkHwyJl8DZoUNobsVrB5lLptZOaeJf8URhB0lpKPI70bVXSDo7nM4mBNOr98BTS3Z-jOz5STq52tBXmQ_-brLeeqDYHxCTYAGO9eCPpe91EWCcxqw54lObixXyIedacK_dj4PU1EXiwoVcbRR9eIbhinBR1q5euJ535TuVXgkbK0NwVbQDVZnuiHaJfUkr9D8EEuahiNGI2532kWeJLpphixKEj2RTU4Y4myaGcJ8SWbu9PWda4Uh2D9CvOvUHtdpK3Q"
-    },
-    {
-      id: 4,
-      name: "Modern Suites, London",
-      location: "Thames District",
-      rating: 4.7,
-      price: 180,
-      originalPrice: null,
-      offer: null,
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhcsD7EmnPc6ROcNp90satGseTUmu271XK4BavLgJoNulbsMfRRScec78pWz1jSXU-SShwBJO7sL306T4pmb6yaUmG_oJWUpPRQzsmuRPDkOFvunVfZHzhmRFEdLO9v8-Xfc0qk8S86fHUIhtQ49PlhLCvRHNpsbnQwi634a2tARuxrsyE1G2PcbN_zr0_WVYHAtQFOAWTMQTixfYu7g8kyT3GL5ROeaslDwvn0e65B6mX5BirCWJLLcCdpxTPpN7fCnibl3V95w"
-    }
-  ]
-
-  const offerHotels = [
-    {
-      id: 5,
-      name: "Luxury Resort, Maldives",
-      location: "Beachfront Paradise",
-      rating: 4.9,
-      price: 299,
-      originalPrice: 399,
-      offer: "25% OFF Early Bird Special",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuC1uDq5Yc4tqP576GVTNZ2-I4zrkBJgbBPzsB6JiUruj8-j06sjA2CcJUjEs29Cu3oMJZjs0WsU49YTBRskY2UWQZzGHt0KTBjz9zqi4HMO2bSVaTxALB_tSiCMsdPGQboWfeme7jmpP6DYHBCUNFUlpHl5UAWLc_s8-uN_N9gzbV1wJi2JfT5oYkfprUyuSmslOhYU4EahEIEACNKjmS8KoE6yqsnf7AjyAPCA_zncEKdX2QaEIDlsnHtbwRnVFeL93D19FJ963w"
-    },
-    {
-      id: 6,
-      name: "Spa Hotel, Bali",
-      location: "Tropical Gardens",
-      rating: 4.8,
-      price: 150,
-      originalPrice: 200,
-      offer: "Free Spa Treatment Included",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDhcsD7EmnPc6ROcNp90satGseTUmu271XK4BavLgJoNulbsMfRRScec78pWz1jSXU-SShwBJO7sL306T4pmb6yaUmG_oJWUpPRQzsmuRPDkOFvunVfZHzhmRFEdLO9v8-Xfc0qk8S86fHUIhtQ49PlhLCvRHNpsbnQwi634a2tARuxrsyE1G2PcbN_zr0_WVYHAtQFOAWTMQTixfYu7g8kyT3GL5ROeaslDwvn0e65B6mX5BirCWJLLcCdpxTPpN7fCnibl3V95w"
-    }
-  ]
 
   const getCurrentHotels = () => {
     switch (activeTab) {
@@ -221,46 +245,110 @@ export default function HotelBookingApp() {
   }
 
   const renderHotelCard = (hotel) => (
-    <Pressable onPress={() => router.push('/hotels/1')} key={hotel.id} className="flex-col gap-3">
-      <View className="relative w-full overflow-hidden rounded-xl">
-        <ImageBackground
+    <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+      <View className="relative">
+        <Image
           source={{ uri: hotel.image }}
-          className="w-full h-72 rounded-xl"
+          className="w-full h-48"
           resizeMode="cover"
-        >
-          <TouchableOpacity className="absolute top-3 right-3 rounded-full bg-white/80 p-2">
-            <HeartIcon size={18} />
-          </TouchableOpacity>
-          {hotel.offer && (
-            <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-xl">
-              <Text className="text-white text-sm " style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{hotel.offer}</Text>
-            </View>
-          )}
-        </ImageBackground>
+        />
+        {hotel.offer && (
+          <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
+            <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              {hotel.offer}
+            </Text>
+          </View>
+        )}
+        <TouchableOpacity className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center">
+          <HeartIcon size={18} color="#EF4444" />
+        </TouchableOpacity>
+      </View>
+      
+      <View className="p-4">
+        <View className="flex-row items-start justify-between mb-2">
+          <View className="flex-1">
+            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              {hotel.name}
+            </Text>
+            <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              {hotel.location}
+            </Text>
+          </View>
+          <View className="flex-row items-center gap-1">
+            <Star size={14} color="#FCD34D" fill="#FCD34D" />
+            <Text className="text-sm text-gray-900 ml-1" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+              {hotel.rating}
+            </Text>
+            {hotel.reviewCount && (
+              <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                ({hotel.reviewCount})
+              </Text>
+            )}
+          </View>
+        </View>
+        
+        <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+          {hotel.distance}
+        </Text>
+        
+        <View className="flex-row items-center justify-between">
+          <View className="flex-row items-baseline">
+            <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              ₹{hotel.price.toLocaleString()}
+            </Text>
+            {hotel.originalPrice && (
+              <Text className="text-sm text-gray-500 line-through ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                ₹{hotel.originalPrice.toLocaleString()}
+              </Text>
+            )}
+            <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              /night
+            </Text>
+          </View>
+        </View>
+      </View>
+    </Pressable>
+  );
+
+  const renderCompactHotelCard = (hotel) => (
+    <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="flex-col gap-3 w-72 mr-4">
+      <View className="relative w-full overflow-hidden rounded-xl">
+        <Image
+          source={{ uri: hotel.image }}
+          className="w-full h-48 rounded-xl"
+          resizeMode="cover"
+        />
+        <TouchableOpacity className="absolute top-3 right-3 rounded-full bg-white/80 p-2">
+          <HeartIcon size={18} color="#EF4444" />
+        </TouchableOpacity>
+        {hotel.offer && (
+          <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-xl">
+            <Text className="text-white text-sm" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{hotel.offer}</Text>
+          </View>
+        )}
       </View>
       <View>
         <View className="flex-row items-start justify-between">
           <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{hotel.name}</Text>
           <View className="flex-row items-center gap-1">
-            <StarIcon size={14} />
+            <Star size={14} color="#FCD34D" fill="#FCD34D" />
             <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.rating}</Text>
           </View>
         </View>
         <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.location}</Text>
         <View className="flex-row items-center mt-1">
-          <Text className="text-base text-gray-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>${hotel.price} </Text>
+          <Text className="text-base text-gray-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>₹{hotel.price.toLocaleString()} </Text>
           {hotel.originalPrice && (
-            <Text className="text-sm text-gray-500 line-through" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>${hotel.originalPrice}</Text>
+            <Text className="text-sm text-gray-500 line-through" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>₹{hotel.originalPrice.toLocaleString()}</Text>
           )}
           <Text className="text-sm text-gray-800" style={{ fontFamily: 'PlusJakartaSans-Regular' }}> / night</Text>
         </View>
       </View>
     </Pressable>
-  )
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Custom Header with Search Bar */}
       {/* Navigation Tabs */}
       <View className="px-4 pt-3 bg-white">
         <View className="flex-row justify-between border-b border-gray-200">
@@ -288,12 +376,8 @@ export default function HotelBookingApp() {
         </View>
       </View>
 
-
       <ScrollView className="flex-1"  // Makes the tabs sticky
         showsVerticalScrollIndicator={false}>
-
-
-
         {/* Hotel Listings */}
         <View className="px-4 py-4">
           <View className="gap-6">
@@ -320,6 +404,16 @@ export default function HotelBookingApp() {
               resizeMode="cover"
             />
           </View>
+        </View>
+
+        {/* Featured Hotels Section */}
+        <View className="px-4 flex-col gap-4 mt-4">
+          <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Featured Hotels</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-4">
+            <View className="flex-row">
+              {[...nearbyHotels.slice(0, 2), ...latestHotels.slice(0, 1)].map(renderCompactHotelCard)}
+            </View>
+          </ScrollView>
         </View>
 
         {/* Bottom spacing */}
