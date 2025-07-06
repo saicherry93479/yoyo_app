@@ -153,7 +153,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 <DateRangePicker
                   value={searchData.dateRange}
                   onDateRangeSelect={handleDateRangeSelect}
-                  placeholder="Add dates"
+                  placeholder="Check-in - Check-out"
                 />
               </View>
 
@@ -168,7 +168,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 <GuestSelector
                   value={searchData.guests}
                   onGuestCountChange={handleGuestCountChange}
-                  placeholder="Add guests"
+                  placeholder="1 guest"
                 />
               </View>
             </View>

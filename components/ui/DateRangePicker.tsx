@@ -22,15 +22,18 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
+    return date.toLocaleDateString('en-IN', { 
       month: 'short', 
-      day: 'numeric' 
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
   const getDisplayText = () => {
     if (selectedDates.startDate && selectedDates.endDate) {
-      return `${formatDate(selectedDates.startDate)} - ${formatDate(selectedDates.endDate)}`;
+      const startFormatted = formatDate(selectedDates.startDate);
+      const endFormatted = formatDate(selectedDates.endDate);
+      return `${startFormatted} - ${endFormatted}`;
     } else if (selectedDates.startDate) {
       return `${formatDate(selectedDates.startDate)} - Add end date`;
     }
@@ -112,7 +115,7 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
         className="relative"
         onPress={() => setIsModalVisible(true)}
       >
-        <View className="absolute inset-y-0 left-0 flex items-center pl-4 z-10">
+        <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
           <CalendarIcon size={20} color="#94A3B8" />
         </View>
         <View className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 justify-center">

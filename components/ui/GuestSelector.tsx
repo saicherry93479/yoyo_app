@@ -123,7 +123,7 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
         className="relative"
         onPress={() => setIsModalVisible(true)}
       >
-        <View className="absolute inset-y-0 left-0 flex items-center pl-4 z-10">
+        <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
           <Users size={20} color="#94A3B8" />
         </View>
         <View className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 justify-center">
