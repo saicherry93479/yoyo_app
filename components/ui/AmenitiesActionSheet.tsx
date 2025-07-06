@@ -1,29 +1,7 @@
 import React from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { 
-  Wifi, 
-  Waves, 
-  Car, 
-  Tv, 
-  ChefHat, 
-  WashingMachine, 
-  Wind, 
-  Flame, 
-  Dumbbell,
-  Microwave,
-  Refrigerator,
-  Coffee,
-  Wine,
-  Armchair,
-  UtensilsCrossed,
-  Shield,
-  AlertTriangle,
-  Plus,
-  Sun,
-  Lock,
-  X
-} from 'lucide-react-native';
+import { Wifi, Waves, Car, Tv, ChefHat, WashingMachine, Wind, Flame, Dumbbell, Microwave, Refrigerator, Coffee, Wine, Armchair, UtensilsCrossed, Shield, TriangleAlert as AlertTriangle, Plus, Sun, Lock, X } from 'lucide-react-native';
 
 interface Amenity {
   id: string;
