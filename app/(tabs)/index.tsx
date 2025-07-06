@@ -111,6 +111,7 @@ export default function HotelBookingApp() {
   // Hide the default header
   useLayoutEffect(() => {
     navigation.setOptions({
+      headerShadowVisible:false,
       headerTitle: () => (
 
 

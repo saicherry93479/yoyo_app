@@ -172,7 +172,7 @@ const HotelDetails = () => {
             </View>
           </View>
           
-          <TouchableOpacity className="mt-5 flex-row items-center justify-between">
+          <TouchableOpacity  onPress={() => SheetManager.show('reviews')} className="mt-5 flex-row items-center justify-between">
             <Text className="text-base font-medium text-red-600">
               View All Reviews
             </Text>
@@ -203,7 +203,7 @@ const HotelDetails = () => {
                 <Text className="mt-1 text-sm text-stone-500">
                   Spacious suite with city view
                 </Text>
-                <TouchableOpacity className="mt-2 flex-row items-center gap-1">
+                <TouchableOpacity onPressIn={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
                   <Text className="text-sm font-bold text-stone-900">Upgrade</Text>
                   <Ionicons name="arrow-forward" size={16} color="#1c1917" />
                 </TouchableOpacity>
@@ -228,7 +228,7 @@ const HotelDetails = () => {
                 <Text className="mt-1 text-sm text-stone-500">
                   Business-class room
                 </Text>
-                <TouchableOpacity className="mt-2 flex-row items-center gap-1">
+                <TouchableOpacity onPressIn={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
                   <Text className="text-sm font-bold text-stone-900">Book</Text>
                   <Ionicons name="arrow-forward" size={16} color="#1c1917" />
                 </TouchableOpacity>
