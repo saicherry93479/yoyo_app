@@ -87,7 +87,7 @@ const ProfileScreen = () => {
   return (
     <View className="flex-1 bg-white">
       {/* Content */}
-      <ScrollView className="flex-1 px-6 py-6">
+      <ScrollView className="flex-1 px-4 py-6">
         {/* Profile Section */}
         <View className="flex-row items-center gap-4 mb-8">
           <View className="relative">
@@ -107,7 +107,7 @@ const ProfileScreen = () => {
         <View className="space-y-8">
           {menuItems.map((section, sectionIndex) => (
             <View key={sectionIndex}>
-              <Text className="text-gray-900 text-xl px-4 pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
+              <Text className="text-gray-900 text-xl pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
               <View className="space-y-1">
                 {section.items.map((item, itemIndex) => (
                   <TouchableOpacity

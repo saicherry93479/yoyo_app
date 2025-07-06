@@ -34,6 +34,7 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
+      
       <SheetProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
           <Stack>
@@ -41,10 +42,10 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="hotels" options={{ headerShown: false }} />
-            <Stack.Screen name="checkout" options={{ headerShown: false }} />
+            <Stack.Screen name="checkout" options={{ headerShown: true }} />
             <Stack.Screen name="+not-found" />
           </Stack>
-          <StatusBar style="auto" />
+          <StatusBar style="dark" />
         </ThemeProvider>
       </SheetProvider>
     </AuthProvider>

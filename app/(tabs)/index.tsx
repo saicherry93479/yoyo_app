@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView
 import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
+import { SheetManager } from "react-native-actions-sheet"
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -111,11 +112,11 @@ export default function HotelBookingApp() {
   // Hide the default header
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerShadowVisible:false,
+      headerShadowVisible: false,
       headerTitle: () => (
 
 
-        <View className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full">
+        <Pressable onPressIn={()=>SheetManager.show('search')} className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full">
           <View className="flex-row items-center gap-2">
             <View className="text-red-500">
               <MagnifyingGlassIcon size={24} color="#EF4444" />
@@ -128,12 +129,12 @@ export default function HotelBookingApp() {
           <TouchableOpacity className="rounded-full border border-gray-300 p-2">
             <FilterIcon />
           </TouchableOpacity>
-        </View>
+        </Pressable>
 
 
       ),
       headerTitleAlign: 'left',
-     
+
     });
   }, [navigation]);
 
@@ -220,7 +221,7 @@ export default function HotelBookingApp() {
   }
 
   const renderHotelCard = (hotel) => (
-    <Pressable onPress={()=>router.push('/hotels/1')} key={hotel.id} className="flex-col gap-3">
+    <Pressable onPress={() => router.push('/hotels/1')} key={hotel.id} className="flex-col gap-3">
       <View className="relative w-full overflow-hidden rounded-xl">
         <ImageBackground
           source={{ uri: hotel.image }}
@@ -232,7 +233,7 @@ export default function HotelBookingApp() {
           </TouchableOpacity>
           {hotel.offer && (
             <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-xl">
-              <Text className="text-white text-sm font-semibold">{hotel.offer}</Text>
+              <Text className="text-white text-sm " style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{hotel.offer}</Text>
             </View>
           )}
         </ImageBackground>
@@ -260,36 +261,38 @@ export default function HotelBookingApp() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Custom Header with Search Bar */}
-
-
-      <ScrollView className="flex-1">
-
-        {/* Navigation Tabs */}
-        <View className="px-4 py-3">
-          <View className="flex-row justify-between border-b border-gray-200">
-            <TouchableOpacity
-              className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'nearby' ? 'border-red-500' : 'border-transparent'} py-3`}
-              onPress={() => setActiveTab('nearby')}
-            >
-              <LocationIcon size={18} color={activeTab === 'nearby' ? '#EF4444' : '#6B7280'} />
-              <Text className={`text-sm ${activeTab === 'nearby' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Nearby</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'latest' ? 'border-red-500' : 'border-transparent'} py-3`}
-              onPress={() => setActiveTab('latest')}
-            >
-              <ArrowUpDownIcon size={18} color={activeTab === 'latest' ? '#EF4444' : '#6B7280'} />
-              <Text className={`text-sm ${activeTab === 'latest' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Latest</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'offers' ? 'border-red-500' : 'border-transparent'} py-3`}
-              onPress={() => setActiveTab('offers')}
-            >
-              <OffersIcon size={18} color={activeTab === 'offers' ? '#EF4444' : '#6B7280'} />
-              <Text className={`text-sm ${activeTab === 'offers' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Offers</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Navigation Tabs */}
+      <View className="px-4 pt-3 bg-white">
+        <View className="flex-row justify-between border-b border-gray-200">
+          <TouchableOpacity
+            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'nearby' ? 'border-red-500' : 'border-transparent'} py-3`}
+            onPress={() => setActiveTab('nearby')}
+          >
+            <LocationIcon size={18} color={activeTab === 'nearby' ? '#EF4444' : '#6B7280'} />
+            <Text className={`text-sm ${activeTab === 'nearby' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Nearby</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'latest' ? 'border-red-500' : 'border-transparent'} py-3`}
+            onPress={() => setActiveTab('latest')}
+          >
+            <ArrowUpDownIcon size={18} color={activeTab === 'latest' ? '#EF4444' : '#6B7280'} />
+            <Text className={`text-sm ${activeTab === 'latest' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Latest</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'offers' ? 'border-red-500' : 'border-transparent'} py-3`}
+            onPress={() => setActiveTab('offers')}
+          >
+            <OffersIcon size={18} color={activeTab === 'offers' ? '#EF4444' : '#6B7280'} />
+            <Text className={`text-sm ${activeTab === 'offers' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Offers</Text>
+          </TouchableOpacity>
         </View>
+      </View>
+
+
+      <ScrollView className="flex-1"  // Makes the tabs sticky
+        showsVerticalScrollIndicator={false}>
+
+
 
         {/* Hotel Listings */}
         <View className="px-4 py-4">
