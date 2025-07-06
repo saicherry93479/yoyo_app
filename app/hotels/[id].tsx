@@ -16,16 +16,23 @@ const HotelDetails = () => {
 
     const navigation = useNavigation()
 
-    useLayoutEffect(()=>{
-            navigation.setOptions({
-                headerShown:false
-            })
-    },[navigation])
+    useLayoutEffect(() => {
+        navigation.setOptions({
+          headerShadowVisible: false,
+          headerTitle: () => (
+            <Text className="text-xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Details</Text>
+          ),
+          headerTitleAlign: 'center',
+        });
+      }, [navigation]);
+    
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="light-content" />
       
       {/* Header with Background Image */}
+      
+      <ScrollView className="flex-1">
       <View className="relative">
         <Image
           source={{
@@ -37,17 +44,7 @@ const HotelDetails = () => {
         
         {/* Overlay */}
         <View className="absolute inset-0 bg-black/40" />
-        
-        {/* Header Controls */}
-        <View className="absolute top-12 left-0 right-0 flex-row items-center justify-between px-4">
-          <TouchableOpacity className="w-10 h-10 bg-white/80 rounded-full items-center justify-center">
-            <Ionicons name="arrow-back" size={24} color="black" />
-          </TouchableOpacity>
-          
-          <Text className="text-lg text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Details</Text>
-          
-          <View className="w-10" />
-        </View>
+    
         
         {/* Image Indicators */}
         <View className="absolute bottom-5 left-0 right-0 flex-row justify-center gap-2">
@@ -58,7 +55,6 @@ const HotelDetails = () => {
         </View>
       </View>
 
-      <ScrollView className="flex-1">
         {/* Hotel Info */}
         <View className="p-5 pb-6">
           <View className="flex-row items-start justify-between">
