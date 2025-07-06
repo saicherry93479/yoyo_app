@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from 'expo-router';
+import { SheetManager } from 'react-native-actions-sheet';
 
 const HotelDetails = () => {
 
@@ -120,11 +121,16 @@ const HotelDetails = () => {
           </View>
           
           <TouchableOpacity className="mt-5 flex-row items-center justify-between">
-            <Text className="text-base font-medium text-red-600">
-              View All Amenities
-            </Text>
-            <Ionicons name="chevron-forward" size={20} color="#dc2626" />
-          </TouchableOpacity>
+            <TouchableOpacity 
+              className="flex-row items-center justify-between w-full"
+              onPress={() => SheetManager.show('amenities')}
+            >
+              <Text className="text-base font-medium text-red-600">
+                View All Amenities
+              </Text>
+              <Ionicons name="chevron-forward" size={20} color="#dc2626" />
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Reviews */}
