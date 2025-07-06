@@ -1,6 +1,6 @@
 import React, { useLayoutEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
-import { useNavigation } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
 
 const ProfileScreen = () => {
@@ -69,7 +69,9 @@ const ProfileScreen = () => {
       section: 'Support',
       items: [
         { icon: HelpIcon, label: 'Help Center', onPress: () => {} },
-        { icon: MessageIcon, label: 'Contact us', onPress: () => {} },
+        { icon: MessageIcon, label: 'Contact us', onPress: () => {
+          router.push('/contactus')
+        } },
       ]
     }
   ];

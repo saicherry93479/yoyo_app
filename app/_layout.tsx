@@ -43,6 +43,7 @@ export default function RootLayout() {
             <Stack.Screen name="onboarding" options={{ headerShown: false }} />
             <Stack.Screen name="hotels" options={{ headerShown: false }} />
             <Stack.Screen name="checkout" options={{ headerShown: true }} />
+            <Stack.Screen name="contactus" options={{ headerShown: true }} />
             <Stack.Screen name="+not-found" />
           </Stack>
           <StatusBar style="dark" />
