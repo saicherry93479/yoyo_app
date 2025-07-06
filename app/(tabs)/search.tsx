@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView } from 'r
 import { useNavigation, router } from 'expo-router';
 import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { SheetManager } from 'react-native-actions-sheet';
 
 // Mock search results data
 const mockSearchResults = [
