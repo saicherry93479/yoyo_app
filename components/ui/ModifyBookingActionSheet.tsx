@@ -1,7 +1,7 @@
 import React from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { X, Calendar, Users, XCircle, Edit3 } from 'lucide-react-native';
+import { X, Calendar, Users, Circle as XCircle, LocationEdit as Edit3 } from 'lucide-react-native';
 
 interface ModifyBookingActionSheetProps {
   sheetId: string;
