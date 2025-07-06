@@ -25,7 +25,7 @@ export const SHEET_IDS = {
   UPGRADEROOM:'upgraderoom',
   SEARCH : 'search',
   CONTACT_HOTEL: 'contact-hotel',
-  MODIFY_BOOKING: 'modify-booking'.
+  MODIFY_BOOKING: 'modify-booking',
   FILTERS: 'filters'
 } as const;
 
