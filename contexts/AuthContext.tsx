@@ -47,7 +47,13 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null>({
+    id: "DLJSJOIF",
+    name: 'sai',
+    email: 'saicherry93479@gmail.com',
+    phone: "+919515234212",
+    hasOnboarded: true
+  });
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;

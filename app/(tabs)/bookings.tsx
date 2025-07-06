@@ -1,164 +1,96 @@
-import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
-import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader';
-import { useBookings } from '@/hooks/useBookings';
+import React, { useState, useLayoutEffect } from "react"
+import { View, Text, TouchableOpacity, Image, SafeAreaView } from "react-native"
+import { Svg, Path } from "react-native-svg"
+import { useNavigation } from "@react-navigation/native"
 
-export default function BookingsScreen() {
-  const { bookings, loading } = useBookings();
+// Plus Icon Component
+const PlusIcon = ({ size = 24, color = "#1990E5" }) => (
+  <Svg width={size} height={size} viewBox="0 0 256 256" fill={color}>
+    <Path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+  </Svg>
+)
+
+export default function MyTripsApp() {
+  const [activeTab, setActiveTab] = useState('upcoming')
+  const navigation = useNavigation()
+
+  // Hide the default header
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShadowVisible:false,
+      headerTitle: () => <View className="flex-row items-center justify-between p-4">
+        <View className="w-8"></View>
+        <Text className="text-xl font-bold text-center flex-1 text-gray-900">My Trips</Text>
+        <TouchableOpacity className="flex items-center justify-center w-8 h-8 rounded-full">
+          <PlusIcon size={24} color="#1990E5" />
+        </TouchableOpacity>
+      </View>
+    })
+  }, [navigation])
 
   return (
-    <ThemedView style={styles.container}>
-      <View style={styles.header}>
-        <ThemedText type="title" style={styles.title}>
-          My Bookings
-        </ThemedText>
+    <SafeAreaView className="flex-1 bg-white">
+      {/* Header */}
+      <View className="bg-white border-b border-gray-100">
+
+
+        {/* Tab Navigation */}
+        <View className="flex-row border-b border-gray-200">
+          <TouchableOpacity
+            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-[#1990E5]' : ''}`}
+            onPress={() => setActiveTab('upcoming')}
+          >
+            <Text className={`text-center font-semibold ${activeTab === 'upcoming' ? 'text-[#1990E5]' : 'text-gray-500'}`}>
+              Upcoming
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-[#1990E5]' : ''}`}
+            onPress={() => setActiveTab('past')}
+          >
+            <Text className={`text-center font-semibold ${activeTab === 'past' ? 'text-[#1990E5]' : 'text-gray-500'}`}>
+              Past
+            </Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-        {loading ? (
-          <View>
-            <BookingCardSkeleton />
-            <BookingCardSkeleton />
-            <BookingCardSkeleton />
+      {/* Main Content */}
+      <View className="flex-1 bg-gray-50 p-6">
+        <View className="flex-1 flex-col items-center justify-center text-center">
+          {/* Luggage Illustration */}
+          <View className="mb-6">
+            <Image
+              source={{
+                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDox-c6lfmOvbsmJjoLOTALNua-eoPBhBVBs3K_lYX2mgtaJqF16CCts-UnDW19GlMUJhDFY_kVYuV9WVvUSSp64phjcmM1KLKiT2alSy9x_BO3-TOKYoFzsL3_f2aslXz6ohnEyKbmQU2bIdGNSKk2BvAOQ43-89sQvDxsqFkKo1dNu0FGysXJZtrWYiMnrWllUH7dVB0y1cc8fOqfrGrrcHKhrg_pfudl89OBZEIWFApGFUETVxILMM4Oa0eRfxMj9h0WeWdNfQ"
+              }}
+              className="w-48 h-48"
+              resizeMode="contain"
+            />
           </View>
-        ) : (
-          <View style={styles.bookingsContainer}>
-            {bookings.length > 0 ? (
-              bookings.map((booking) => (
-                <View key={booking.id} style={styles.bookingCard}>
-                  <View style={styles.bookingHeader}>
-                    <ThemedText style={styles.hotelName}>{booking.hotelName}</ThemedText>
-                    <View style={[styles.statusBadge, styles[`status${booking.status}`]]}>
-                      <ThemedText style={styles.statusText}>
-                        {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-                      </ThemedText>
-                    </View>
-                  </View>
-                  
-                  <View style={styles.bookingDetails}>
-                    <ThemedText style={styles.detailText}>
-                      Check-in: {new Date(booking.checkIn).toLocaleDateString()}
-                    </ThemedText>
-                    <ThemedText style={styles.detailText}>
-                      Check-out: {new Date(booking.checkOut).toLocaleDateString()}
-                    </ThemedText>
-                    <ThemedText style={styles.detailText}>
-                      Guests: {booking.guests}
-                    </ThemedText>
-                  </View>
-                  
-                  <View style={styles.bookingFooter}>
-                    <ThemedText style={styles.totalAmount}>
-                      Total: ${booking.totalAmount}
-                    </ThemedText>
-                  </View>
-                </View>
-              ))
-            ) : (
-              <View style={styles.emptyState}>
-                <ThemedText style={styles.emptyText}>
-                  No bookings yet. Start exploring hotels to make your first booking!
-                </ThemedText>
-              </View>
-            )}
-          </View>
-        )}
-      </ScrollView>
-    </ThemedView>
-  );
-}
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingTop: 60,
-    paddingBottom: 20,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: 20,
-  },
-  bookingsContainer: {
-    paddingBottom: 100,
-  },
-  bookingCard: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  bookingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  hotelName: {
-    fontSize: 18,
-    fontWeight: '600',
-    flex: 1,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  statusconfirmed: {
-    backgroundColor: '#E8F5E8',
-  },
-  statuspending: {
-    backgroundColor: '#FFF3CD',
-  },
-  statuscancelled: {
-    backgroundColor: '#F8D7DA',
-  },
-  statuscompleted: {
-    backgroundColor: '#D1ECF1',
-  },
-  statusText: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  bookingDetails: {
-    marginBottom: 12,
-  },
-  detailText: {
-    fontSize: 14,
-    opacity: 0.7,
-    marginBottom: 4,
-  },
-  bookingFooter: {
-    borderTopWidth: 1,
-    borderTopColor: '#F2F2F7',
-    paddingTop: 12,
-  },
-  totalAmount: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#007AFF',
-    textAlign: 'right',
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 60,
-  },
-  emptyText: {
-    fontSize: 16,
-    opacity: 0.7,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-});
+          {/* Title */}
+          <Text className="text-2xl font-bold text-gray-900 mb-2">
+            {activeTab === 'upcoming' ? 'No upcoming trips' : 'No past trips'}
+          </Text>
+
+          {/* Description */}
+          <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center">
+            {activeTab === 'upcoming'
+              ? "It looks like you haven't booked anything yet. Let's find your next destination!"
+              : "You haven't completed any trips yet. Start exploring to create amazing memories!"
+            }
+          </Text>
+
+          {/* CTA Button */}
+          <TouchableOpacity className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#1990E5] shadow-lg">
+            <Text className="text-white text-base font-bold">
+              Start Exploring
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </SafeAreaView>
+  )
+}
