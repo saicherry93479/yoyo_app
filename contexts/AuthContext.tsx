@@ -45,15 +45,15 @@ export const useAuth = () => {
 interface AuthProviderProps {
   children: ReactNode;
 }
-
+// {
+//   id: "DLJSJOIF",
+//   name: 'sai',
+//   email: 'saicherry93479@gmail.com',
+//   phone: "+919515234212",
+//   hasOnboarded: false
+// }
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>({
-    id: "DLJSJOIF",
-    name: 'sai',
-    email: 'saicherry93479@gmail.com',
-    phone: "+919515234212",
-    hasOnboarded: true
-  });
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const isAuthenticated = !!user;
