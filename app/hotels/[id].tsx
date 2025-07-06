@@ -120,7 +120,7 @@ const HotelDetails = () => {
             </View>
           </View>
           
-          <TouchableOpacity className="mt-5 flex-row items-center justify-between">
+          {/* <TouchableOpacity className="mt-5 flex-row items-center justify-between"> */}
             <TouchableOpacity 
               className="flex-row items-center justify-between w-full"
               onPress={() => SheetManager.show('amenities')}
@@ -131,7 +131,7 @@ const HotelDetails = () => {
               <Ionicons name="chevron-forward" size={20} color="#dc2626" />
             </TouchableOpacity>
           </View>
-        </View>
+        {/* </View> */}
 
         {/* Reviews */}
         <View className="border-b border-stone-200 p-5">

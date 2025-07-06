@@ -59,6 +59,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
   return (
     <ActionSheet 
       id={sheetId}
+      
       containerStyle={{
         paddingHorizontal: 0,
         paddingBottom: 0,
@@ -83,7 +84,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
 
         {/* Amenities Grid */}
         <ScrollView 
-          className="flex-1 px-4"
+          className=" px-4"
           showsVerticalScrollIndicator={false}
           style={{ maxHeight: 500 }}
         >
