@@ -6,6 +6,7 @@ import { LocationSearchInput } from './LocationSearchInput';
 import { DateRangePicker } from './DateRangePicker';
 import { GuestSelector } from './GuestSelector';
 import { router } from 'expo-router';
+import { SheetManager as ActionSheetManager } from 'react-native-actions-sheet';
 
 interface Location {
   id: string;
@@ -68,7 +69,15 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       }
       
       // Navigate to explore tab with search results
-      router.push('/(tabs)/search');
+      router.push({
+        pathname: '/(tabs)/search',
+        params: {
+          location: searchData.location?.name || '',
+          checkIn: searchData.dateRange.startDate || '',
+          checkOut: searchData.dateRange.endDate || '',
+          guests: searchData.guests.adults + searchData.guests.children
+        }
+      });
       
       // Close the sheet
       handleClose();

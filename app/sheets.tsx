@@ -6,6 +6,7 @@ import { RoomUpgradeActionSheet } from '@/components/ui/RoomUpgradeActionSheet';
 import { SearchActionSheet } from '@/components/ui/SearchActionSheet';
 import { ContactHotelActionSheet } from '@/components/ui/ContactHotelActionSheet';
 import { ModifyBookingActionSheet } from '@/components/ui/ModifyBookingActionSheet';
+import { FiltersActionSheet } from '@/components/ui/FiltersActionSheet';
 
 registerSheet('profile-options', CustomActionSheet);
 registerSheet('amenities', AmenitiesActionSheet);
@@ -14,6 +15,7 @@ registerSheet('upgraderoom', RoomUpgradeActionSheet);
 registerSheet('search', SearchActionSheet);
 registerSheet('contact-hotel', ContactHotelActionSheet);
 registerSheet('modify-booking', ModifyBookingActionSheet);
+registerSheet('filters', FiltersActionSheet);
 
 // Export the sheet IDs for type safety
 export const SHEET_IDS = {
@@ -24,6 +26,7 @@ export const SHEET_IDS = {
   SEARCH : 'search',
   CONTACT_HOTEL: 'contact-hotel',
   MODIFY_BOOKING: 'modify-booking'
+  FILTERS: 'filters'
 } as const;
 
 export type SheetId = typeof SHEET_IDS[keyof typeof SHEET_IDS];

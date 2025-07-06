@@ -195,20 +195,46 @@ export default function SearchScreen() {
       <View className="bg-white px-4 py-3 border-b border-gray-100">
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View className="flex-row gap-3">
-            <TouchableOpacity className="flex-row items-center bg-gray-100 px-4 py-2 rounded-full">
+            <TouchableOpacity 
+              className="flex-row items-center bg-gray-100 px-4 py-2 rounded-full"
+              onPress={() => SheetManager.show('filters', {
+                payload: {
+                  currentFilters: {
+                    priceRange: { min: 0, max: 999999 },
+                    rating: 0,
+                    amenities: [],
+                    propertyType: [],
+                    sortBy: 'recommended'
+                  },
+                  onApplyFilters: (filters) => {
+                    console.log('Applied filters:', filters);
+                    // Here you would typically update the search results based on filters
+                  }
+                }
+              })}
+            >
               <Filter size={16} color="#6B7280" />
               <Text className="text-gray-700 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Filters
               </Text>
             </TouchableOpacity>
             
-            {['Price', 'Rating', 'Distance', 'Amenities'].map((filter) => (
+            {[
+              { id: 'price', label: 'Price' },
+              { id: 'rating', label: 'Rating' },
+              { id: 'distance', label: 'Distance' },
+              { id: 'amenities', label: 'Amenities' }
+            ].map((filter) => (
               <TouchableOpacity 
-                key={filter}
+                key={filter.id}
                 className="bg-gray-100 px-4 py-2 rounded-full"
+                onPress={() => {
+                  // Quick filter actions
+                  console.log('Quick filter:', filter.id);
+                }}
               >
                 <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  {filter}
+                  {filter.label}
                 </Text>
               </TouchableOpacity>
             ))}

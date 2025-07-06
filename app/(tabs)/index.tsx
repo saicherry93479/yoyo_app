@@ -222,7 +222,24 @@ export default function HotelBookingApp() {
               <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Anywhere • Any week • Add guests</Text>
             </View>
           </View>
-          <TouchableOpacity className="rounded-full border border-gray-300 p-2">
+          <TouchableOpacity 
+            className="rounded-full border border-gray-300 p-2"
+            onPress={() => SheetManager.show('filters', {
+              payload: {
+                currentFilters: {
+                  priceRange: { min: 0, max: 999999 },
+                  rating: 0,
+                  amenities: [],
+                  propertyType: [],
+                  sortBy: 'recommended'
+                },
+                onApplyFilters: (filters) => {
+                  console.log('Applied filters:', filters);
+                  // Here you would typically update the hotel list based on filters
+                }
+              }
+            })}
+          >
             <FilterIcon />
           </TouchableOpacity>
         </Pressable>
