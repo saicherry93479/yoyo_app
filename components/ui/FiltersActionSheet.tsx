@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { X, Sliders, Star, Wifi, Car, Utensils, Waves, Dumbbell, Spa } from 'lucide-react-native';
+import { X, FileSliders as Sliders, Star, Wifi, Car, Utensils, Waves, Dumbbell, Space as Spa } from 'lucide-react-native';
 
 interface FilterOptions {
   priceRange: {
