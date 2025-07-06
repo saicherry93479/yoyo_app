@@ -44,7 +44,7 @@ const HotelDetails = () => {
             <Ionicons name="arrow-back" size={24} color="black" />
           </TouchableOpacity>
           
-          <Text className="text-lg font-bold text-white">Details</Text>
+          <Text className="text-lg text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Details</Text>
           
           <View className="w-10" />
         </View>
@@ -63,24 +63,24 @@ const HotelDetails = () => {
         <View className="p-5 pb-6">
           <View className="flex-row items-start justify-between">
             <View className="flex-1">
-              <Text className="text-2xl font-bold text-stone-900">
+              <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 The Grand Budapest Hotel
               </Text>
-              <Text className="mt-1 text-stone-500">
+              <Text className="mt-1 text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 123 Main Street, Budapest
               </Text>
             </View>
             
             <View className="flex-row items-center gap-1">
               <Ionicons name="star" size={20} color="#facc15" />
-              <Text className="text-lg font-bold text-stone-900">4.8</Text>
+              <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>4.8</Text>
             </View>
           </View>
         </View>
 
         {/* Amenities */}
         <View className="border-t border-b border-stone-200 p-5">
-          <Text className="text-lg font-bold text-stone-900">Amenities</Text>
+          <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Amenities</Text>
           
           <View className="mt-4 flex-row flex-wrap">
             <View className="w-1/2 mb-4">
@@ -88,7 +88,7 @@ const HotelDetails = () => {
                 <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
                   <Ionicons name="wifi" size={24} color="#57534e" />
                 </View>
-                <Text className="text-stone-700">Free Wi-Fi</Text>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Free Wi-Fi</Text>
               </View>
             </View>
             
@@ -97,7 +97,7 @@ const HotelDetails = () => {
                 <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
                   <Ionicons name="water" size={24} color="#57534e" />
                 </View>
-                <Text className="text-stone-700">Swimming Pool</Text>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Swimming Pool</Text>
               </View>
             </View>
             
@@ -106,7 +106,7 @@ const HotelDetails = () => {
                 <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
                   <Ionicons name="fitness" size={24} color="#57534e" />
                 </View>
-                <Text className="text-stone-700">Fitness Center</Text>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Fitness Center</Text>
               </View>
             </View>
             
@@ -115,7 +115,7 @@ const HotelDetails = () => {
                 <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
                   <Ionicons name="leaf" size={24} color="#57534e" />
                 </View>
-                <Text className="text-stone-700">Spa</Text>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Spa</Text>
               </View>
             </View>
           </View>
@@ -125,7 +125,7 @@ const HotelDetails = () => {
               className="flex-row items-center justify-between w-full"
               onPress={() => SheetManager.show('amenities')}
             >
-              <Text className="text-base font-medium text-red-600">
+              <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 View All Amenities
               </Text>
               <Ionicons name="chevron-forward" size={20} color="#dc2626" />
@@ -135,11 +135,11 @@ const HotelDetails = () => {
 
         {/* Reviews */}
         <View className="border-b border-stone-200 p-5">
-          <Text className="text-lg font-bold text-stone-900">Reviews</Text>
+          <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Reviews</Text>
           
           <View className="mt-4 flex-row items-center gap-8">
             <View className="items-center gap-1">
-              <Text className="text-5xl font-bold text-stone-900">4.8</Text>
+              <Text className="text-5xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>4.8</Text>
               <View className="flex-row gap-0.5">
                 <Ionicons name="star" size={16} color="#facc15" />
                 <Ionicons name="star" size={16} color="#facc15" />
@@ -147,7 +147,7 @@ const HotelDetails = () => {
                 <Ionicons name="star" size={16} color="#facc15" />
                 <Ionicons name="star-outline" size={16} color="#d6d3d1" />
               </View>
-              <Text className="text-sm text-stone-500">234 reviews</Text>
+              <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>234 reviews</Text>
             </View>
             
             <View className="flex-1">
@@ -159,21 +159,21 @@ const HotelDetails = () => {
                 { rating: 1, percentage: 2 },
               ].map((item) => (
                 <View key={item.rating} className="flex-row items-center gap-3 mb-2">
-                  <Text className="text-sm text-stone-700 w-2">{item.rating}</Text>
+                  <Text className="text-sm text-stone-700 w-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{item.rating}</Text>
                   <View className="flex-1 h-1.5 bg-stone-200 rounded-full">
                     <View
                       className="h-1.5 bg-yellow-400 rounded-full"
                       style={{ width: `${item.percentage}%` }}
                     />
                   </View>
-                  <Text className="text-sm text-stone-500 w-8">{item.percentage}%</Text>
+                  <Text className="text-sm text-stone-500 w-8" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{item.percentage}%</Text>
                 </View>
               ))}
             </View>
           </View>
           
           <TouchableOpacity  onPress={() => SheetManager.show('reviews')} className="mt-5 flex-row items-center justify-between">
-            <Text className="text-base font-medium text-red-600">
+            <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
               View All Reviews
             </Text>
             <Ionicons name="chevron-forward" size={20} color="#dc2626" />
@@ -182,7 +182,7 @@ const HotelDetails = () => {
 
         {/* Room Upgrades */}
         <View className="p-5">
-          <Text className="text-lg font-bold text-stone-900">Room Upgrades</Text>
+          <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Upgrades</Text>
           
           <View className="mt-4 gap-4">
             <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
@@ -194,17 +194,17 @@ const HotelDetails = () => {
                 resizeMode="cover"
               />
               <View className="flex-1">
-                <Text className="text-sm font-medium text-red-600">
+                <Text className="text-sm text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                   Upgrade Available
                 </Text>
-                <Text className="mt-0.5 text-base font-bold text-stone-900">
+                <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                   Deluxe Suite
                 </Text>
-                <Text className="mt-1 text-sm text-stone-500">
+                <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                   Spacious suite with city view
                 </Text>
                 <TouchableOpacity onPressIn={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
-                  <Text className="text-sm font-bold text-stone-900">Upgrade</Text>
+                  <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Upgrade</Text>
                   <Ionicons name="arrow-forward" size={16} color="#1c1917" />
                 </TouchableOpacity>
               </View>
@@ -219,17 +219,17 @@ const HotelDetails = () => {
                 resizeMode="cover"
               />
               <View className="flex-1">
-                <Text className="text-sm font-medium text-stone-600">
+                <Text className="text-sm text-stone-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                   Room Available
                 </Text>
-                <Text className="mt-0.5 text-base font-bold text-stone-900">
+                <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                   Executive Room
                 </Text>
-                <Text className="mt-1 text-sm text-stone-500">
+                <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                   Business-class room
                 </Text>
                 <TouchableOpacity onPressIn={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
-                  <Text className="text-sm font-bold text-stone-900">Book</Text>
+                  <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book</Text>
                   <Ionicons name="arrow-forward" size={16} color="#1c1917" />
                 </TouchableOpacity>
               </View>
@@ -242,12 +242,12 @@ const HotelDetails = () => {
       <View className="bg-white p-4 shadow-lg border-t border-stone-100">
         <View className="flex-row items-center justify-between">
           <View>
-            <Text className="text-2xl font-bold text-stone-900">$250</Text>
-            <Text className="text-stone-500">/night</Text>
+            <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>$250</Text>
+            <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
           </View>
           
           <TouchableOpacity className="bg-red-600 px-6 py-3 rounded-full">
-            <Text className="text-base font-bold text-white">Book Now</Text>
+            <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book Now</Text>
           </TouchableOpacity>
         </View>
       </View>

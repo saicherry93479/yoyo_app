@@ -97,14 +97,14 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
 
   const renderRatingBar = (rating: number, percentage: number) => (
     <View className="flex-row items-center gap-3">
-      <Text className="text-sm font-medium text-gray-700 w-2">{rating}</Text>
+      <Text className="text-sm text-gray-700 w-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{rating}</Text>
       <View className="flex-1 h-2 rounded-full bg-gray-200">
         <View 
           className="h-full rounded-full bg-[#FF5A5F]" 
           style={{ width: `${percentage}%` }}
         />
       </View>
-      <Text className="text-sm text-gray-500 w-8">{percentage}%</Text>
+      <Text className="text-sm text-gray-500 w-8" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{percentage}%</Text>
     </View>
   );
 
@@ -116,8 +116,8 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
           className="w-10 h-10 rounded-full"
         />
         <View className="flex-1">
-          <Text className="text-base font-semibold text-gray-900">{review.userName}</Text>
-          <Text className="text-sm text-gray-500">{review.timeAgo}</Text>
+          <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{review.userName}</Text>
+          <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{review.timeAgo}</Text>
         </View>
       </View>
       
@@ -125,18 +125,18 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
         {renderStars(review.rating, 20)}
       </View>
       
-      <Text className="text-base leading-relaxed text-gray-700 mb-4">
+      <Text className="text-base leading-relaxed text-gray-700 mb-4" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
         {review.content}
       </Text>
       
       <View className="flex-row items-center gap-6">
         <TouchableOpacity className="flex-row items-center gap-2">
           <ThumbsUp size={20} color="#6B7280" />
-          <Text className="text-sm font-medium text-gray-500">{review.likes}</Text>
+          <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{review.likes}</Text>
         </TouchableOpacity>
         <TouchableOpacity className="flex-row items-center gap-2">
           <ThumbsDown size={20} color="#6B7280" />
-          <Text className="text-sm font-medium text-gray-500">{review.dislikes}</Text>
+          <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{review.dislikes}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -161,7 +161,7 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
 
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4">
-          <Text className="text-2xl font-bold text-gray-900">Reviews</Text>
+          <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Reviews</Text>
           <TouchableOpacity onPress={handleClose} className="p-2">
             <X size={24} color="#6B7280" />
           </TouchableOpacity>
@@ -171,11 +171,11 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
         <View className="px-6 pb-6">
           <View className="flex-row items-start justify-between gap-6">
             <View className="flex-col items-start gap-1">
-              <Text className="text-5xl font-extrabold text-gray-900">{reviewsData.overallRating}</Text>
+              <Text className="text-5xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-ExtraBold' }}>{reviewsData.overallRating}</Text>
               <View className="flex-row items-center gap-1 mb-1">
                 {renderStars(Math.floor(reviewsData.overallRating))}
               </View>
-              <Text className="text-sm text-gray-500">{reviewsData.totalReviews} reviews</Text>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{reviewsData.totalReviews} reviews</Text>
             </View>
             
             <View className="flex-1 min-w-[200px] gap-2">
@@ -188,7 +188,7 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
 
         {/* Sort Options */}
         <View className="px-6 pt-4 border-t border-gray-100">
-          <Text className="text-base font-semibold text-gray-800 mb-3">Sort by</Text>
+          <Text className="text-base text-gray-800 mb-3" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Sort by</Text>
           <ScrollView 
             horizontal 
             showsHorizontalScrollIndicator={false}
@@ -205,11 +205,11 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
                       : 'bg-gray-100'
                   }`}
                 >
-                  <Text className={`text-sm font-medium ${
+                  <Text className={`text-sm ${
                     selectedSort === option.id 
                       ? 'text-white' 
                       : 'text-gray-700'
-                  }`}>
+                  }`} style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                     {option.label}
                   </Text>
                 </TouchableOpacity>
@@ -233,7 +233,7 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
             onPress={handleClose}
             className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
           >
-            <Text className="text-base font-bold text-white">Close</Text>
+            <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -121,8 +121,8 @@ export default function HotelBookingApp() {
               <MagnifyingGlassIcon size={24} color="#EF4444" />
             </View>
             <View className="flex-col">
-              <Text className="text-base font-semibold text-gray-900">Where to?</Text>
-              <Text className="text-sm text-gray-500">Anywhere • Any week • Add guests</Text>
+              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Where to?</Text>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Anywhere • Any week • Add guests</Text>
             </View>
           </View>
           <TouchableOpacity className="rounded-full border border-gray-300 p-2">
@@ -239,19 +239,19 @@ export default function HotelBookingApp() {
       </View>
       <View>
         <View className="flex-row items-start justify-between">
-          <Text className="text-base font-semibold text-gray-900">{hotel.name}</Text>
+          <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{hotel.name}</Text>
           <View className="flex-row items-center gap-1">
             <StarIcon size={14} />
-            <Text className="text-sm text-gray-600">{hotel.rating}</Text>
+            <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.rating}</Text>
           </View>
         </View>
-        <Text className="text-sm text-gray-500">{hotel.location}</Text>
+        <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.location}</Text>
         <View className="flex-row items-center mt-1">
-          <Text className="text-base font-semibold text-gray-800">${hotel.price} </Text>
+          <Text className="text-base text-gray-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>${hotel.price} </Text>
           {hotel.originalPrice && (
-            <Text className="text-sm text-gray-500 line-through font-normal">${hotel.originalPrice}</Text>
+            <Text className="text-sm text-gray-500 line-through" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>${hotel.originalPrice}</Text>
           )}
-          <Text className="text-sm text-gray-800 font-normal"> / night</Text>
+          <Text className="text-sm text-gray-800" style={{ fontFamily: 'PlusJakartaSans-Regular' }}> / night</Text>
         </View>
       </View>
     </Pressable>
@@ -272,21 +272,21 @@ export default function HotelBookingApp() {
               onPress={() => setActiveTab('nearby')}
             >
               <LocationIcon size={18} color={activeTab === 'nearby' ? '#EF4444' : '#6B7280'} />
-              <Text className={`text-sm font-semibold ${activeTab === 'nearby' ? 'text-red-500' : 'text-gray-500'}`}>Nearby</Text>
+              <Text className={`text-sm ${activeTab === 'nearby' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Nearby</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'latest' ? 'border-red-500' : 'border-transparent'} py-3`}
               onPress={() => setActiveTab('latest')}
             >
               <ArrowUpDownIcon size={18} color={activeTab === 'latest' ? '#EF4444' : '#6B7280'} />
-              <Text className={`text-sm font-semibold ${activeTab === 'latest' ? 'text-red-500' : 'text-gray-500'}`}>Latest</Text>
+              <Text className={`text-sm ${activeTab === 'latest' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Latest</Text>
             </TouchableOpacity>
             <TouchableOpacity
               className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'offers' ? 'border-red-500' : 'border-transparent'} py-3`}
               onPress={() => setActiveTab('offers')}
             >
               <OffersIcon size={18} color={activeTab === 'offers' ? '#EF4444' : '#6B7280'} />
-              <Text className={`text-sm font-semibold ${activeTab === 'offers' ? 'text-red-500' : 'text-gray-500'}`}>Offers</Text>
+              <Text className={`text-sm ${activeTab === 'offers' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Offers</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -300,13 +300,13 @@ export default function HotelBookingApp() {
 
         {/* Deals & Coupons */}
         <View className="px-4 flex-col gap-4 mt-4">
-          <Text className="text-gray-900 text-lg font-bold">Deals & Coupons</Text>
+          <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Deals & Coupons</Text>
           <View className="bg-white p-4 rounded-xl flex-row items-center justify-between gap-4 border border-gray-100">
             <View className="flex-col gap-2 flex-1">
-              <Text className="text-gray-900 text-base font-bold">Last Minute Deals</Text>
-              <Text className="text-gray-500 text-sm font-normal">Up to 30% off on select hotels</Text>
+              <Text className="text-gray-900 text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Last Minute Deals</Text>
+              <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Up to 30% off on select hotels</Text>
               <TouchableOpacity className="bg-red-500 rounded-lg h-10 px-4 justify-center items-center mt-2 self-start">
-                <Text className="text-white text-sm font-bold">View Deals</Text>
+                <Text className="text-white text-sm" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>View Deals</Text>
               </TouchableOpacity>
             </View>
             <ImageBackground

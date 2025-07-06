@@ -1,11 +1,12 @@
 import { StyleSheet, Text, type TextProps } from 'react-native';
 
 import { useThemeColor } from '@/hooks/useThemeColor';
+import { TypographyPresets } from '@/constants/Typography';
 
 export type ThemedTextProps = TextProps & {
   lightColor?: string;
   darkColor?: string;
-  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link';
+  type?: 'default' | 'title' | 'defaultSemiBold' | 'subtitle' | 'link' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'body' | 'bodyMedium' | 'bodySemiBold' | 'caption' | 'captionMedium' | 'small' | 'button';
 };
 
 export function ThemedText({
@@ -20,12 +21,25 @@ export function ThemedText({
   return (
     <Text
       style={[
-        { color },
+        { color, ...TypographyPresets.body },
         type === 'default' ? styles.default : undefined,
         type === 'title' ? styles.title : undefined,
         type === 'defaultSemiBold' ? styles.defaultSemiBold : undefined,
         type === 'subtitle' ? styles.subtitle : undefined,
         type === 'link' ? styles.link : undefined,
+        type === 'h1' ? TypographyPresets.h1 : undefined,
+        type === 'h2' ? TypographyPresets.h2 : undefined,
+        type === 'h3' ? TypographyPresets.h3 : undefined,
+        type === 'h4' ? TypographyPresets.h4 : undefined,
+        type === 'h5' ? TypographyPresets.h5 : undefined,
+        type === 'h6' ? TypographyPresets.h6 : undefined,
+        type === 'body' ? TypographyPresets.body : undefined,
+        type === 'bodyMedium' ? TypographyPresets.bodyMedium : undefined,
+        type === 'bodySemiBold' ? TypographyPresets.bodySemiBold : undefined,
+        type === 'caption' ? TypographyPresets.caption : undefined,
+        type === 'captionMedium' ? TypographyPresets.captionMedium : undefined,
+        type === 'small' ? TypographyPresets.small : undefined,
+        type === 'button' ? TypographyPresets.button : undefined,
         style,
       ]}
       {...rest}
@@ -35,26 +49,19 @@ export function ThemedText({
 
 const styles = StyleSheet.create({
   default: {
-    fontSize: 16,
-    lineHeight: 24,
+    ...TypographyPresets.body,
   },
   defaultSemiBold: {
-    fontSize: 16,
-    lineHeight: 24,
-    fontWeight: '600',
+    ...TypographyPresets.bodySemiBold,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    lineHeight: 32,
+    ...TypographyPresets.h1,
   },
   subtitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    ...TypographyPresets.h4,
   },
   link: {
-    lineHeight: 30,
-    fontSize: 16,
+    ...TypographyPresets.link,
     color: '#0a7ea4',
   },
 });

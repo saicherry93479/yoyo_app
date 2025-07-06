@@ -29,7 +29,7 @@ export default function SearchScreen() {
   return (
     <ThemedView style={styles.container}>
       <View style={styles.header}>
-        <ThemedText type="title" style={styles.title}>
+        <ThemedText type="h2" style={styles.title}>
           Search Hotels
         </ThemedText>
       </View>
@@ -79,7 +79,7 @@ export default function SearchScreen() {
         </View>
 
         <View style={styles.resultsSection}>
-          <ThemedText type="subtitle" style={styles.sectionTitle}>
+          <ThemedText type="h4" style={styles.sectionTitle}>
             Search Results
           </ThemedText>
 
@@ -94,17 +94,17 @@ export default function SearchScreen() {
               {hotels.length > 0 ? (
                 hotels.map((hotel) => (
                   <View key={hotel.id} style={styles.hotelCard}>
-                    <ThemedText style={styles.hotelName}>{hotel.name}</ThemedText>
-                    <ThemedText style={styles.hotelLocation}>{hotel.location}</ThemedText>
+                    <ThemedText type="bodySemiBold" style={styles.hotelName}>{hotel.name}</ThemedText>
+                    <ThemedText type="caption" style={styles.hotelLocation}>{hotel.location}</ThemedText>
                     <View style={styles.hotelFooter}>
-                      <ThemedText style={styles.hotelRating}>⭐ {hotel.rating}</ThemedText>
-                      <ThemedText style={styles.hotelPrice}>${hotel.price}/night</ThemedText>
+                      <ThemedText type="caption" style={styles.hotelRating}>⭐ {hotel.rating}</ThemedText>
+                      <ThemedText type="bodySemiBold" style={styles.hotelPrice}>${hotel.price}/night</ThemedText>
                     </View>
                   </View>
                 ))
               ) : (
                 <View style={styles.emptyState}>
-                  <ThemedText style={styles.emptyText}>
+                  <ThemedText type="body" style={styles.emptyText}>
                     No hotels found. Try adjusting your search criteria.
                   </ThemedText>
                 </View>
@@ -170,12 +170,9 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   hotelName: {
-    fontSize: 18,
-    fontWeight: '600',
     marginBottom: 4,
   },
   hotelLocation: {
-    fontSize: 14,
     opacity: 0.7,
     marginBottom: 12,
   },
@@ -185,12 +182,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   hotelRating: {
-    fontSize: 14,
-    fontWeight: '500',
   },
   hotelPrice: {
-    fontSize: 16,
-    fontWeight: '600',
     color: '#007AFF',
   },
   emptyState: {
@@ -198,7 +191,6 @@ const styles = StyleSheet.create({
     paddingVertical: 40,
   },
   emptyText: {
-    fontSize: 16,
     opacity: 0.7,
     textAlign: 'center',
   },

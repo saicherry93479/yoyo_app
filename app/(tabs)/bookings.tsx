@@ -20,7 +20,7 @@ export default function MyTripsApp() {
       headerShadowVisible:false,
       headerTitle: () => <View className="flex-row items-center justify-between p-4">
         <View className="w-8"></View>
-        <Text className="text-xl font-bold text-center flex-1 text-gray-900">My Trips</Text>
+        <Text className="text-xl text-center flex-1 text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>My Trips</Text>
         <TouchableOpacity className="flex items-center justify-center w-8 h-8 rounded-full">
           <PlusIcon size={24} color="#1990E5" />
         </TouchableOpacity>
@@ -40,7 +40,7 @@ export default function MyTripsApp() {
             className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-[#1990E5]' : ''}`}
             onPress={() => setActiveTab('upcoming')}
           >
-            <Text className={`text-center font-semibold ${activeTab === 'upcoming' ? 'text-[#1990E5]' : 'text-gray-500'}`}>
+            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-[#1990E5]' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Upcoming
             </Text>
           </TouchableOpacity>
@@ -49,7 +49,7 @@ export default function MyTripsApp() {
             className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-[#1990E5]' : ''}`}
             onPress={() => setActiveTab('past')}
           >
-            <Text className={`text-center font-semibold ${activeTab === 'past' ? 'text-[#1990E5]' : 'text-gray-500'}`}>
+            <Text className={`text-center ${activeTab === 'past' ? 'text-[#1990E5]' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Past
             </Text>
           </TouchableOpacity>
@@ -71,12 +71,12 @@ export default function MyTripsApp() {
           </View>
 
           {/* Title */}
-          <Text className="text-2xl font-bold text-gray-900 mb-2">
+          <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             {activeTab === 'upcoming' ? 'No upcoming trips' : 'No past trips'}
           </Text>
 
           {/* Description */}
-          <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center">
+          <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
             {activeTab === 'upcoming'
               ? "It looks like you haven't booked anything yet. Let's find your next destination!"
               : "You haven't completed any trips yet. Start exploring to create amazing memories!"
@@ -85,7 +85,7 @@ export default function MyTripsApp() {
 
           {/* CTA Button */}
           <TouchableOpacity className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#1990E5] shadow-lg">
-            <Text className="text-white text-base font-bold">
+            <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Start Exploring
             </Text>
           </TouchableOpacity>

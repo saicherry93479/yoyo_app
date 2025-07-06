@@ -51,7 +51,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
     return (
       <View key={amenity.id} className="flex-row items-center gap-4">
         <IconComponent size={24} color="#1F2937" strokeWidth={2} />
-        <Text className="text-base font-medium text-gray-700">{amenity.name}</Text>
+        <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
       </View>
     );
   };
@@ -76,7 +76,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
 
         {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-4">
-          <Text className="text-2xl font-bold text-gray-900">What this place offers</Text>
+          <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>What this place offers</Text>
           <TouchableOpacity onPress={handleClose} className="p-2">
             <X size={24} color="#6B7280" />
           </TouchableOpacity>
@@ -106,7 +106,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
             onPress={handleClose}
             className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
           >
-            <Text className="text-base font-bold text-white">Close</Text>
+            <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Close</Text>
           </TouchableOpacity>
         </View>
       </View>

@@ -86,9 +86,9 @@ export function RoomUpgradeActionSheet({
         resizeMode="cover"
       />
       <View className="flex-1">
-        <Text className="text-sm font-medium text-gray-500 mb-1">Your current room</Text>
-        <Text className="text-lg font-semibold text-gray-900">{roomData.currentRoom.name}</Text>
-        <Text className="text-sm text-gray-500">{roomData.currentRoom.features}</Text>
+        <Text className="text-sm text-gray-500 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Your current room</Text>
+        <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{roomData.currentRoom.name}</Text>
+        <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{roomData.currentRoom.features}</Text>
       </View>
     </View>
   );
@@ -102,18 +102,18 @@ export function RoomUpgradeActionSheet({
       />
       <View className="flex-1">
         <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-lg font-semibold text-gray-900">{room.name}</Text>
-          <Text className="text-lg font-bold text-[#FF5A5F]">
+          <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{room.name}</Text>
+          <Text className="text-lg text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             +${room.pricePerNight}
-            <Text className="text-sm font-medium text-gray-500">/night</Text>
+            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>/night</Text>
           </Text>
         </View>
-        <Text className="text-sm text-gray-500 mb-3">{room.features}</Text>
+        <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{room.features}</Text>
         <TouchableOpacity
           onPress={() => handleRoomSelect(room)}
           className="w-full h-10 rounded-full bg-[#FF5A5F] items-center justify-center"
         >
-          <Text className="text-sm font-bold text-white">Select</Text>
+          <Text className="text-sm text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Select</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -138,7 +138,7 @@ export function RoomUpgradeActionSheet({
 
         {/* Header */}
         <View className="flex-row items-center justify-between px-6 py-4">
-          <Text className="text-2xl font-bold text-gray-900">Upgrade your room</Text>
+          <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Upgrade your room</Text>
           <TouchableOpacity onPress={handleClose} className="p-2">
             <X size={24} color="#6B7280" />
           </TouchableOpacity>
@@ -164,7 +164,7 @@ export function RoomUpgradeActionSheet({
             onPress={handleNoThanks}
             className="w-full h-12 rounded-full bg-gray-100 items-center justify-center"
           >
-            <Text className="text-base font-bold text-gray-700">No thanks</Text>
+            <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>No thanks</Text>
           </TouchableOpacity>
         </View>
 

@@ -36,32 +36,32 @@ export default function OnboardingScreen() {
     <ThemedView style={styles.container}>
       <View style={styles.content}>
         <View style={styles.header}>
-          <ThemedText type="title" style={styles.title}>
+          <ThemedText type="h2" style={styles.title}>
             Welcome to HotelBooking!
           </ThemedText>
-          <ThemedText style={styles.subtitle}>
+          <ThemedText type="body" style={styles.subtitle}>
             Let's get you set up to start booking amazing hotels
           </ThemedText>
         </View>
 
         <View style={styles.features}>
           <View style={styles.feature}>
-            <ThemedText style={styles.featureTitle}>🏨 Discover Hotels</ThemedText>
-            <ThemedText style={styles.featureDescription}>
+            <ThemedText type="h5" style={styles.featureTitle}>🏨 Discover Hotels</ThemedText>
+            <ThemedText type="body" style={styles.featureDescription}>
               Find and book the perfect hotel for your next trip
             </ThemedText>
           </View>
 
           <View style={styles.feature}>
-            <ThemedText style={styles.featureTitle}>⭐ Read Reviews</ThemedText>
-            <ThemedText style={styles.featureDescription}>
+            <ThemedText type="h5" style={styles.featureTitle}>⭐ Read Reviews</ThemedText>
+            <ThemedText type="body" style={styles.featureDescription}>
               Check ratings and reviews from other travelers
             </ThemedText>
           </View>
 
           <View style={styles.feature}>
-            <ThemedText style={styles.featureTitle}>💳 Easy Booking</ThemedText>
-            <ThemedText style={styles.featureDescription}>
+            <ThemedText type="h5" style={styles.featureTitle}>💳 Easy Booking</ThemedText>
+            <ThemedText type="body" style={styles.featureDescription}>
               Book instantly with secure payment options
             </ThemedText>
           </View>
@@ -110,13 +110,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   featureTitle: {
-    fontSize: 20,
-    fontWeight: '600',
     marginBottom: 8,
     textAlign: 'center',
   },
   featureDescription: {
-    fontSize: 16,
     opacity: 0.7,
     textAlign: 'center',
     lineHeight: 22,

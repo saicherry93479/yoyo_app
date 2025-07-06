@@ -116,10 +116,10 @@ export default function RegisterScreen() {
         <View className="w-full max-w-sm mx-auto">
           {/* Header */}
           <View className="mb-8">
-            <Text className="text-2xl font-bold text-gray-900 text-center">
+            <Text className="text-2xl text-gray-900 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Create Account
             </Text>
-            <Text className="text-base text-gray-600 text-center mt-2">
+            <Text className="text-base text-gray-600 text-center mt-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               Join us to start booking amazing hotels
             </Text>
           </View>
@@ -128,10 +128,11 @@ export default function RegisterScreen() {
           <View className="space-y-4">
             {/* Name */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Full Name</Text>
+              <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Full Name</Text>
               <View className="rounded-lg border border-gray-300">
                 <TextInput
                   className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   placeholder="Enter your full name"
                   placeholderTextColor="#9CA3AF"
                   value={formData.name}
@@ -140,16 +141,17 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.name && (
-                <Text className="text-sm text-red-500 mt-1">{errors.name}</Text>
+                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.name}</Text>
               )}
             </View>
 
             {/* Email */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Email</Text>
+              <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Email</Text>
               <View className="rounded-lg border border-gray-300">
                 <TextInput
                   className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   placeholder="Enter your email"
                   placeholderTextColor="#9CA3AF"
                   value={formData.email}
@@ -159,20 +161,21 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email && (
-                <Text className="text-sm text-red-500 mt-1">{errors.email}</Text>
+                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.email}</Text>
               )}
             </View>
 
             {/* Phone */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Phone Number</Text>
+              <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Phone Number</Text>
               <View className="rounded-lg border border-gray-300">
                 <View className="flex-row">
                   <View className="px-4 py-4 border-r border-gray-300">
-                    <Text className="text-base text-gray-900">+91</Text>
+                    <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>+91</Text>
                   </View>
                   <TextInput
                     className="flex-1 p-4 text-base text-gray-900 rounded-r-lg"
+                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                     placeholder="Phone number"
                     placeholderTextColor="#9CA3AF"
                     value={formData.phone}
@@ -182,16 +185,17 @@ export default function RegisterScreen() {
                 </View>
               </View>
               {errors.phone && (
-                <Text className="text-sm text-red-500 mt-1">{errors.phone}</Text>
+                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.phone}</Text>
               )}
             </View>
 
             {/* Password */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Password</Text>
+              <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Password</Text>
               <View className="rounded-lg border border-gray-300">
                 <TextInput
                   className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   placeholder="Create a password"
                   placeholderTextColor="#9CA3AF"
                   value={formData.password}
@@ -200,16 +204,17 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.password && (
-                <Text className="text-sm text-red-500 mt-1">{errors.password}</Text>
+                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.password}</Text>
               )}
             </View>
 
             {/* Confirm Password */}
             <View>
-              <Text className="text-sm font-medium text-gray-700 mb-2">Confirm Password</Text>
+              <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Confirm Password</Text>
               <View className="rounded-lg border border-gray-300">
                 <TextInput
                   className="w-full p-4 text-base text-gray-900 rounded-lg"
+                  style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   placeholder="Confirm your password"
                   placeholderTextColor="#9CA3AF"
                   value={formData.confirmPassword}
@@ -218,7 +223,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.confirmPassword && (
-                <Text className="text-sm text-red-500 mt-1">{errors.confirmPassword}</Text>
+                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.confirmPassword}</Text>
               )}
             </View>
           </View>
@@ -233,7 +238,7 @@ export default function RegisterScreen() {
               {isLoading ? (
                 <ActivityIndicator size="small" color="white" />
               ) : (
-                <Text className="text-base font-bold text-white text-center">
+                <Text className="text-base text-white text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                   Create Account
                 </Text>
               )}
@@ -246,7 +251,7 @@ export default function RegisterScreen() {
               <View className="w-full border-t border-gray-300" />
             </View>
             <View className="relative bg-white px-2">
-              <Text className="text-sm text-gray-500">or</Text>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>or</Text>
             </View>
           </View>
 
@@ -262,7 +267,7 @@ export default function RegisterScreen() {
               ) : (
                 <>
                   <Text className="mr-3">🔍</Text>
-                  <Text className="text-base font-medium text-gray-700">
+                  <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                     Continue with Google
                   </Text>
                 </>
@@ -279,7 +284,7 @@ export default function RegisterScreen() {
               ) : (
                 <>
                   <Text className="mr-3">⚡</Text>
-                  <Text className="text-base font-medium text-gray-700">
+                  <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                     Continue with Github
                   </Text>
                 </>
@@ -289,9 +294,9 @@ export default function RegisterScreen() {
 
           {/* Footer */}
           <View className="mt-8 items-center">
-            <Text className="text-sm text-gray-500">
+            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               Already have an account?{' '}
-              <Link href="/(auth)/login" className="text-[#FF5A5F] font-medium">
+              <Link href="/(auth)/login" className="text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Sign In
               </Link>
             </Text>

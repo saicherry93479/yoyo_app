@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TextInputProps } from 'react-native';
 import { Eye, EyeOff } from 'lucide-react-native';
 import { TouchableOpacity } from 'react-native';
+import { TypographyPresets } from '@/constants/Typography';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -118,8 +119,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   label: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...TypographyPresets.bodySemiBold,
     color: '#000000',
     marginBottom: 8,
   },
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    fontSize: 16,
+    ...TypographyPresets.body,
     color: '#000000',
     paddingHorizontal: 16,
     paddingVertical: 12,
@@ -162,12 +162,12 @@ const styles = StyleSheet.create({
     paddingLeft: 8,
   },
   error: {
-    fontSize: 14,
+    ...TypographyPresets.caption,
     color: '#FF3B30',
     marginTop: 4,
   },
   hint: {
-    fontSize: 14,
+    ...TypographyPresets.caption,
     color: '#8E8E93',
     marginTop: 4,
   },

@@ -1,5 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, ViewStyle, TextStyle } from 'react-native';
+import { TypographyPresets } from '@/constants/Typography';
 
 interface ButtonProps {
   title: string;
@@ -101,8 +102,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   text: {
-    fontSize: 16,
-    fontWeight: '600',
+    ...TypographyPresets.button,
     textAlign: 'center',
   },
   primaryText: {
