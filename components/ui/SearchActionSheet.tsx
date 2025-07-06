@@ -1,12 +1,34 @@
 import React, { useState } from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
-import { View, Text, TouchableOpacity, TextInput, SafeAreaView } from 'react-native';
-import { X, Search, Calendar, Users } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { X, Search } from 'lucide-react-native';
+import { LocationSearchInput } from './LocationSearchInput';
+import { DateRangePicker } from './DateRangePicker';
+import { GuestSelector } from './GuestSelector';
+import { router } from 'expo-router';
+
+interface Location {
+  id: string;
+  name: string;
+  description: string;
+  type: 'city' | 'region' | 'country' | 'recent';
+}
+
+interface DateRange {
+  startDate: string | null;
+  endDate: string | null;
+}
+
+interface GuestCounts {
+  adults: number;
+  children: number;
+  infants: number;
+}
 
 interface SearchData {
-  destination: string;
-  dates: string;
-  guests: string;
+  location: Location | null;
+  dateRange: DateRange;
+  guests: GuestCounts;
 }
 
 interface SearchActionSheetProps {
@@ -17,26 +39,54 @@ interface SearchActionSheetProps {
 }
 
 export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
-  const [destination, setDestination] = useState('');
-  const [dates, setDates] = useState('');
-  const [guests, setGuests] = useState('1 guest');
+  const [searchData, setSearchData] = useState<SearchData>({
+    location: null,
+    dateRange: { startDate: null, endDate: null },
+    guests: { adults: 1, children: 0, infants: 0 }
+  });
+  const [isSearching, setIsSearching] = useState(false);
+
+  const isSearchEnabled = searchData.location && searchData.dateRange.startDate && searchData.dateRange.endDate;
 
   const handleClose = () => {
     SheetManager.hide(sheetId);
   };
 
   const handleSearch = () => {
-    const searchData: SearchData = {
-      destination,
-      dates,
-      guests
-    };
+    if (!isSearchEnabled) return;
     
-    if (payload?.onSearch) {
-      payload.onSearch(searchData);
-    }
+    setIsSearching(true);
     
-    handleClose();
+    // Simulate search API call
+    setTimeout(() => {
+      if (payload?.onSearch) {
+        payload.onSearch({
+          destination: searchData.location?.name || '',
+          dates: `${searchData.dateRange.startDate} - ${searchData.dateRange.endDate}`,
+          guests: `${searchData.guests.adults + searchData.guests.children} guests`
+        });
+      }
+      
+      // Navigate to explore tab with search results
+      router.push('/(tabs)/search');
+      
+      // Close the sheet
+      handleClose();
+      
+      setIsSearching(false);
+    }, 1500);
+  };
+    
+  const handleLocationSelect = (location: Location) => {
+    setSearchData(prev => ({ ...prev, location }));
+  };
+
+  const handleDateRangeSelect = (dateRange: DateRange) => {
+    setSearchData(prev => ({ ...prev, dateRange }));
+  };
+
+  const handleGuestCountChange = (guests: GuestCounts) => {
+    setSearchData(prev => ({ ...prev, guests }));
   };
 
   return (
@@ -85,19 +135,11 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 >
                   Where
                 </Text>
-                <View className="relative">
-                  <View className="absolute inset-y-0 left-0 flex items-center pl-4 z-10">
-                    <Search size={20} color="#94A3B8" />
-                  </View>
-                  <TextInput
-                    className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 pl-12 pr-4 py-3 text-base"
-                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                    placeholder="Search destinations"
-                    placeholderTextColor="#94A3B8"
-                    value={destination}
-                    onChangeText={setDestination}
-                  />
-                </View>
+                <LocationSearchInput
+                  value={searchData.location?.name || ''}
+                  onLocationSelect={handleLocationSelect}
+                  placeholder="Search destinations"
+                />
               </View>
 
               {/* When */}
@@ -108,19 +150,11 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 >
                   When
                 </Text>
-                <View className="relative">
-                  <View className="absolute inset-y-0 left-0 flex items-center pl-4 z-10">
-                    <Calendar size={20} color="#94A3B8" />
-                  </View>
-                  <TextInput
-                    className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 pl-12 pr-4 py-3 text-base"
-                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                    placeholder="Check in - Check out"
-                    placeholderTextColor="#94A3B8"
-                    value={dates}
-                    onChangeText={setDates}
-                  />
-                </View>
+                <DateRangePicker
+                  value={searchData.dateRange}
+                  onDateRangeSelect={handleDateRangeSelect}
+                  placeholder="Add dates"
+                />
               </View>
 
               {/* Who */}
@@ -131,19 +165,11 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 >
                   Who
                 </Text>
-                <View className="relative">
-                  <View className="absolute inset-y-0 left-0 flex items-center pl-4 z-10">
-                    <Users size={20} color="#94A3B8" />
-                  </View>
-                  <TextInput
-                    className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 text-slate-900 pl-12 pr-4 py-3 text-base"
-                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                    placeholder="1 guest"
-                    placeholderTextColor="#94A3B8"
-                    value={guests}
-                    onChangeText={setGuests}
-                  />
-                </View>
+                <GuestSelector
+                  value={searchData.guests}
+                  onGuestCountChange={handleGuestCountChange}
+                  placeholder="Add guests"
+                />
               </View>
             </View>
           </View>
@@ -152,21 +178,43 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
           <View className="bg-white px-4 pb-6">
             <TouchableOpacity 
               onPress={handleSearch}
-              className="flex h-14 w-full items-center justify-center rounded-xl bg-[#FF5A5F] shadow-lg"
+              className={`flex h-14 w-full items-center justify-center rounded-xl shadow-lg ${
+                isSearchEnabled && !isSearching 
+                  ? 'bg-[#FF5A5F]' 
+                  : 'bg-gray-300'
+              }`}
               style={{
-                shadowColor: '#FF5A5F',
+                shadowColor: isSearchEnabled ? '#FF5A5F' : '#000',
                 shadowOffset: { width: 0, height: 4 },
-                shadowOpacity: 0.3,
+                shadowOpacity: isSearchEnabled ? 0.3 : 0.1,
                 shadowRadius: 8,
                 elevation: 8,
               }}
+              disabled={!isSearchEnabled || isSearching}
             >
-              <Text 
-                className="text-base text-white tracking-wide" 
-                style={{ fontFamily: 'PlusJakartaSans-Bold' }}
-              >
-                Search
-              </Text>
+              {isSearching ? (
+                <View className="flex-row items-center gap-2">
+                  <ActivityIndicator size="small" color="white" />
+                  <Text 
+                    className="text-base text-white tracking-wide" 
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                  >
+                    Searching...
+                  </Text>
+                </View>
+              ) : (
+                <View className="flex-row items-center gap-2">
+                  <Search size={20} color="white" />
+                  <Text 
+                    className={`text-base tracking-wide ${
+                      isSearchEnabled ? 'text-white' : 'text-gray-500'
+                    }`}
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                  >
+                    Search
+                  </Text>
+                </View>
+              )}
             </TouchableOpacity>
           </View>
         </View>
@@ -174,18 +222,3 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     </ActionSheet>
   );
 }
-
-// Usage example:
-// 
-// To show the search action sheet:
-// SheetManager.show('search', {
-//   payload: {
-//     onSearch: (data) => {
-//       console.log('Search data:', data);
-//       // Handle search logic here
-//     }
-//   }
-// });
-// 
-// In your sheets registration:
-// registerSheet('search', SearchActionSheet);
