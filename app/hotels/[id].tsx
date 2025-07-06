@@ -9,7 +9,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useNavigation } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { SheetManager } from 'react-native-actions-sheet';
 
 const HotelDetails = () => {
@@ -246,7 +246,7 @@ const HotelDetails = () => {
             <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
           </View>
           
-          <TouchableOpacity className="bg-red-600 px-6 py-3 rounded-full">
+          <TouchableOpacity  onPressIn={()=>router.push('checkout')} className="bg-red-600 px-6 py-3 rounded-full">
             <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book Now</Text>
           </TouchableOpacity>
         </View>
