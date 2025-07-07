@@ -187,7 +187,7 @@ export default function HotelBookingApp() {
     <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
       <View className="relative">
         <Image
-          source={{ uri: hotel.image }}
+          source={{ uri: hotel.images[0] }}
           className="w-full h-48"
           style={{ resizeMode: 'cover' }}
         />
@@ -253,7 +253,7 @@ export default function HotelBookingApp() {
     <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="flex-col gap-3 w-72 mr-4">
       <View className="relative w-full overflow-hidden rounded-xl">
         <Image
-          source={{ uri: hotel.image }}
+          source={{ uri: hotel.images[0] }}
           className="w-full h-48 rounded-xl"
           style={{ resizeMode: 'cover' }}
         />

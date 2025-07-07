@@ -126,21 +126,45 @@ const HotelDetails = () => {
           </View>
         </View>
 
-        {/* Amenities */}
         <View className="border-t border-b border-stone-200 p-5">
           <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Amenities</Text>
           
           <View className="mt-4 flex-row flex-wrap">
-            {hotel.amenities.slice(0, 4).map((amenity, index) => (
-              <View key={index} className="w-1/2 mb-4">
-                <View className="flex-row items-center gap-3">
-                  <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
-                    <Ionicons name="checkmark" size={24} color="#57534e" />
-                  </View>
-                  <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{amenity}</Text>
+            <View className="w-1/2 mb-4">
+              <View className="flex-row items-center gap-3">
+                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
+                  <Ionicons name="wifi" size={24} color="#57534e" />
                 </View>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Free Wi-Fi</Text>
               </View>
-            ))}
+            </View>
+            
+            <View className="w-1/2 mb-4">
+              <View className="flex-row items-center gap-3">
+                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
+                  <Ionicons name="water" size={24} color="#57534e" />
+                </View>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Swimming Pool</Text>
+              </View>
+            </View>
+            
+            <View className="w-1/2 mb-4">
+              <View className="flex-row items-center gap-3">
+                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
+                  <Ionicons name="fitness" size={24} color="#57534e" />
+                </View>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Fitness Center</Text>
+              </View>
+            </View>
+            
+            <View className="w-1/2 mb-4">
+              <View className="flex-row items-center gap-3">
+                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
+                  <Ionicons name="leaf" size={24} color="#57534e" />
+                </View>
+                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Spa</Text>
+              </View>
+            </View>
           </View>
           
           {/* <TouchableOpacity className="mt-5 flex-row items-center justify-between"> */}

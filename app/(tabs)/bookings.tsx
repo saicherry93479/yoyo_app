@@ -26,7 +26,7 @@ export default function MyTripsApp() {
         <View className="flex-row items-center justify-between p-4">
           <View className="w-8"></View>
           <Text className="text-xl text-center flex-1 text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>My Trips</Text>
-          <TouchableOpacity 
+          <TouchableOpacity
             className="flex items-center justify-center w-8 h-8 rounded-full"
             onPress={() => router.push('/(tabs)/search')}
           >
@@ -40,7 +40,7 @@ export default function MyTripsApp() {
   const getFilteredBookings = () => {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
-    
+
     return bookings.filter(booking => {
       if (activeTab === 'upcoming') {
         return booking.checkIn >= today || booking.status === 'upcoming' || booking.status === 'confirmed';
@@ -52,8 +52,8 @@ export default function MyTripsApp() {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', { 
-      month: 'short', 
+    return date.toLocaleDateString('en-IN', {
+      month: 'short',
       day: 'numeric',
       year: 'numeric'
     });
@@ -91,7 +91,7 @@ export default function MyTripsApp() {
           </Text>
         </View>
       </View>
-      
+
       <View className="p-4">
         <Text className="text-lg text-gray-900 mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
           {booking.hotelName}
@@ -99,7 +99,7 @@ export default function MyTripsApp() {
         <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
           {booking.location}
         </Text>
-        
+
         <View className="flex-row items-center justify-between mb-3">
           <View>
             <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -127,7 +127,7 @@ export default function MyTripsApp() {
             </Text>
           </View>
         </View>
-        
+
         <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
           <View>
             <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -195,47 +195,45 @@ export default function MyTripsApp() {
             </TouchableOpacity>
           </View>
         ) : filteredBookings.length === 0 ? (
-          <View className="flex-1 bg-gray-50 p-6">
-            <View className="flex-1 flex-col items-center justify-center text-center">
-              {/* Luggage Illustration */}
-              <View className="mb-6">
-                <Image
-                  source={{
-                    uri: "https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=300"
-                  }}
-                  className="w-48 h-48"
-                  style={{ resizeMode: 'contain' }}
-                />
-              </View>
-
-              {/* Title */}
-              <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                {activeTab === 'upcoming' ? 'No upcoming trips' : 'No past trips'}
-              </Text>
-
-              {/* Description */}
-              <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                {activeTab === 'upcoming'
-                  ? "It looks like you haven't booked anything yet. Let's find your next destination!"
-                  : "You haven't completed any trips yet. Start exploring to create amazing memories!"
-                }
-              </Text>
-
-              {/* CTA Button */}
-              <TouchableOpacity 
-                className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#FF5A5F] shadow-lg"
-                onPress={() => router.push('/(tabs)/search')}
-              >
-                <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  Start Exploring
-                </Text>
-              </TouchableOpacity>
+          <View className="flex-col items-center justify-center text-center p-6">
+            {/* Luggage Illustration */}
+            <View className="mb-6">
+              <Image
+                source={{
+                  uri: "https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=300"
+                }}
+                className="w-48 h-48"
+                style={{ resizeMode: 'contain' }}
+              />
             </View>
-          </View>
+
+            {/* Title */}
+            <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              {activeTab === 'upcoming' ? 'No upcoming trips' : 'No past trips'}
+            </Text>
+
+            {/* Description */}
+            <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              {activeTab === 'upcoming'
+                ? "It looks like you haven't booked anything yet. Let's find your next destination!"
+                : "You haven't completed any trips yet. Start exploring to create amazing memories!"
+              }
+            </Text>
+
+            {/* CTA Button */}
+            <TouchableOpacity
+              className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#FF5A5F] shadow-lg"
+              onPress={() => router.push('/(tabs)/search')}
+            >
+              <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                Start Exploring
+              </Text>
+            </TouchableOpacity>
           </View>
         ) : (
           filteredBookings.map(renderBookingCard)
-        )}
+        )
+        }
       </ScrollView>
     </SafeAreaView>
   )

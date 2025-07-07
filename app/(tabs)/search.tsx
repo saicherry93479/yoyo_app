@@ -44,7 +44,7 @@ export default function SearchScreen() {
     >
       <View className="relative">
         <Image
-          source={{ uri: hotel.image }}
+          source={{ uri: hotel.images[0] }}
           className="w-full h-48"
           style={{ resizeMode: 'cover' }}
         />
