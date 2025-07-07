@@ -10,11 +10,12 @@ export default function AuthIndex() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated && user) {
-        if (user.hasOnboarded) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/onboarding');
-        }
+        router.replace('/(tabs)');
+        // if (user.hasOnboarded) {
+        //   router.replace('/(tabs)');
+        // } else {
+        //   router.replace('/onboarding');
+        // }
       } else {
         router.replace('/(auth)/login');
       }

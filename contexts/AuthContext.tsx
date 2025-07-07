@@ -115,13 +115,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ]);
 
         setUser(userData);
-
+        router.replace('/(tabs)');
         // Navigate based on onboarding status
-        if (!userData.hasOnboarded) {
-          router.replace('/onboarding');
-        } else {
-          router.replace('/(tabs)');
-        }
+        // if (!userData.hasOnboarded) {
+        //   router.replace('/onboarding');
+        // } else {
+        //   router.replace('/(tabs)');
+        // }
       } else {
         throw new Error(response.error || 'Login failed');
       }
@@ -149,7 +149,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ]);
 
         setUser(newUser);
-        router.replace('/onboarding');
+        // router.replace('/onboarding');
+        router.replace('/(tabs)');
       } else {
         throw new Error(response.error || 'Registration failed');
       }
@@ -201,12 +202,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         // Update stored user data
         await AsyncStorage.setItem('userProfile', JSON.stringify(updatedUser));
+        router.replace('/(tabs)');
 
-        if (updatedUser.hasOnboarded) {
-          router.replace('/(tabs)');
-        } else {
-          router.replace('/onboarding');
-        }
+        // if (updatedUser.hasOnboarded) {
+        //   router.replace('/(tabs)');
+        // } else {
+        //   router.replace('/onboarding');
+        // }
       } else {
         throw new Error('Failed to refresh user data');
       }

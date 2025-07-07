@@ -65,7 +65,7 @@ export default function OTPScreen() {
         router.replace('/(tabs)');
       } else {
         // New user - go to onboarding
-        router.replace('/onboarding');
+        router.replace('/(tabs)');
       }
     } catch (error) {
       Alert.alert('Error', 'Invalid OTP. Please try again.');
