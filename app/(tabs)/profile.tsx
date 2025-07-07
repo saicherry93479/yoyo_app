@@ -59,9 +59,13 @@ const ProfileScreen = () => {
     {
       section: 'Account Settings',
       items: [
-        { icon: UserIcon, label: 'Personal information', onPress: () => {} },
+        { icon: UserIcon, label: 'Personal information', onPress: () => {
+          router.push('/personal-info')
+        } },
         { icon: CreditCardIcon, label: 'Payment methods', onPress: () => {} },
-        { icon: BellIcon, label: 'Notifications', onPress: () => {} },
+        { icon: BellIcon, label: 'Notifications', onPress: () => {
+          router.push('/notifications')
+        } },
         { icon: SettingsIcon, label: 'Settings', onPress: () => {} },
       ]
     },
