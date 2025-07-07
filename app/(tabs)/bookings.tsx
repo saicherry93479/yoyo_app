@@ -232,6 +232,7 @@ export default function MyTripsApp() {
               </TouchableOpacity>
             </View>
           </View>
+          </View>
         ) : (
           filteredBookings.map(renderBookingCard)
         )}
