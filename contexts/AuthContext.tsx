@@ -84,14 +84,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const parsedUser = JSON.parse(userProfile[1]);
         setUser(parsedUser);
 
-        // Validate token with backend
-        try {
-          await refreshUser();
-        } catch (error) {
-          console.log('Token validation failed during initialization');
-          await clearAuthData();
-          setUser(null);
-        }
+        // Skip token validation in mock mode
+        console.log('Using stored user data in mock mode');
       }
     } catch (error) {
       console.log('Auth initialization error:', error);

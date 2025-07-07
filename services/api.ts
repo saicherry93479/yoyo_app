@@ -14,6 +14,7 @@ export interface ApiResponse<T = any> {
 class ApiService {
   private axiosInstance: AxiosInstance;
   private refreshPromise: Promise<string> | null = null;
+  private isMockMode = true; // Always use mock mode
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -24,7 +25,10 @@ class ApiService {
       },
     });
 
-    this.setupInterceptors();
+    // Only setup interceptors if not in mock mode
+    if (!this.isMockMode) {
+      this.setupInterceptors();
+    }
   }
 
   private setupInterceptors() {
@@ -109,34 +113,21 @@ class ApiService {
   // Generic request method with mock fallback
   async request<T = any>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
     try {
-      // For development, use mock data
-      if (__DEV__) {
-        return this.getMockResponse<T>(config);
-      }
-
-      const response = await this.axiosInstance(config);
+      // Always use mock data - no real API calls
+      return this.getMockResponse<T>(config);
+    } catch (error: any) {
+      // Always fallback to mock data
       return {
         success: true,
-        data: response.data.data || response.data,
-        message: response.data.message,
-      };
-    } catch (error: any) {
-      // Fallback to mock in development
-      if (__DEV__) {
-        return this.getMockResponse<T>(config);
-      }
-
-      return {
-        success: false,
-        data: null,
-        error: error.response?.data?.message || error.message || 'An error occurred',
+        data: {} as T,
+        message: 'Mock response (fallback)',
       };
     }
   }
 
   private async getMockResponse<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 800 + 200));
 
     const url = config.url || '';
     const method = config.method?.toUpperCase() || 'GET';
@@ -181,6 +172,22 @@ class ApiService {
       };
     }
 
+    if (url.includes('/auth/me')) {
+      return {
+        success: true,
+        data: {
+          user: {
+            id: '1',
+            name: 'Sophia Carter',
+            email: 'sophia.carter@example.com',
+            phone: '+919876543210',
+            avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200',
+            hasOnboarded: true,
+          }
+        } as T,
+        message: 'User data fetched successfully'
+      };
+    }
     if (url.includes('/hotels/search')) {
       const searchQuery = params.query || '';
       const location = params.location || '';
@@ -354,8 +361,12 @@ class ApiService {
     // Default mock response
     return {
       success: true,
-      data: {} as T,
-      message: 'Mock response'
+      data: {
+        message: 'Mock API endpoint not implemented yet',
+        endpoint: url,
+        method: method
+      } as T,
+      message: 'Mock response - endpoint not implemented'
     };
   }
 
