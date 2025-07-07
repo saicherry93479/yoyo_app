@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView } from "r
 import { Svg, Path } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
+import { useBookings } from '@/hooks/useBookings'
+import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader'
 
 // Plus Icon Component
 const PlusIcon = ({ size = 24, color = "#FF5A5F" }) => (
@@ -11,55 +13,10 @@ const PlusIcon = ({ size = 24, color = "#FF5A5F" }) => (
   </Svg>
 )
 
-// Mock bookings data
-const mockBookings = [
-  {
-    id: '1',
-    hotelName: 'The Oberoi Mumbai',
-    location: 'Nariman Point, Mumbai',
-    checkIn: '2024-03-15',
-    checkOut: '2024-03-18',
-    guests: 2,
-    status: 'confirmed',
-    totalAmount: 45000,
-    image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
-    bookingDate: '2024-02-10',
-    roomType: 'Deluxe Ocean View',
-    nights: 3
-  },
-  {
-    id: '2',
-    hotelName: 'Taj Mahal Palace',
-    location: 'Colaba, Mumbai',
-    checkIn: '2024-04-20',
-    checkOut: '2024-04-23',
-    guests: 2,
-    status: 'upcoming',
-    totalAmount: 75000,
-    image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
-    bookingDate: '2024-02-15',
-    roomType: 'Heritage Suite',
-    nights: 3
-  },
-  {
-    id: '3',
-    hotelName: 'Grand Hyatt Goa',
-    location: 'Bambolim, Goa',
-    checkIn: '2024-01-10',
-    checkOut: '2024-01-14',
-    guests: 4,
-    status: 'completed',
-    totalAmount: 32000,
-    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
-    bookingDate: '2023-12-20',
-    roomType: 'Family Suite',
-    nights: 4
-  }
-];
-
 export default function MyTripsApp() {
   const [activeTab, setActiveTab] = useState('upcoming')
   const navigation = useNavigation()
+  const { bookings, loading, error, refresh } = useBookings()
 
   // Hide the default header
   useLayoutEffect(() => {
@@ -84,11 +41,11 @@ export default function MyTripsApp() {
     const now = new Date();
     const today = now.toISOString().split('T')[0];
     
-    return mockBookings.filter(booking => {
+    return bookings.filter(booking => {
       if (activeTab === 'upcoming') {
-        return booking.checkIn >= today;
+        return booking.checkIn >= today || booking.status === 'upcoming' || booking.status === 'confirmed';
       } else {
-        return booking.checkIn < today;
+        return booking.checkIn < today || booking.status === 'completed';
       }
     });
   };
@@ -126,7 +83,7 @@ export default function MyTripsApp() {
         <Image
           source={{ uri: booking.image }}
           className="w-full h-48"
-          resizeMode="cover"
+          style={{ resizeMode: 'cover' }}
         />
         <View className={`absolute top-3 right-3 px-2 py-1 rounded-full ${getStatusColor(booking.status)}`}>
           <Text className="text-xs capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
@@ -255,13 +212,65 @@ export default function MyTripsApp() {
                 Start Exploring
               </Text>
             </TouchableOpacity>
+        {loading ? (
+          <View>
+            {Array.from({ length: 3 }).map((_, index) => (
+              <BookingCardSkeleton key={index} />
+            ))}
           </View>
+        ) : error ? (
+          <View className="p-4 bg-red-50 rounded-lg">
+            <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              {error}
+            </Text>
+            <TouchableOpacity onPress={refresh} className="mt-2">
+              <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                Try Again
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : filteredBookings.length === 0 ? (
+          <View className="flex-1 bg-gray-50 p-6">
+            <View className="flex-1 flex-col items-center justify-center text-center">
+              {/* Luggage Illustration */}
+              <View className="mb-6">
+                <Image
+                  source={{
+                    uri: "https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=300"
+                  }}
+                  className="w-48 h-48"
+                  style={{ resizeMode: 'contain' }}
+                />
+              </View>
+
+              {/* Title */}
+              <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                {activeTab === 'upcoming' ? 'No upcoming trips' : 'No past trips'}
+              </Text>
+
+              {/* Description */}
+              <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                {activeTab === 'upcoming'
+                  ? "It looks like you haven't booked anything yet. Let's find your next destination!"
+                  : "You haven't completed any trips yet. Start exploring to create amazing memories!"
+                }
+              </Text>
+
+              {/* CTA Button */}
+              <TouchableOpacity 
+                className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#FF5A5F] shadow-lg"
+                onPress={() => router.push('/(tabs)/search')}
+              >
+                <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Start Exploring
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        ) : (
+          filteredBookings.map(renderBookingCard)
+        )}
         </View>
-      ) : (
-        <ScrollView className="flex-1 bg-gray-50 px-4 py-4" showsVerticalScrollIndicator={false}>
-          {filteredBookings.map(renderBookingCard)}
-        </ScrollView>
-      )}
     </SafeAreaView>
   )
 }

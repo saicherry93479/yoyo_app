@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
-import { Booking } from '@/types/hotel';
+import { MockBooking } from '@/services/mockData';
 
 export function useBookings() {
-  const [bookings, setBookings] = useState<Booking[]>([]);
+  const [bookings, setBookings] = useState<MockBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const [total, setTotal] = useState(0);
 
   const fetchBookings = async (isRefresh = false) => {
     try {
@@ -21,6 +22,7 @@ export function useBookings() {
 
       if (response.success) {
         setBookings(response.data.bookings || []);
+        setTotal(response.data.total || 0);
       } else {
         setError(response.error || 'Failed to fetch bookings');
       }
@@ -80,6 +82,7 @@ export function useBookings() {
 
   return {
     bookings,
+    total,
     loading,
     error,
     refreshing,

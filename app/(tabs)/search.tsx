@@ -4,70 +4,16 @@ import { useNavigation, router } from 'expo-router';
 import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
-
-// Mock search results data
-const mockSearchResults = [
-  {
-    id: '1',
-    name: 'The Oberoi Mumbai',
-    location: 'Nariman Point, Mumbai',
-    rating: 4.8,
-    reviewCount: 1247,
-    price: 15000,
-    originalPrice: 18000,
-    image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
-    amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant'],
-    distance: '2.1 km from city center',
-    offer: '20% OFF'
-  },
-  {
-    id: '2',
-    name: 'Taj Mahal Palace',
-    location: 'Colaba, Mumbai',
-    rating: 4.9,
-    reviewCount: 2156,
-    price: 25000,
-    image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
-    amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym'],
-    distance: '1.5 km from city center'
-  },
-  {
-    id: '3',
-    name: 'ITC Grand Central',
-    location: 'Parel, Mumbai',
-    rating: 4.7,
-    reviewCount: 892,
-    price: 12000,
-    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
-    amenities: ['Free WiFi', 'Pool', 'Business Center'],
-    distance: '3.2 km from city center'
-  },
-  {
-    id: '4',
-    name: 'The St. Regis Mumbai',
-    location: 'Lower Parel, Mumbai',
-    rating: 4.8,
-    reviewCount: 1543,
-    price: 22000,
-    image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=600',
-    amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Bar'],
-    distance: '2.8 km from city center'
-  }
-];
+import { useHotels } from '@/hooks/useHotels';
 
 export default function SearchScreen() {
-  const [loading, setLoading] = useState(true);
-  const [hotels, setHotels] = useState(mockSearchResults);
   const [sortBy, setSortBy] = useState('recommended');
+  const [searchFilters, setSearchFilters] = useState({
+    location: 'Mumbai',
+    sortBy: 'recommended'
+  });
   const navigation = useNavigation();
-
-  // Simulate loading
-  React.useEffect(() => {
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 2000);
-    return () => clearTimeout(timer);
-  }, []);
+  const { hotels, loading, error, total, searchHotels } = useHotels(searchFilters);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -78,13 +24,17 @@ export default function SearchScreen() {
             Mumbai • Mar 15-20 • 2 guests
           </Text>
           <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {hotels.length} properties found
+            {total} properties found
           </Text>
         </View>
       ),
       headerTitleAlign: 'left',
     });
-  }, [navigation, hotels.length]);
+  }, [navigation, total]);
+
+  const handleFilterChange = (newFilters: any) => {
+    setSearchFilters(prev => ({ ...prev, ...newFilters }));
+  };
 
   const renderHotelCard = (hotel: any) => (
     <TouchableOpacity 
@@ -96,7 +46,7 @@ export default function SearchScreen() {
         <Image
           source={{ uri: hotel.image }}
           className="w-full h-48"
-          resizeMode="cover"
+          style={{ resizeMode: 'cover' }}
         />
         {hotel.offer && (
           <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
@@ -119,7 +69,7 @@ export default function SearchScreen() {
             <View className="flex-row items-center mt-1">
               <MapPin size={14} color="#6B7280" />
               <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                {hotel.location}
+                {hotel.address || hotel.location}
               </Text>
             </View>
           </View>
@@ -208,8 +158,7 @@ export default function SearchScreen() {
                     sortBy: 'recommended'
                   },
                   onApplyFilters: (filters) => {
-                    console.log('Applied filters:', filters);
-                    // Here you would typically update the search results based on filters
+                    handleFilterChange(filters);
                   }
                 }
               })}
@@ -230,8 +179,10 @@ export default function SearchScreen() {
                 key={filter.id}
                 className="bg-gray-100 px-4 py-2 rounded-full"
                 onPress={() => {
-                  // Quick filter actions
-                  console.log('Quick filter:', filter.id);
+                  const quickFilters: any = {};
+                  if (filter.id === 'price') quickFilters.sortBy = 'price_low';
+                  if (filter.id === 'rating') quickFilters.rating = 4;
+                  handleFilterChange(quickFilters);
                 }}
               >
                 <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
@@ -247,10 +198,15 @@ export default function SearchScreen() {
       <ScrollView className="flex-1 px-4 py-4" showsVerticalScrollIndicator={false}>
         {loading ? (
           <View>
-            <HotelCardSkeleton />
-            <HotelCardSkeleton />
-            <HotelCardSkeleton />
-            <HotelCardSkeleton />
+            {Array.from({ length: 4 }).map((_, index) => (
+              <HotelCardSkeleton key={index} />
+            ))}
+          </View>
+        ) : error ? (
+          <View className="p-4 bg-red-50 rounded-lg">
+            <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              {error}
+            </Text>
           </View>
         ) : (
           <View>

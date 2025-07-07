@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { mockHotels, mockBookings, mockWishlistItems, getHotelById, getBookingById, searchHotels, filterHotels } from './mockData';
 
 const BASE_URL = 'https://hotel-booking-api.example.com/api';
 
@@ -135,10 +136,11 @@ class ApiService {
 
   private async getMockResponse<T>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
     // Simulate network delay
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
 
     const url = config.url || '';
     const method = config.method?.toUpperCase() || 'GET';
+    const params = config.params || {};
 
     // Mock responses based on endpoint
     if (url.includes('/auth/login')) {
@@ -179,75 +181,173 @@ class ApiService {
       };
     }
 
-    if (url.includes('/hotels')) {
+    if (url.includes('/hotels/search')) {
+      const searchQuery = params.query || '';
+      const location = params.location || '';
+      const filteredHotels = searchHotels(searchQuery).filter(hotel => 
+        !location || hotel.location.toLowerCase().includes(location.toLowerCase())
+      );
+      
       return {
         success: true,
         data: {
-          hotels: [
-            {
-              id: '1',
-              name: 'Grand Palace Hotel',
-              location: 'New York, NY',
-              rating: 4.8,
-              price: 299,
-              image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
-              amenities: ['WiFi', 'Pool', 'Spa', 'Restaurant'],
-              description: 'Luxury hotel in the heart of Manhattan'
-            },
-            {
-              id: '2',
-              name: 'Ocean View Resort',
-              location: 'Miami, FL',
-              rating: 4.6,
-              price: 199,
-              image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
-              amenities: ['Beach Access', 'Pool', 'Restaurant', 'Bar'],
-              description: 'Beautiful beachfront resort with stunning ocean views'
-            },
-            {
-              id: '3',
-              name: 'Mountain Lodge Retreat',
-              location: 'Aspen, CO',
-              rating: 4.9,
-              price: 399,
-              image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
-              amenities: ['Ski Access', 'Fireplace', 'Hot Tub', 'Restaurant'],
-              description: 'Cozy mountain retreat with breathtaking alpine views'
-            },
-            {
-              id: '4',
-              name: 'City Center Boutique',
-              location: 'San Francisco, CA',
-              rating: 4.7,
-              price: 249,
-              image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=600',
-              amenities: ['WiFi', 'Gym', 'Business Center', 'Rooftop Bar'],
-              description: 'Modern boutique hotel in the heart of downtown'
-            }
-          ]
+          hotels: filteredHotels,
+          total: filteredHotels.length,
+          page: params.page || 1,
+          limit: params.limit || 20
+        } as T,
+        message: 'Search results fetched successfully'
+      };
+    }
+
+    if (url.includes('/hotels/') && !url.includes('/search')) {
+      const hotelId = url.split('/hotels/')[1];
+      const hotel = getHotelById(hotelId);
+      
+      if (hotel) {
+        return {
+          success: true,
+          data: { hotel } as T,
+          message: 'Hotel details fetched successfully'
+        };
+      } else {
+        return {
+          success: false,
+          data: null,
+          error: 'Hotel not found'
+        };
+      }
+    }
+
+    if (url.includes('/hotels') && method === 'GET') {
+      const filteredHotels = filterHotels({
+        priceRange: params.priceRange,
+        rating: params.rating,
+        amenities: params.amenities,
+        location: params.location
+      });
+      
+      return {
+        success: true,
+        data: {
+          hotels: filteredHotels,
+          total: filteredHotels.length,
+          page: params.page || 1,
+          limit: params.limit || 20
         } as T,
         message: 'Hotels fetched successfully'
       };
     }
 
-    if (url.includes('/bookings')) {
+    if (url.includes('/bookings/') && method === 'GET') {
+      const bookingId = url.split('/bookings/')[1].split('/')[0];
+      const booking = getBookingById(bookingId);
+      
+      if (booking) {
+        return {
+          success: true,
+          data: { booking } as T,
+          message: 'Booking details fetched successfully'
+        };
+      } else {
+        return {
+          success: false,
+          data: null,
+          error: 'Booking not found'
+        };
+      }
+    }
+
+    if (url.includes('/bookings') && method === 'GET') {
       return {
         success: true,
         data: {
-          bookings: [
-            {
-              id: '1',
-              hotelName: 'Grand Palace Hotel',
-              checkIn: '2024-02-15',
-              checkOut: '2024-02-18',
-              guests: 2,
-              status: 'confirmed',
-              totalAmount: 897,
-              image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=300'
-            }
-          ]
+          bookings: mockBookings,
+          total: mockBookings.length
         } as T,
         message: 'Bookings fetched successfully'
+      };
+    }
+
+    if (url.includes('/bookings') && method === 'POST') {
+      const newBooking = {
+        id: `booking_${Date.now()}`,
+        ...config.data,
+        status: 'confirmed',
+        bookingDate: new Date().toISOString().split('T')[0],
+        bookingReference: `BK${Date.now().toString().slice(-6)}`
+      };
+      
+      return {
+        success: true,
+        data: { booking: newBooking } as T,
+        message: 'Booking created successfully'
+      };
+    }
+
+    if (url.includes('/bookings/') && url.includes('/cancel') && method === 'PATCH') {
+      return {
+        success: true,
+        data: { status: 'cancelled' } as T,
+        message: 'Booking cancelled successfully'
+      };
+    }
+
+    if (url.includes('/wishlist')) {
+      if (method === 'GET') {
+        return {
+          success: true,
+          data: {
+            items: mockWishlistItems,
+            total: mockWishlistItems.length
+          } as T,
+          message: 'Wishlist fetched successfully'
+        };
+      }
+      
+      if (method === 'POST') {
+        return {
+          success: true,
+          data: { added: true } as T,
+          message: 'Added to wishlist'
+        };
+      }
+      
+      if (method === 'DELETE') {
+        return {
+          success: true,
+          data: { removed: true } as T,
+          message: 'Removed from wishlist'
+        };
+      }
+    }
+
+    if (url.includes('/user/profile') && method === 'PUT') {
+      return {
+        success: true,
+        data: {
+          user: {
+            ...config.data,
+            id: '1',
+            updatedAt: new Date().toISOString()
+          }
+        } as T,
+        message: 'Profile updated successfully'
+      };
+    }
+
+    if (url.includes('/reviews/') && method === 'GET') {
+      const hotelId = url.split('/reviews/')[1];
+      const hotel = getHotelById(hotelId);
+      
+      return {
+        success: true,
+        data: {
+          reviews: hotel?.reviews || [],
+          total: hotel?.reviews?.length || 0,
+          averageRating: hotel?.rating || 0
+        } as T,
+        message: 'Reviews fetched successfully'
       };
     }
 

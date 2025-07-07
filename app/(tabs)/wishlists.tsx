@@ -3,6 +3,9 @@ import React, { useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
+import { useWishlist } from '@/hooks/useWishlist';
+import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader';
+import { router } from 'expo-router';
 
 // Add Circle Outline Icon
 const AddCircleOutlineIcon = ({ size = 24, color = "#6B7280" }) => (
@@ -21,6 +24,7 @@ const FavoriteIcon = ({ size = 24, color = "#EF4444" }) => (
 const WishlistScreen = () => {
 
     const navigation = useNavigation()
+    const { items, loading, error, removeFromWishlist, refresh } = useWishlist()
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -31,97 +35,121 @@ const WishlistScreen = () => {
           headerTitleAlign: 'center',
         });
       }, [navigation]);
-  const wishlistItems = [
-    {
-      id: 1,
-      location: "Kyoto, Japan",
-      type: "Entire cabin",
-      dates: "Mar 18 - 22",
-      price: "$250",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDz8FUZn4utBj-BsdWdx0zuhGNB7AcdzF6MPa-Yo_USJpUd5yCxmwt3eFYXqggKy6eAd9-jWfNA0-bBTp7x0l2qG3aA-oGzyd3K8IgCB3h04B_Svb5uajfSkKSnvTXNi7eSJSPLTyGFtku4BX60MFKB48kBs23xh43n_es_sIPD-1GG96gLmI7mZ8Izd7hnKPAKvg5FHWuyqM-SuINh1tvN1kDkEgWh4YRzhgBgMwU1lxUYdKbd4kX4jz5Mm-rVXOC8ga01dS31zA"
-    },
-    {
-      id: 2,
-      location: "Santorini, Greece",
-      type: "Beachfront villa",
-      dates: "Aug 26 - 30",
-      price: "$480",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDLlATEfBog3Cff42YfKgtzx7JtVLbKRTaNhEpTd4rka30tpYeT_sf_3QsF3aF-Ww2IPzO7ReBnt6TwqGrIgacHtcyeNaeKxcyns161-ONOoGOu44C_i50Irfy4CjuEoWlJ7oNq7US9KbDSBcL7LjhxFDgfFpZm3kWOar6L7JU9vadhBIirvMlMVYdQ4-69EMQxG6PoBiVwuqypSfBu93OtHuNfkvFG4Y1hyiQWRqLsfIIwJjWQujK9p7g_--uO800Me8c2gDayJg"
-    },
-    {
-      id: 3,
-      location: "Rio de Janeiro, Brazil",
-      type: "Penthouse apartment",
-      dates: "Jun 29 - Jul 3",
-      price: "$320",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuApEtNg86i6My7-ux27lHtrPI85e8kYLMhn9UirsvK_0vcmpJ9LS4rJROkf8hjMwQ-s3eO0GPPTHMObHEhad8ZUpiHrdpFOJ0enNYKqfiK-5Zq0AwMHsM4gEZjAO9fEvZ5igPPcaifljYLBClgjj4Dx8pGt44K1I2AiTUfX_fYKMpWPMfckaV0zRb3NxLBIvPXmZloGwT0cRe3SW677FsrYNvJ3g2gPBlahZVbDuMnZXfixM419MOAf5RlDlDvXrTa6U8srmfV2Eg"
-    },
-    {
-      id: 4,
-      location: "Barcelona, Spain",
-      type: "Chic city apartment",
-      dates: "Aug 4 - 8",
-      price: "$180",
-      image: "https://lh3.googleusercontent.com/aida-public/AB6AXuCZZ06W77syx4VO6fDACpQH_S-aQSOy5k76-Be2O7syXg-GqxrXcf2DoAnjiYLAhBWNfganWKOcNmcPKMPbZCd9v3Psh7_O0-jjQJTy36s8p8ufwJ17kdlXxh-gzJ5dp_-NZN-5v3lJtz0nuqgquuTvDIWEnEQj-1t5UXORZg7JUazyqAgiJywTB3MmUck0JRyQqMp5ow7NiPZFvNgOYkS-6ooK0pHVXy-t5MaLrh537D5AO4m53Kp0ocE54hDAjG6cQDc3KSvgMg"
+
+  const handleRemoveFromWishlist = async (itemId: string) => {
+    try {
+      await removeFromWishlist(itemId);
+    } catch (error) {
+      console.error('Failed to remove from wishlist:', error);
     }
-  ];
+  };
 
   return (
   
       <ScrollView className="flex-1 bg-white">
-        {/* Header */}
-     
-
         {/* Wishlist Items */}
         <View className="px-4 gap-4 ">
-          {wishlistItems.map((item) => (
-            <View key={item.id} className="flex-row items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100">
-              <Image
-                source={{ uri: item.image }}
-                className="w-24 h-24 rounded-lg"
-                resizeMode="cover"
-              />
-              
-              <View className="flex-1 ml-4 justify-center">
-                <Text 
-                  className="text-gray-900 text-lg leading-tight mb-1"
-                  style={{ fontFamily: 'PlusJakartaSans-Bold' }}
-                >
-                  {item.location}
+          {loading ? (
+            Array.from({ length: 4 }).map((_, index) => (
+              <BookingCardSkeleton key={index} />
+            ))
+          ) : error ? (
+            <View className="p-4 bg-red-50 rounded-lg">
+              <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                {error}
+              </Text>
+              <TouchableOpacity onPress={refresh} className="mt-2">
+                <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Try Again
                 </Text>
-                <Text 
-                  className="text-gray-500 text-sm"
-                  style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                >
-                  {item.type}
-                </Text>
-                <Text 
-                  className="text-gray-500 text-sm"
-                  style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                >
-                  {item.dates}
-                </Text>
-                <View className="flex-row items-baseline mt-1">
-                  <Text 
-                    className="text-gray-900 text-base"
-                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                  >
-                    {item.price}
-                  </Text>
-                  <Text 
-                    className="text-gray-900 text-base ml-1"
-                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                  >
-                    night
-                  </Text>
-                </View>
-              </View>
-              
-              <TouchableOpacity className="p-2">
-                <FavoriteIcon size={24} color="#EF4444" />
               </TouchableOpacity>
             </View>
-          ))}
+          ) : items.length === 0 ? (
+            <View className="flex-1 items-center justify-center py-20">
+              <View className="mb-6">
+                <Image
+                  source={{
+                    uri: "https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=300"
+                  }}
+                  className="w-48 h-48"
+                  style={{ resizeMode: 'contain' }}
+                />
+              </View>
+              <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                No saved hotels yet
+              </Text>
+              <Text className="text-gray-600 text-center mb-8" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Start exploring and save your favorite hotels to your wishlist
+              </Text>
+              <TouchableOpacity 
+                className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+                onPress={() => router.push('/(tabs)/search')}
+              >
+                <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Explore Hotels
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            items.map((item) => (
+              <TouchableOpacity 
+                key={item.id} 
+                className="flex-row items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100"
+                onPress={() => router.push(`/hotels/${item.hotelId}`)}
+              >
+                <Image
+                  source={{ uri: item.image }}
+                  className="w-24 h-24 rounded-lg"
+                  style={{ resizeMode: 'cover' }}
+                />
+                
+                <View className="flex-1 ml-4 justify-center">
+                  <Text 
+                    className="text-gray-900 text-lg leading-tight mb-1"
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                  >
+                    {item.hotelName}
+                  </Text>
+                  <Text 
+                    className="text-gray-500 text-sm"
+                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                  >
+                    {item.location}
+                  </Text>
+                  <View className="flex-row items-center mt-1">
+                    <Text className="text-yellow-500">★</Text>
+                    <Text 
+                      className="text-gray-600 text-sm ml-1"
+                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+                    >
+                      {item.rating}
+                    </Text>
+                  </View>
+                  <View className="flex-row items-baseline mt-1">
+                    <Text 
+                      className="text-gray-900 text-base"
+                      style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                    >
+                      ₹{item.price.toLocaleString()}
+                    </Text>
+                    <Text 
+                      className="text-gray-900 text-base ml-1"
+                      style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                    >
+                      /night
+                    </Text>
+                  </View>
+                </View>
+                
+                <TouchableOpacity 
+                  className="p-2"
+                  onPress={() => handleRemoveFromWishlist(item.id)}
+                >
+                  <FavoriteIcon size={24} color="#EF4444" />
+                </TouchableOpacity>
+              </TouchableOpacity>
+            ))
+          )}
         </View>
       </ScrollView>
 

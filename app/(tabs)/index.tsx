@@ -5,6 +5,8 @@ import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
 import { Search, Star } from "lucide-react-native"
+import { useHotels } from '@/hooks/useHotels';
+import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -106,106 +108,10 @@ const StarIcon = ({ size = 16, color = "#EAB308" }) => (
   </Svg>
 )
 
-// Mock hotel data similar to explore tab
-const nearbyHotels = [
-  {
-    id: '1',
-    name: 'The Oberoi Mumbai',
-    location: 'Nariman Point, Mumbai',
-    rating: 4.8,
-    reviewCount: 1247,
-    price: 15000,
-    originalPrice: 18000,
-    image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: '2.1 km away',
-    offer: '20% OFF Summer Special'
-  },
-  {
-    id: '2',
-    name: 'Taj Mahal Palace',
-    location: 'Colaba, Mumbai',
-    rating: 4.9,
-    reviewCount: 2156,
-    price: 25000,
-    image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: '1.5 km away'
-  },
-  {
-    id: '3',
-    name: 'ITC Grand Central',
-    location: 'Parel, Mumbai',
-    rating: 4.7,
-    reviewCount: 892,
-    price: 12000,
-    image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: '3.2 km away'
-  },
-  {
-    id: '4',
-    name: 'The St. Regis Mumbai',
-    location: 'Lower Parel, Mumbai',
-    rating: 4.8,
-    reviewCount: 1543,
-    price: 22000,
-    image: 'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: '2.8 km away'
-  }
-];
-
-const latestHotels = [
-  {
-    id: '5',
-    name: 'Grand Hyatt Goa',
-    location: 'Bambolim, Goa',
-    rating: 4.6,
-    reviewCount: 987,
-    price: 8500,
-    image: 'https://images.pexels.com/photos/1134176/pexels-photo-1134176.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: 'Beachfront location',
-    offer: 'Limited Time: Free Breakfast'
-  },
-  {
-    id: '6',
-    name: 'The Leela Palace',
-    location: 'New Delhi',
-    rating: 4.9,
-    reviewCount: 1876,
-    price: 18000,
-    image: 'https://images.pexels.com/photos/1838554/pexels-photo-1838554.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: 'City center'
-  }
-];
-
-const offerHotels = [
-  {
-    id: '7',
-    name: 'Luxury Resort Udaipur',
-    location: 'Lake Pichola, Udaipur',
-    rating: 4.8,
-    reviewCount: 1432,
-    price: 14000,
-    originalPrice: 20000,
-    image: 'https://images.pexels.com/photos/1134176/pexels-photo-1134176.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: 'Lakefront paradise',
-    offer: '30% OFF Palace Experience'
-  },
-  {
-    id: '8',
-    name: 'Beach Resort Kerala',
-    location: 'Kovalam, Kerala',
-    rating: 4.7,
-    reviewCount: 1098,
-    price: 9500,
-    originalPrice: 13000,
-    image: 'https://images.pexels.com/photos/1838554/pexels-photo-1838554.jpeg?auto=compress&cs=tinysrgb&w=600',
-    distance: 'Beachfront location',
-    offer: 'Free Ayurveda Treatment'
-  }
-];
-
 export default function HotelBookingApp() {
   const [activeTab, setActiveTab] = useState('nearby')
   const navigation = useNavigation()
+  const { hotels, loading, error, refresh } = useHotels()
 
   // Hide the default header
   useLayoutEffect(() => {
@@ -263,15 +169,17 @@ export default function HotelBookingApp() {
   }, [navigation]);
 
   const getCurrentHotels = () => {
+    if (loading || !hotels.length) return [];
+    
     switch (activeTab) {
       case 'nearby':
-        return nearbyHotels
+        return hotels.filter(hotel => hotel.location.includes('Mumbai')).slice(0, 4)
       case 'latest':
-        return latestHotels
+        return hotels.slice(0, 2)
       case 'offers':
-        return offerHotels
+        return hotels.filter(hotel => hotel.offer).slice(0, 2)
       default:
-        return nearbyHotels
+        return hotels.slice(0, 4)
     }
   }
 
@@ -281,7 +189,7 @@ export default function HotelBookingApp() {
         <Image
           source={{ uri: hotel.image }}
           className="w-full h-48"
-          resizeMode="cover"
+          style={{ resizeMode: 'cover' }}
         />
         {hotel.offer && (
           <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
@@ -347,7 +255,7 @@ export default function HotelBookingApp() {
         <Image
           source={{ uri: hotel.image }}
           className="w-full h-48 rounded-xl"
-          resizeMode="cover"
+          style={{ resizeMode: 'cover' }}
         />
         <TouchableOpacity className="absolute top-3 right-3 rounded-full bg-white/80 p-2">
           <HeartIcon size={18} color="#EF4444" />
@@ -412,7 +320,26 @@ export default function HotelBookingApp() {
         {/* Hotel Listings */}
         <View className="px-4 py-4">
           <View className="gap-6">
-            {getCurrentHotels().map(renderHotelCard)}
+            {loading ? (
+              <>
+                <HotelCardSkeleton />
+                <HotelCardSkeleton />
+                <HotelCardSkeleton />
+              </>
+            ) : error ? (
+              <View className="p-4 bg-red-50 rounded-lg">
+                <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  {error}
+                </Text>
+                <TouchableOpacity onPress={refresh} className="mt-2">
+                  <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    Try Again
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              getCurrentHotels().map(renderHotelCard)
+            )}
           </View>
         </View>
 
@@ -429,10 +356,10 @@ export default function HotelBookingApp() {
             </View>
             <ImageBackground
               source={{
-                uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuC1uDq5Yc4tqP576GVTNZ2-I4zrkBJgbBPzsB6JiUruj8-j06sjA2CcJUjEs29Cu3oMJZjs0WsU49YTBRskY2UWQZzGHt0KTBjz9zqi4HMO2bSVaTxALB_tSiCMsdPGQboWfeme7jmpP6DYHBCUNFUlpHl5UAWLc_s8-uN_N9gzbV1wJi2JfT5oYkfprUyuSmslOhYU4EahEIEACNKjmS8KoE6yqsnf7AjyAPCA_zncEKdX2QaEIDlsnHtbwRnVFeL93D19FJ963w",
+                uri: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=300"
               }}
               className="w-20 h-20 rounded-lg"
-              resizeMode="cover"
+              style={{ resizeMode: 'cover' }}
             />
           </View>
         </View>
@@ -442,7 +369,14 @@ export default function HotelBookingApp() {
           <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Featured Hotels</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-4">
             <View className="flex-row">
-              {[...nearbyHotels.slice(0, 2), ...latestHotels.slice(0, 1)].map(renderCompactHotelCard)}
+              {loading ? (
+                <>
+                  <HotelCardSkeleton />
+                  <HotelCardSkeleton />
+                </>
+              ) : (
+                hotels.slice(0, 3).map(renderCompactHotelCard)
+              )}
             </View>
           </ScrollView>
         </View>

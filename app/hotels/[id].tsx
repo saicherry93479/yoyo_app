@@ -11,10 +11,41 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation } from 'expo-router';
 import { SheetManager } from 'react-native-actions-sheet';
+import { useLocalSearchParams } from 'expo-router';
+import { useState, useEffect } from 'react';
+import { apiService } from '@/services/api';
+import { MockHotel } from '@/services/mockData';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const HotelDetails = () => {
-
+    const { id } = useLocalSearchParams();
     const navigation = useNavigation()
+    const [hotel, setHotel] = useState<MockHotel | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+
+    useEffect(() => {
+      fetchHotelDetails();
+    }, [id]);
+
+    const fetchHotelDetails = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await apiService.get(`/hotels/${id}`);
+        
+        if (response.success) {
+          setHotel(response.data.hotel);
+        } else {
+          setError(response.error || 'Failed to fetch hotel details');
+        }
+      } catch (err: any) {
+        setError(err.message || 'An error occurred');
+      } finally {
+        setLoading(false);
+      }
+    };
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -26,6 +57,28 @@ const HotelDetails = () => {
         });
       }, [navigation]);
     
+  if (loading) {
+    return <LoadingSpinner fullScreen text="Loading hotel details..." />;
+  }
+
+  if (error || !hotel) {
+    return (
+      <SafeAreaView className="flex-1 bg-white items-center justify-center">
+        <Text className="text-lg text-gray-500 mb-4" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+          {error || 'Hotel not found'}
+        </Text>
+        <TouchableOpacity 
+          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Go Back
+          </Text>
+        </TouchableOpacity>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="light-content" />
@@ -36,10 +89,10 @@ const HotelDetails = () => {
       <View className="relative">
         <Image
           source={{
-            uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuA2uTYzO0L3GRFX4La-rHJ76ayo4lExcSUVa6ryaKYO8ge2RCA-q7wVtU0nPk5Qmu5u_CH0xfCTkES_rUNauPJwL9wbZvoutemXXl6nDkPrEUNJUn69e7a8srMGLqNbk6hDXsmgo35YB_ZXHIKvAdTP-0_gApz7vdej-CDaJQLFfynYPRZ3zKxpGFiqQDkMikLC_cxm_jd8WyGmiE9LW7cPBGs6dlti4cbt5O6Nhknf5CfwLK5bKQfJpjZpKM_48hTHbtoMqqP1gA'
+            uri: hotel.images[currentImageIndex]
           }}
           className="w-full h-80"
-          resizeMode="cover"
+          style={{ resizeMode: 'cover' }}
         />
         
         {/* Overlay */}
@@ -48,10 +101,9 @@ const HotelDetails = () => {
         
         {/* Image Indicators */}
         <View className="absolute bottom-5 left-0 right-0 flex-row justify-center gap-2">
-          <View className="w-8 h-2 bg-white rounded-full" />
-          <View className="w-2 h-2 bg-white/50 rounded-full" />
-          <View className="w-2 h-2 bg-white/50 rounded-full" />
-          <View className="w-2 h-2 bg-white/50 rounded-full" />
+          {hotel.images.map((_, index) => (
+            <View key={index} className={`h-2 rounded-full ${index === currentImageIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`} />
+          ))}
         </View>
       </View>
 
@@ -60,16 +112,16 @@ const HotelDetails = () => {
           <View className="flex-row items-start justify-between">
             <View className="flex-1">
               <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                The Grand Budapest Hotel
+                {hotel.name}
               </Text>
               <Text className="mt-1 text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                123 Main Street, Budapest
+                {hotel.address}
               </Text>
             </View>
             
             <View className="flex-row items-center gap-1">
               <Ionicons name="star" size={20} color="#facc15" />
-              <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>4.8</Text>
+              <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{hotel.rating}</Text>
             </View>
           </View>
         </View>
@@ -79,41 +131,16 @@ const HotelDetails = () => {
           <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Amenities</Text>
           
           <View className="mt-4 flex-row flex-wrap">
-            <View className="w-1/2 mb-4">
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
-                  <Ionicons name="wifi" size={24} color="#57534e" />
+            {hotel.amenities.slice(0, 4).map((amenity, index) => (
+              <View key={index} className="w-1/2 mb-4">
+                <View className="flex-row items-center gap-3">
+                  <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
+                    <Ionicons name="checkmark" size={24} color="#57534e" />
+                  </View>
+                  <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{amenity}</Text>
                 </View>
-                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Free Wi-Fi</Text>
               </View>
-            </View>
-            
-            <View className="w-1/2 mb-4">
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
-                  <Ionicons name="water" size={24} color="#57534e" />
-                </View>
-                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Swimming Pool</Text>
-              </View>
-            </View>
-            
-            <View className="w-1/2 mb-4">
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
-                  <Ionicons name="fitness" size={24} color="#57534e" />
-                </View>
-                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Fitness Center</Text>
-              </View>
-            </View>
-            
-            <View className="w-1/2 mb-4">
-              <View className="flex-row items-center gap-3">
-                <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
-                  <Ionicons name="leaf" size={24} color="#57534e" />
-                </View>
-                <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Spa</Text>
-              </View>
-            </View>
+            ))}
           </View>
           
           {/* <TouchableOpacity className="mt-5 flex-row items-center justify-between"> */}
@@ -135,15 +162,18 @@ const HotelDetails = () => {
           
           <View className="mt-4 flex-row items-center gap-8">
             <View className="items-center gap-1">
-              <Text className="text-5xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>4.8</Text>
+              <Text className="text-5xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{hotel.rating}</Text>
               <View className="flex-row gap-0.5">
-                <Ionicons name="star" size={16} color="#facc15" />
-                <Ionicons name="star" size={16} color="#facc15" />
-                <Ionicons name="star" size={16} color="#facc15" />
-                <Ionicons name="star" size={16} color="#facc15" />
-                <Ionicons name="star-outline" size={16} color="#d6d3d1" />
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <Ionicons 
+                    key={index}
+                    name={index < Math.floor(hotel.rating) ? "star" : "star-outline"} 
+                    size={16} 
+                    color={index < Math.floor(hotel.rating) ? "#facc15" : "#d6d3d1"} 
+                  />
+                ))}
               </View>
-              <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>234 reviews</Text>
+              <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.reviewCount} reviews</Text>
             </View>
             
             <View className="flex-1">
@@ -184,20 +214,20 @@ const HotelDetails = () => {
             <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
               <Image
                 source={{
-                  uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBfyxfIOBMacLOyDlVCThN5uSQcxXIdinGXTfJL1NdGuYdvSZIH0e2nJnJSK4yF6lxWXqzrYy7_xxzlnqQUvQYb0bF7GQFU3AFhRBQHaDhvvzZNe2R4BAH7IP_Z6FzLumUd89uEwhNhCk3S65lKcxHTuYVLuuu7996kRmkDgzRrwYkdgl-RR8iT2qHgSmksoRmUetDWYFwCaFeql3ZroQDRzXd-ddoQD4Sj2dZQaXT5kxvbvlp3cZ7quXlOE3KTDy2Em6t720jmsg'
+                  uri: hotel.rooms[0]?.images[0] || hotel.images[0]
                 }}
                 className="w-24 h-24 rounded-lg"
-                resizeMode="cover"
+                style={{ resizeMode: 'cover' }}
               />
               <View className="flex-1">
                 <Text className="text-sm text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                   Upgrade Available
                 </Text>
                 <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  Deluxe Suite
+                  {hotel.rooms[0]?.type || 'Premium Room'}
                 </Text>
                 <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  Spacious suite with city view
+                  {hotel.rooms[0]?.description || 'Upgraded accommodation with premium amenities'}
                 </Text>
                 <TouchableOpacity onPressIn={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
                   <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Upgrade</Text>
@@ -209,20 +239,20 @@ const HotelDetails = () => {
             <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
               <Image
                 source={{
-                  uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuB6VQ0j4vJGSCenenE0QY6NkP5OOTHVd6FEhWho3iSckPS_xK-Lh0Lot36o39q-Lbr4ycSSLoP_Bdx6WP5nqZet8Qnf876Yw4-13VbCxjLRodyTWL2wxbIrdVkwSsXAlUl2QJDYg7HmfI5b2G9Jda-eeyW8mSt2jvoNJ6FjTOUQguK5Zb8dyC6hOYVb40qDvKsSSkMbb_DMhLjOQdqT-wVnpZ_VOKB0MlQXpfa27qqewUkxmKKYUnIOcT9p1h5kSZt7RDPeNFWyOw'
+                  uri: hotel.rooms[1]?.images[0] || hotel.images[1]
                 }}
                 className="w-24 h-24 rounded-lg"
-                resizeMode="cover"
+                style={{ resizeMode: 'cover' }}
               />
               <View className="flex-1">
                 <Text className="text-sm text-stone-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                   Room Available
                 </Text>
                 <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  Executive Room
+                  {hotel.rooms[1]?.type || 'Standard Room'}
                 </Text>
                 <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  Business-class room
+                  {hotel.rooms[1]?.description || 'Comfortable accommodation with essential amenities'}
                 </Text>
                 <TouchableOpacity onPressIn={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
                   <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book</Text>
@@ -238,7 +268,7 @@ const HotelDetails = () => {
       <View className="bg-white p-4 shadow-lg border-t border-stone-100">
         <View className="flex-row items-center justify-between">
           <View>
-            <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>$250</Text>
+            <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>₹{hotel.price.toLocaleString()}</Text>
             <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
           </View>
           
