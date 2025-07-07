@@ -150,38 +150,70 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
             </TouchableOpacity>
           </View>
 
-          {/* Calendar */}
-          <View className="flex-1">
-            <CalendarList
+          {/* Calendar - Using Calendar instead of CalendarList for better rendering */}
+          <View className="flex-1 px-4 py-4">
+            <Calendar
               onDayPress={onDayPress}
               markingType="period"
               markedDates={getMarkedDates()}
               minDate={today}
+              enableSwipeMonths={true}
+              hideArrows={false}
+              hideExtraDays={true}
+              disableMonthChange={false}
+              firstDay={1}
+              hideDayNames={false}
+              showWeekNumbers={false}
+              onPressArrowLeft={(subtractMonth) => subtractMonth()}
+              onPressArrowRight={(addMonth) => addMonth()}
+              disableArrowLeft={false}
+              disableArrowRight={false}
               theme={{
                 backgroundColor: '#ffffff',
                 calendarBackground: '#ffffff',
-                textSectionTitleColor: '#b6c1cd',
+                textSectionTitleColor: '#9CA3AF',
+                textSectionTitleDisabledColor: '#D1D5DB',
                 selectedDayBackgroundColor: '#FF5A5F',
                 selectedDayTextColor: '#ffffff',
                 todayTextColor: '#FF5A5F',
-                dayTextColor: '#2d4150',
-                textDisabledColor: '#d9e1e8',
+                dayTextColor: '#374151',
+                textDisabledColor: '#D1D5DB',
                 dotColor: '#FF5A5F',
                 selectedDotColor: '#ffffff',
                 arrowColor: '#FF5A5F',
-                disabledArrowColor: '#d9e1e8',
-                monthTextColor: '#2d4150',
+                disabledArrowColor: '#D1D5DB',
+                monthTextColor: '#111827',
                 indicatorColor: '#FF5A5F',
                 textDayFontFamily: 'PlusJakartaSans-Regular',
                 textMonthFontFamily: 'PlusJakartaSans-SemiBold',
                 textDayHeaderFontFamily: 'PlusJakartaSans-Medium',
                 textDayFontSize: 16,
                 textMonthFontSize: 18,
-                textDayHeaderFontSize: 14,
+                textDayHeaderFontSize: 13,
+                textDayFontWeight: '400',
+                textMonthFontWeight: '600',
+                textDayHeaderFontWeight: '500',
+                // Additional styling
+                'stylesheet.calendar.header': {
+                  week: {
+                    marginTop: 5,
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                  },
+                },
+                'stylesheet.calendar.main': {
+                  container: {
+                    paddingLeft: 5,
+                    paddingRight: 5,
+                  },
+                  week: {
+                    marginTop: 2,
+                    marginBottom: 2,
+                    flexDirection: 'row',
+                    justifyContent: 'space-around',
+                  },
+                },
               }}
-              horizontal={true}
-              pagingEnabled={true}
-              calendarWidth={screenWidth}
             />
           </View>
 
