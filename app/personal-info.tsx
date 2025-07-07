@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Camera, User, Mail, Phone, MapPin, Calendar, Edit3 } from 'lucide-react-native';
+import { ArrowLeft, Camera, User, Mail, Phone, MapPin, Calendar, LocationEdit as Edit3 } from 'lucide-react-native';
 
 export default function PersonalInfoScreen() {
   const navigation = useNavigation();
