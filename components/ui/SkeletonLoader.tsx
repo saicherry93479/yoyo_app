@@ -65,11 +65,15 @@ export function HotelCardSkeleton() {
 export function BookingCardSkeleton() {
   return (
     <View style={styles.bookingCard}>
-      <SkeletonLoader width={80} height={80} borderRadius={8} />
+      <SkeletonLoader width={100} height={100} borderRadius={12} />
       <View style={styles.bookingCardContent}>
-        <SkeletonLoader width="70%" height={18} />
-        <SkeletonLoader width="50%" height={14} style={{ marginTop: 6 }} />
-        <SkeletonLoader width="40%" height={14} style={{ marginTop: 6 }} />
+        <SkeletonLoader width="80%" height={20} />
+        <SkeletonLoader width="60%" height={16} style={{ marginTop: 8 }} />
+        <SkeletonLoader width="40%" height={16} style={{ marginTop: 8 }} />
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 12 }}>
+          <SkeletonLoader width={80} height={16} />
+          <SkeletonLoader width={60} height={20} />
+        </View>
       </View>
     </View>
   );
@@ -118,14 +122,16 @@ const styles = StyleSheet.create({
   bookingCard: {
     flexDirection: 'row',
     backgroundColor: 'white',
-    borderRadius: 12,
+    borderRadius: 16,
     padding: 16,
-    marginBottom: 12,
+    marginBottom: 16,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 2,
-    elevation: 2,
+    shadowRadius: 4,
+    elevation: 3,
+    borderWidth: 1,
+    borderColor: '#F3F4F6',
   },
   bookingCardContent: {
     flex: 1,

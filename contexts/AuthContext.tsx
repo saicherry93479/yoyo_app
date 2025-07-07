@@ -55,14 +55,14 @@ interface AuthProviderProps {
 // }
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(
-    null
-//     {
-//   id: "DLJSJOIF",
-//   name: 'sai',
-//   email: 'saicherry93479@gmail.com',
-//   phone: "+919515234212",
-//   hasOnboarded: true
-// }
+    {
+      id: "DLJSJOIF",
+      name: 'Sophia Carter',
+      email: 'sophia.carter@example.com',
+      phone: "+919515234212",
+      hasOnboarded: true,
+      avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=200'
+    }
   );
   const [isLoading, setIsLoading] = useState(true);
 

@@ -12,7 +12,7 @@ interface LoadingSpinnerProps {
 
 export function LoadingSpinner({ 
   size = 'large', 
-  color = '#007AFF', 
+  color = '#FF5A5F', 
   text,
   fullScreen = false 
 }: LoadingSpinnerProps) {

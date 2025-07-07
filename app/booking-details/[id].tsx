@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,103 +11,38 @@ import {
 import { useLocalSearchParams, useNavigation, router } from 'expo-router';
 import { SheetManager } from 'react-native-actions-sheet';
 import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, Share2 } from 'lucide-react-native';
-
-// Mock booking data - in real app, this would come from API
-const getBookingById = (id: string) => {
-  const bookings = {
-    '1': {
-      id: '1',
-      hotelName: 'The Oberoi Mumbai',
-      location: 'Nariman Point, Mumbai',
-      checkIn: '2024-03-15',
-      checkOut: '2024-03-18',
-      guests: 2,
-      status: 'confirmed',
-      totalAmount: 45000,
-      image: 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bookingDate: '2024-02-10',
-      roomType: 'Deluxe Ocean View',
-      nights: 3,
-      bookingReference: 'OB2024001',
-      hotelPhone: '+91 22 6632 5757',
-      hotelEmail: 'reservations@oberoihotels.com',
-      address: 'Nariman Point, Mumbai, Maharashtra 400021',
-      amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym', 'Business Center'],
-      cancellationPolicy: 'Free cancellation until 24 hours before check-in',
-      priceBreakdown: {
-        roomRate: 12000,
-        nights: 3,
-        subtotal: 36000,
-        taxes: 6480,
-        serviceFee: 2520,
-        total: 45000
-      }
-    },
-    '2': {
-      id: '2',
-      hotelName: 'Taj Mahal Palace',
-      location: 'Colaba, Mumbai',
-      checkIn: '2024-04-20',
-      checkOut: '2024-04-23',
-      guests: 2,
-      status: 'upcoming',
-      totalAmount: 75000,
-      image: 'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bookingDate: '2024-02-15',
-      roomType: 'Heritage Suite',
-      nights: 3,
-      bookingReference: 'TMP2024002',
-      hotelPhone: '+91 22 6665 3366',
-      hotelEmail: 'reservations.mumbai@tajhotels.com',
-      address: 'Apollo Bunder, Colaba, Mumbai, Maharashtra 400001',
-      amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym', 'Concierge'],
-      cancellationPolicy: 'Free cancellation until 48 hours before check-in',
-      priceBreakdown: {
-        roomRate: 20000,
-        nights: 3,
-        subtotal: 60000,
-        taxes: 10800,
-        serviceFee: 4200,
-        total: 75000
-      }
-    },
-    '3': {
-      id: '3',
-      hotelName: 'Grand Hyatt Goa',
-      location: 'Bambolim, Goa',
-      checkIn: '2024-01-10',
-      checkOut: '2024-01-14',
-      guests: 4,
-      status: 'completed',
-      totalAmount: 32000,
-      image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=600',
-      bookingDate: '2023-12-20',
-      roomType: 'Family Suite',
-      nights: 4,
-      bookingReference: 'GHG2024003',
-      hotelPhone: '+91 832 2717 1234',
-      hotelEmail: 'goa.grand@hyatt.com',
-      address: 'P.O. Bambolim, Goa 403202',
-      amenities: ['Free WiFi', 'Pool', 'Beach Access', 'Restaurant', 'Kids Club'],
-      cancellationPolicy: 'Non-refundable booking',
-      priceBreakdown: {
-        roomRate: 6500,
-        nights: 4,
-        subtotal: 26000,
-        taxes: 4680,
-        serviceFee: 1320,
-        total: 32000
-      }
-    }
-  };
-  
-  return bookings[id as keyof typeof bookings] || null;
-};
+import { apiService } from '@/services/api';
+import { MockBooking } from '@/services/mockData';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const BookingDetails = () => {
   const { id } = useLocalSearchParams();
   const navigation = useNavigation();
-  const booking = getBookingById(id as string);
+  const [booking, setBooking] = useState<MockBooking | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchBookingDetails();
+  }, [id]);
+
+  const fetchBookingDetails = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.get(`/bookings/${id}`);
+      
+      if (response.success) {
+        setBooking(response.data.booking);
+      } else {
+        setError(response.error || 'Failed to fetch booking details');
+      }
+    } catch (err: any) {
+      setError(err.message || 'An error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -121,12 +56,24 @@ const BookingDetails = () => {
     });
   }, [navigation]);
 
-  if (!booking) {
+  if (loading) {
+    return <LoadingSpinner fullScreen text="Loading booking details..." />;
+  }
+
+  if (error || !booking) {
     return (
-      <SafeAreaView className="flex-1 bg-white items-center justify-center">
-        <Text className="text-lg text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-          Booking not found
+      <SafeAreaView className="flex-1 bg-white items-center justify-center px-6">
+        <Text className="text-lg text-gray-500 mb-4 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+          {error || 'Booking not found'}
         </Text>
+        <TouchableOpacity 
+          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          onPress={() => router.back()}
+        >
+          <Text className="text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Go Back
+          </Text>
+        </TouchableOpacity>
       </SafeAreaView>
     );
   }
@@ -195,7 +142,7 @@ const BookingDetails = () => {
           <Image
             source={{ uri: booking.image }}
             className="w-full h-64"
-            resizeMode="cover"
+            style={{ resizeMode: 'cover' }}
           />
           <View className="absolute inset-0 bg-black/20" />
           <View className={`absolute top-4 right-4 px-3 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
