@@ -176,42 +176,7 @@ export default function MyTripsApp() {
       </View>
 
       {/* Main Content */}
-      {filteredBookings.length === 0 ? (
-        <View className="flex-1 bg-gray-50 p-6">
-          <View className="flex-1 flex-col items-center justify-center text-center">
-            {/* Luggage Illustration */}
-            <View className="mb-6">
-              <Image
-                source={{
-                  uri: "https://images.pexels.com/photos/1008155/pexels-photo-1008155.jpeg?auto=compress&cs=tinysrgb&w=300"
-                }}
-                className="w-48 h-48"
-                resizeMode="contain"
-              />
-            </View>
-
-            {/* Title */}
-            <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              {activeTab === 'upcoming' ? 'No upcoming trips' : 'No past trips'}
-            </Text>
-
-            {/* Description */}
-            <Text className="text-gray-600 max-w-xs mx-auto mb-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              {activeTab === 'upcoming'
-                ? "It looks like you haven't booked anything yet. Let's find your next destination!"
-                : "You haven't completed any trips yet. Start exploring to create amazing memories!"
-              }
-            </Text>
-
-            {/* CTA Button */}
-            <TouchableOpacity 
-              className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#FF5A5F] shadow-lg"
-              onPress={() => router.push('/(tabs)/search')}
-            >
-              <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                Start Exploring
-              </Text>
-            </TouchableOpacity>
+      <ScrollView className="flex-1 bg-gray-50 p-4">
         {loading ? (
           <View>
             {Array.from({ length: 3 }).map((_, index) => (
@@ -270,7 +235,7 @@ export default function MyTripsApp() {
         ) : (
           filteredBookings.map(renderBookingCard)
         )}
-        </View>
+      </ScrollView>
     </SafeAreaView>
   )
 }
