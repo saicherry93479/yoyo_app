@@ -63,8 +63,8 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       if (payload?.onSearch) {
         payload.onSearch({
           destination: searchData.location?.name || '',
-            guests: searchData.guests.adults + searchData.guests.children,
-            query: searchData.location?.name || ''
+          guests: searchData.guests.adults + searchData.guests.children,
+          query: searchData.location?.name || '',
           guests: `${searchData.guests.adults + searchData.guests.children} guests`
         });
       }
@@ -72,7 +72,8 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       // Navigate to explore tab with search results
       router.push({
         pathname: '/(tabs)/search',
-          payload.onSearch(searchData);
+        params: {
+          payload: payload.onSearch(searchData)
         }
       });
       
