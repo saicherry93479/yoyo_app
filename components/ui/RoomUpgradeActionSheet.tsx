@@ -153,7 +153,7 @@ export function RoomUpgradeActionSheet({
           showsVerticalScrollIndicator={false}
           style={{ maxHeight: 400 }}
         >
-          <View className="space-y-4">
+          <View className="gap-4">
             {roomData.upgradeOptions.map(renderUpgradeOption)}
           </View>
         </ScrollView>

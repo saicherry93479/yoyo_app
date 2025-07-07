@@ -86,7 +86,7 @@ const CheckoutScreen = () => {
                         <Text className="text-[#161312] text-lg  mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                             Your Trip
                         </Text>
-                        <View className="space-y-4">
+                        <View className="gap-4">
                             <View className="flex-row items-center justify-between">
                                 <View>
                                     <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -128,7 +128,7 @@ const CheckoutScreen = () => {
                         <Text className="text-[#161312] text-lg  mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                             Price Details
                         </Text>
-                        <View className="space-y-3">
+                        <View className="gap-3">
                             <View className="flex-row justify-between">
                                 <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                                     5 nights

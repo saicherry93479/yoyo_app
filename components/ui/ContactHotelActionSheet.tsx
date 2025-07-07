@@ -110,7 +110,7 @@ export function ContactHotelActionSheet({ sheetId, payload }: ContactHotelAction
         </View>
 
         {/* Contact Options */}
-        <View className="px-6 pb-6 space-y-3">
+        <View className="px-6 pb-6 gap-3">
           <TouchableOpacity
             className="flex-row items-center p-4 bg-green-50 border border-green-200 rounded-xl"
             onPress={handlePhoneCall}

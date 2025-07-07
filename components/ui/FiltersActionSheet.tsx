@@ -164,7 +164,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
 
         {/* Filters Content */}
         <ScrollView 
-          className="max-h-96"
+          className=""
           showsVerticalScrollIndicator={false}
         >
           {/* Sort By */}
@@ -201,7 +201,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
             <Text className="text-lg text-gray-900 mb-3" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Price range
             </Text>
-            <View className="space-y-2">
+            <View className="gap-2">
               {priceRanges.map((range, index) => (
                 <TouchableOpacity
                   key={index}
@@ -232,7 +232,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
             <Text className="text-lg text-gray-900 mb-3" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Minimum rating
             </Text>
-            <View className="space-y-2">
+            <View className="gap-2">
               {[4, 3, 2, 1].map((rating) => (
                 <TouchableOpacity
                   key={rating}

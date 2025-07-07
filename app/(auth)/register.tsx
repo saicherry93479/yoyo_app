@@ -125,7 +125,7 @@ export default function RegisterScreen() {
           </View>
 
           {/* Form Fields */}
-          <View className="space-y-4">
+          <View className="gap-4">
             {/* Name */}
             <View>
               <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Full Name</Text>
@@ -256,7 +256,7 @@ export default function RegisterScreen() {
           </View>
 
           {/* Social Registration */}
-          <View className="space-y-3">
+          <View className="gap-3">
             <TouchableOpacity
               className="w-full flex-row items-center justify-center rounded-lg border border-gray-300 bg-white py-3 shadow-sm active:bg-gray-50 disabled:opacity-50"
               onPress={() => handleSocialRegister('google')}

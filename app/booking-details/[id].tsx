@@ -237,7 +237,7 @@ const BookingDetails = () => {
             Trip Details
           </Text>
           
-          <View className="space-y-4">
+          <View className="gap-4">
             <View className="flex-row items-center">
               <Calendar size={20} color="#FF5A5F" />
               <View className="ml-3 flex-1">
@@ -282,7 +282,7 @@ const BookingDetails = () => {
             Price Breakdown
           </Text>
           
-          <View className="space-y-3">
+          <View className="gap-3">
             <View className="flex-row justify-between">
               <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 ₹{booking.priceBreakdown.roomRate.toLocaleString()} × {booking.nights} nights
@@ -347,7 +347,7 @@ const BookingDetails = () => {
         </View>
 
         {/* Action Buttons */}
-        <View className="px-6 py-6 border-t border-gray-100 space-y-3">
+        <View className="px-6 py-6 border-t border-gray-100 gap-3">
           <TouchableOpacity
             className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
             onPress={handleContactHotel}

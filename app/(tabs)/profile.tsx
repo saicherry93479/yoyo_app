@@ -106,11 +106,11 @@ const ProfileScreen = () => {
         </View>
 
         {/* Menu Sections */}
-        <View className="space-y-8">
+        <View className="gap-8">
           {menuItems.map((section, sectionIndex) => (
             <View key={sectionIndex}>
               <Text className="text-gray-900 text-xl pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
-              <View className="space-y-1">
+              <View className="gap-1">
                 {section.items.map((item, itemIndex) => (
                   <TouchableOpacity
                     key={itemIndex}

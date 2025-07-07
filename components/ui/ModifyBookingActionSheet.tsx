@@ -97,7 +97,7 @@ export function ModifyBookingActionSheet({ sheetId, payload }: ModifyBookingActi
         </View>
 
         {/* Modification Options */}
-        <View className="px-6 pb-6 space-y-3">
+        <View className="px-6 pb-6 gap-3">
           {canModify && (
             <>
               <TouchableOpacity
