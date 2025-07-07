@@ -4,7 +4,7 @@ import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
-import { Star } from "lucide-react-native"
+import { Search, Star } from "lucide-react-native"
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -212,37 +212,51 @@ export default function HotelBookingApp() {
     navigation.setOptions({
       headerShadowVisible: false,
       headerTitle: () => (
-        <Pressable onPress={()=>SheetManager.show('search')} className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full shadow-sm">
-          <View className="flex-row items-center gap-2">
-            <View className="text-red-500">
-              <MagnifyingGlassIcon size={24} color="#EF4444" />
-            </View>
-            <View className="flex-col">
-              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Where to?</Text>
-              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Anywhere • Any week • Add guests</Text>
-            </View>
-          </View>
-          <TouchableOpacity 
-            className="rounded-full border border-gray-300 p-2"
-            onPress={() => SheetManager.show('filters', {
-              payload: {
-                currentFilters: {
-                  priceRange: { min: 0, max: 999999 },
-                  rating: 0,
-                  amenities: [],
-                  propertyType: [],
-                  sortBy: 'recommended'
-                },
-                onApplyFilters: (filters) => {
-                  console.log('Applied filters:', filters);
-                  // Here you would typically update the hotel list based on filters
-                }
-              }
-            })}
+        <View className="bg-white flex-row items-center w-full px-4 py-3 ">
+          <TouchableOpacity
+            className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
+            onPress={
+              // Navigate back to search or open search sheet
+              () => SheetManager.show('search')
+            }
           >
-            <FilterIcon />
+            <Search size={20} color="#6B7280" />
+            <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            Anywhere • Any week • Add guests
+            </Text>
           </TouchableOpacity>
-        </Pressable>
+        </View>
+        // <Pressable onPress={()=>SheetManager.show('search')} className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full shadow-sm">
+        //   <View className="flex-row items-center gap-2">
+        //     <View className="text-red-500">
+        //       <MagnifyingGlassIcon size={24} color="#EF4444" />
+        //     </View>
+        //     <View className="flex-col">
+        //       <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Where to?</Text>
+        //       <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Anywhere • Any week • Add guests</Text>
+        //     </View>
+        //   </View>
+        //   <TouchableOpacity 
+        //     className="rounded-full border border-gray-300 p-2"
+        //     onPress={() => SheetManager.show('filters', {
+        //       payload: {
+        //         currentFilters: {
+        //           priceRange: { min: 0, max: 999999 },
+        //           rating: 0,
+        //           amenities: [],
+        //           propertyType: [],
+        //           sortBy: 'recommended'
+        //         },
+        //         onApplyFilters: (filters) => {
+        //           console.log('Applied filters:', filters);
+        //           // Here you would typically update the hotel list based on filters
+        //         }
+        //       }
+        //     })}
+        //   >
+        //     <FilterIcon />
+        //   </TouchableOpacity>
+        // </Pressable>
       ),
       headerTitleAlign: 'left',
     });
@@ -280,7 +294,7 @@ export default function HotelBookingApp() {
           <HeartIcon size={18} color="#EF4444" />
         </TouchableOpacity>
       </View>
-      
+
       <View className="p-4">
         <View className="flex-row items-start justify-between mb-2">
           <View className="flex-1">
@@ -303,11 +317,11 @@ export default function HotelBookingApp() {
             )}
           </View>
         </View>
-        
+
         <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
           {hotel.distance}
         </Text>
-        
+
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-baseline">
             <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

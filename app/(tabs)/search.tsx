@@ -180,10 +180,10 @@ export default function SearchScreen() {
       <View className="bg-white px-4 py-3 border-b border-gray-100">
         <TouchableOpacity 
           className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
-          onPress={() => {
+          onPress={
             // Navigate back to search or open search sheet
-            router.back();
-          }}
+            ()=>SheetManager.show('search')
+          }
         >
           <Search size={20} color="#6B7280" />
           <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
