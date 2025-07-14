@@ -114,6 +114,8 @@ export function LocationSearchInput({
   const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
   const [isOnline, setIsOnline] = useState(true);
+  const [apiKeyValid, setApiKeyValid] = useState<boolean | null>(null);
+  const [isValidatingKey, setIsValidatingKey] = useState(false);
   const googlePlacesRef = useRef(null);
 
   // Check network status
@@ -124,6 +126,13 @@ export function LocationSearchInput({
     return unsubscribe;
   }, []);
 
+  // Validate API key on mount
+  useEffect(() => {
+    if (googleApiKey) {
+      validateApiKey();
+    }
+  }, [googleApiKey]);
+
   // Load cached data on mount
   useEffect(() => {
     loadCachedData();
@@ -133,6 +142,38 @@ export function LocationSearchInput({
   useEffect(() => {
     setInputValue(value);
   }, [value]);
+
+  // Validate Google Places API key
+  const validateApiKey = async () => {
+    if (!googleApiKey || !isOnline) {
+      setApiKeyValid(false);
+      return;
+    }
+
+    setIsValidatingKey(true);
+    
+    try {
+      // Test the API key with a simple request
+      const testUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=test&key=${googleApiKey}`;
+      const response = await fetch(testUrl);
+      const data = await response.json();
+      
+      if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
+        setApiKeyValid(true);
+      } else if (data.status === 'REQUEST_DENIED') {
+        setApiKeyValid(false);
+        console.error('Google Places API key validation failed:', data.error_message);
+      } else {
+        setApiKeyValid(false);
+        console.error('Google Places API error:', data.status, data.error_message);
+      }
+    } catch (error) {
+      console.error('API key validation error:', error);
+      setApiKeyValid(false);
+    } finally {
+      setIsValidatingKey(false);
+    }
+  };
 
   // Load data from AsyncStorage
   const loadCachedData = async () => {
@@ -488,6 +529,50 @@ export function LocationSearchInput({
     </View>
   );
 
+  const renderApiKeyError = () => (
+    <View style={{
+      padding: 16,
+      backgroundColor: '#FEF2F2',
+      borderWidth: 1,
+      borderColor: '#FECACA',
+      borderRadius: 8,
+      margin: 16,
+    }}>
+      <Text style={{
+        color: '#DC2626',
+        fontSize: 16,
+        fontWeight: '600',
+        marginBottom: 4,
+      }}>
+        {!googleApiKey ? 'Google API Key Required' : 'Invalid API Key'}
+      </Text>
+      <Text style={{
+        color: '#EF4444',
+        fontSize: 14,
+        marginBottom: 8,
+      }}>
+        {!googleApiKey 
+          ? 'Please provide a valid Google Places API key' 
+          : 'The provided Google Places API key is invalid or has insufficient permissions'
+        }
+      </Text>
+      <TouchableOpacity 
+        onPress={validateApiKey}
+        style={{
+          backgroundColor: '#DC2626',
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: 6,
+          alignSelf: 'flex-start',
+        }}
+      >
+        <Text style={{ color: 'white', fontSize: 14, fontWeight: '500' }}>
+          {isValidatingKey ? 'Validating...' : 'Retry Validation'}
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderEmptyState = () => (
     <View style={{
       padding: 24,
@@ -532,29 +617,28 @@ export function LocationSearchInput({
   );
 
   // API key validation
-  if (!googleApiKey) {
+  if (!googleApiKey || apiKeyValid === false) {
+    return renderApiKeyError();
+  }
+
+  // Show loading while validating API key
+  if (isValidatingKey) {
     return (
       <View style={{
         padding: 16,
-        backgroundColor: '#FEF2F2',
-        borderWidth: 1,
-        borderColor: '#FECACA',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#F8FAFC',
         borderRadius: 8,
         margin: 16,
       }}>
+        <ActivityIndicator size="small" color="#3B82F6" />
         <Text style={{
-          color: '#DC2626',
-          fontSize: 16,
-          fontWeight: '600',
-        }}>
-          Error: Google API Key Required
-        </Text>
-        <Text style={{
-          color: '#EF4444',
+          color: '#6B7280',
+          marginTop: 8,
           fontSize: 14,
-          marginTop: 4,
         }}>
-          Please provide a valid Google Places API key
+          Validating API key...
         </Text>
       </View>
     );
@@ -606,6 +690,13 @@ export function LocationSearchInput({
         enablePoweredByContainer={false}
         debounce={300}
         minLength={2}
+        requestUrl={{
+          useOnPlatform: 'web',
+          url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+          },
+        }}
         styles={{
           container: {
             flex: 0,
@@ -699,6 +790,17 @@ export function LocationSearchInput({
             </Text>
           </View>
         )}
+        onFail={(error) => {
+          console.error('GooglePlacesAutocomplete error:', error);
+          Alert.alert(
+            'Search Error',
+            'Unable to search locations. Please check your internet connection and API key.',
+            [
+              { text: 'OK' },
+              { text: 'Validate API Key', onPress: validateApiKey }
+            ]
+          );
+        }}
       />
       
       {/* Custom suggestions overlay */}
