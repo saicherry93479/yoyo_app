@@ -1,7 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import React, { createContext, ReactNode, useContext, useEffect, useState } from 'react';
+import {
+  getAuth,
+  signInWithPhoneNumber,
+  signOut
+} from '@react-native-firebase/auth';
 import { router } from 'expo-router';
 import { apiService } from '@/services/api';
+import { Platform } from 'react-native';
 
 export interface User {
   id: string;
@@ -13,13 +19,20 @@ export interface User {
   hasOnboarded: boolean;
 }
 
+
+
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
 
   // Auth methods
-  login: (email: string, password: string) => Promise<void>;
+  sendOTP: (phoneNumber: string, customerType: string) => Promise<any>;
+
+  verifyOTP: (otp: string, role: string) => Promise<{
+    nextScreen: string;
+    success: boolean;
+  }>;
   register: (userData: RegisterData) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -54,6 +67,7 @@ interface AuthProviderProps {
 //   hasOnboarded: false
 // }
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [confirmation, setConfirmation] = useState<any>(null);
   const [user, setUser] = useState<User | null>(
     null
     // {
@@ -84,8 +98,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const parsedUser = JSON.parse(userProfile[1]);
         setUser(parsedUser);
 
-        // Skip token validation in mock mode
-        console.log('Using stored user data in mock mode');
+        try {
+          await refreshUser();
+        } catch (error) {
+          // If refresh fails during initialization, clear everything
+          console.log('Token validation failed during initialization');
+          await clearAuthData();
+          setUser(null);
+
+        }
       }
     } catch (error) {
       console.log('Auth initialization error:', error);
@@ -95,17 +116,60 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const login = async (email: string, password: string): Promise<void> => {
+  const sendOTP = async (phoneNumber: string, customerType: string = 'customer'): Promise<any> => {
+    try {
+      console.log('=== Starting OTP Process ===');
+      console.log('Phone number:', phoneNumber);
+      console.log('Customer type:', customerType);
+      console.log('Platform:', Platform.OS);
+
+      const formattedPhone = '+91' + phoneNumber.replace(/\D/g, '');
+      console.log('Formatted phone:', formattedPhone);
+
+
+
+
+      const confirmation = await signInWithPhoneNumber(getAuth(), formattedPhone);
+      console.log('=== OTP Sent Successfully ===');
+      setConfirmation(confirmation);
+      return confirmation;
+
+    } catch (error) {
+      console.log('=== OTP Error ===');
+      console.log('Error details:', error);
+      throw error;
+    }
+  };
+
+
+  const verifyOTP = async (otp: string, role: string): Promise<{
+    nextScreen: string;
+    success: boolean;
+  }> => {
     try {
       setIsLoading(true);
+      if (!confirmation) {
+        throw new Error('No OTP confirmation found. Please request a new OTP.');
+      }
 
+      // Verify OTP
+      const result = await confirmation.confirm(otp);
+      const idToken = await result.user.getIdToken();
+
+      console.log('OTP verification successful, sending to backend...');
+
+      // Send idToken and role to backend for authentication
       const response = await apiService.post('/auth/login', {
-        email,
-        password,
+        idToken,
+        role: 'customer' // Send the role that was selected during login
       });
+
+      console.log('Backend login response:', response);
 
       if (response.success) {
         const { accessToken, refreshToken, user: userData } = response.data;
+
+        console.log('userData', userData);
 
         // Store tokens and user data
         await AsyncStorage.multiSet([
@@ -115,22 +179,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         ]);
 
         setUser(userData);
-        router.replace('/(tabs)');
-        // Navigate based on onboarding status
-        // if (!userData.hasOnboarded) {
-        //   router.replace('/onboarding');
-        // } else {
-        //   router.replace('/(tabs)');
-        // }
+        setConfirmation(null); // Clear confirmation after successful verification
+
+        let nextScreen = !userData.hasOnboarded ? '/OnboardDetails' : '/';
+
+        return {
+          nextScreen: nextScreen,
+          success: true,
+        };
       } else {
         throw new Error(response.error || 'Login failed');
       }
     } catch (error: any) {
-      throw new Error(error.message || 'Login failed. Please try again.');
+      console.log('Verify OTP error:', error);
+
+      // Clear confirmation on error so user can try again
+      setConfirmation(null);
+
+      // Re-throw with a user-friendly message
+      if (error.code === 'auth/invalid-verification-code') {
+        throw new Error('Invalid OTP. Please check the code and try again.');
+      } else if (error.code === 'auth/code-expired') {
+        throw new Error('OTP has expired. Please request a new code.');
+      } else {
+        throw new Error(error.message || 'OTP verification failed. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   const register = async (userData: RegisterData): Promise<void> => {
     try {
@@ -165,14 +244,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
 
+
+      await signOut(getAuth());
+
+
       // Clear local storage
       await clearAuthData();
 
       // Reset state
       setUser(null);
+      setConfirmation(null);
 
-      // Navigate to auth screen
-      router.replace('/(auth)');
     } catch (error) {
       console.log('Logout error:', error);
     } finally {
@@ -191,15 +273,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshUser = async () => {
     try {
       const response = await apiService.get('/auth/me');
-      
+
       if (response.success) {
         const updatedUser = {
           ...response.data.user,
           hasOnboarded: response.data.user.hasOnboarded,
         };
-        
+
         setUser(updatedUser);
-        
+
         // Update stored user data
         await AsyncStorage.setItem('userProfile', JSON.stringify(updatedUser));
         router.replace('/(tabs)');
@@ -226,11 +308,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isLoading,
     isAuthenticated,
-    login,
     register,
     logout,
     refreshUser,
     setUser,
+    verifyOTP,
+    sendOTP
   };
 
   return (

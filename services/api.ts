@@ -14,7 +14,7 @@ export interface ApiResponse<T = any> {
 class ApiService {
   private axiosInstance: AxiosInstance;
   private refreshPromise: Promise<string> | null = null;
-  private isMockMode = true; // Always use mock mode
+  private isMockMode = false; // Always use mock mode
 
   constructor() {
     this.axiosInstance = axios.create({

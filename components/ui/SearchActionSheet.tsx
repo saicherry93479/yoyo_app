@@ -144,6 +144,8 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 </Text>
                 <LocationSearchInput
                   value={searchData.location?.name || ''}
+                   googleApiKey='AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM'
+
                   onLocationSelect={handleLocationSelect}
                   placeholder="Search destinations"
                 />

@@ -1,3 +1,4 @@
+import { useAuth } from '@/contexts/AuthContext';
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import {
@@ -55,15 +56,27 @@ const EmailIcon = ({ size = 20 }) => (
 
 export default function LoginSignupScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const { sendOTP } = useAuth()
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (!phoneNumber.trim()) {
       Alert.alert('Error', 'Please enter your phone number');
       return;
     }
-    // Handle continue logic here
-    console.log('Phone number:', phoneNumber);
-    router.push('/(auth)/otp')
+    try {
+      await sendOTP(phoneNumber, 'customer')
+
+      router.push({
+        pathname: '/(auth)/otp',
+        params: { phoneNumber: phoneNumber }
+      });
+    } catch (e) {
+      console.log('error ', e)
+      alert('Unable to send Otp')
+    }
+
+
+
   };
 
   const handleGoogleSignIn = () => {
@@ -88,7 +101,7 @@ export default function LoginSignupScreen() {
           <View className="w-full max-w-sm">
             {/* Header */}
             <View className="mt-16 mb-12">
-              <Text 
+              <Text
                 className="text-3xl text-gray-900 text-left leading-tight"
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}
               >
@@ -101,13 +114,13 @@ export default function LoginSignupScreen() {
               <View className="rounded-xl border border-gray-300 bg-white">
                 {/* Country/Region Section */}
                 <View className="px-5 pt-4 pb-2">
-                  <Text 
+                  <Text
                     className="text-xs text-gray-500 mb-1"
                     style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                   >
                     Country/Region
                   </Text>
-                  <Text 
+                  <Text
                     className="text-base text-gray-900"
                     style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   >
@@ -131,7 +144,7 @@ export default function LoginSignupScreen() {
               </View>
 
               {/* Disclaimer Text */}
-              <Text 
+              <Text
                 className="text-xs text-gray-500 mt-4 leading-relaxed"
                 style={{ fontFamily: 'PlusJakartaSans-Regular' }}
               >
@@ -145,7 +158,7 @@ export default function LoginSignupScreen() {
                 className="w-full rounded-xl bg-red-500 py-4 shadow-sm active:bg-red-600"
                 onPress={handleContinue}
               >
-                <Text 
+                <Text
                   className="text-base text-white text-center"
                   style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                 >
@@ -160,7 +173,7 @@ export default function LoginSignupScreen() {
                 <View className="w-full border-t border-gray-300" />
               </View>
               <View className="relative bg-white px-4">
-                <Text 
+                <Text
                   className="text-sm text-gray-500"
                   style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                 >
@@ -177,7 +190,7 @@ export default function LoginSignupScreen() {
                 onPress={handleGoogleSignIn}
               >
                 <GoogleIcon size={20} />
-                <Text 
+                <Text
                   className="ml-3 text-base text-gray-700"
                   style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                 >
@@ -191,7 +204,7 @@ export default function LoginSignupScreen() {
                 onPress={handleGitHubSignIn}
               >
                 <GitHubIcon size={20} />
-                <Text 
+                <Text
                   className="ml-3 text-base text-gray-700"
                   style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                 >
@@ -205,7 +218,7 @@ export default function LoginSignupScreen() {
                 onPress={handleEmailSignIn}
               >
                 <EmailIcon size={20} />
-                <Text 
+                <Text
                   className="ml-3 text-base text-gray-700"
                   style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                 >

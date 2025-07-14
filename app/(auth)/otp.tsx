@@ -10,14 +10,16 @@ import {
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function OTPScreen() {
-  const { phoneNumber } = useLocalSearchParams();
+  const { phoneNumber } = useLocalSearchParams<{ phoneNumber: string }>();
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<TextInput[]>([]);
+  const { sendOTP } = useAuth()
 
   useEffect(() => {
     if (resendTimer > 0) {
@@ -58,7 +60,7 @@ export default function OTPScreen() {
     try {
       // Simulate OTP verification
       await new Promise(resolve => setTimeout(resolve, 2000));
-      
+
       // For demo purposes, accept any 6-digit OTP
       if (otpCode === '123456') {
         // Existing user - go to main app
@@ -76,10 +78,10 @@ export default function OTPScreen() {
 
   const handleResendOTP = async () => {
     if (!canResend) return;
-    
+
     try {
       // Simulate resend OTP
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await sendOTP(phoneNumber, 'customer')
       setResendTimer(30);
       setCanResend(false);
       Alert.alert('Success', 'OTP sent successfully');
@@ -93,7 +95,7 @@ export default function OTPScreen() {
       <View className="flex-1 px-6 py-8">
         {/* Header */}
         <View className="flex-row items-center mb-8">
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={() => router.back()}
             className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center mr-4"
           >
@@ -139,7 +141,7 @@ export default function OTPScreen() {
               Didn't receive the code?{' '}
             </Text>
             <TouchableOpacity onPress={handleResendOTP} disabled={!canResend}>
-              <Text 
+              <Text
                 className={`${canResend ? 'text-[#FF5A5F]' : 'text-gray-400'}`}
                 style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
               >
@@ -150,19 +152,17 @@ export default function OTPScreen() {
 
           {/* Verify Button */}
           <TouchableOpacity
-            className={`w-full h-12 rounded-lg items-center justify-center ${
-              otp.join('').length === 6 && !isLoading ? 'bg-[#FF5A5F]' : 'bg-gray-200'
-            }`}
+            className={`w-full h-12 rounded-lg items-center justify-center ${otp.join('').length === 6 && !isLoading ? 'bg-[#FF5A5F]' : 'bg-gray-200'
+              }`}
             onPress={handleVerifyOTP}
             disabled={otp.join('').length !== 6 || isLoading}
           >
             {isLoading ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
-              <Text 
-                className={`text-base ${
-                  otp.join('').length === 6 ? 'text-white' : 'text-gray-400'
-                }`}
+              <Text
+                className={`text-base ${otp.join('').length === 6 ? 'text-white' : 'text-gray-400'
+                  }`}
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}
               >
                 Verify
