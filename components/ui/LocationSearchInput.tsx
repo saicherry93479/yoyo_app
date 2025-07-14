@@ -45,59 +45,59 @@ const CACHE_DURATION = 24 * 60 * 60 * 1000;
 
 // Default popular destinations (fallback)
 const DEFAULT_POPULAR_DESTINATIONS: Location[] = [
-  { 
-    id: 'p1', 
-    name: 'Goa', 
-    description: 'Beach paradise', 
+  {
+    id: 'p1',
+    name: 'Goa',
+    description: 'Beach paradise',
     type: 'popular',
     rating: 4.5,
     coordinates: { lat: 15.2993, lng: 74.1240 }
   },
-  { 
-    id: 'p2', 
-    name: 'Kerala', 
-    description: 'God\'s Own Country', 
+  {
+    id: 'p2',
+    name: 'Kerala',
+    description: 'God\'s Own Country',
     type: 'popular',
     rating: 4.7,
     coordinates: { lat: 10.8505, lng: 76.2711 }
   },
-  { 
-    id: 'p3', 
-    name: 'Rajasthan', 
-    description: 'Land of Kings', 
+  {
+    id: 'p3',
+    name: 'Rajasthan',
+    description: 'Land of Kings',
     type: 'popular',
     rating: 4.4,
     coordinates: { lat: 27.0238, lng: 74.2179 }
   },
-  { 
-    id: 'p4', 
-    name: 'Manali', 
-    description: 'Hill station', 
+  {
+    id: 'p4',
+    name: 'Manali',
+    description: 'Hill station',
     type: 'popular',
     rating: 4.3,
     coordinates: { lat: 32.2432, lng: 77.1892 }
   },
-  { 
-    id: 'p5', 
-    name: 'Udaipur', 
-    description: 'City of Lakes', 
+  {
+    id: 'p5',
+    name: 'Udaipur',
+    description: 'City of Lakes',
     type: 'popular',
     rating: 4.6,
     coordinates: { lat: 24.5854, lng: 73.7125 }
   },
-  { 
-    id: 'p6', 
-    name: 'Shimla', 
-    description: 'Queen of Hills', 
+  {
+    id: 'p6',
+    name: 'Shimla',
+    description: 'Queen of Hills',
     type: 'popular',
     rating: 4.2,
     coordinates: { lat: 31.1048, lng: 77.1734 }
   },
 ];
 
-export function LocationSearchInput({ 
-  value, 
-  onLocationSelect, 
+export function LocationSearchInput({
+  value,
+  onLocationSelect,
   placeholder = "Search cities, hotels, or addresses",
   showPopularDestinations = true,
   showRecentSearches = true,
@@ -151,13 +151,13 @@ export function LocationSearchInput({
     }
 
     setIsValidatingKey(true);
-    
+
     try {
       // Test the API key with a simple request
       const testUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=test&key=${googleApiKey}`;
       const response = await fetch(testUrl);
       const data = await response.json();
-      
+
       if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
         setApiKeyValid(true);
       } else if (data.status === 'REQUEST_DENIED') {
@@ -188,11 +188,11 @@ export function LocationSearchInput({
       // Load popular destinations with cache validation
       const cachedPopular = await AsyncStorage.getItem(STORAGE_KEYS.POPULAR_DESTINATIONS);
       const cacheTimestamp = await AsyncStorage.getItem(STORAGE_KEYS.CACHE_TIMESTAMP);
-      
+
       if (cachedPopular && cacheTimestamp) {
         const timestamp = parseInt(cacheTimestamp);
         const isValidCache = Date.now() - timestamp < CACHE_DURATION;
-        
+
         if (isValidCache) {
           const parsedPopular = JSON.parse(cachedPopular);
           setPopularDestinations(parsedPopular);
@@ -211,11 +211,11 @@ export function LocationSearchInput({
   const refreshPopularDestinations = async () => {
     try {
       await AsyncStorage.setItem(
-        STORAGE_KEYS.POPULAR_DESTINATIONS, 
+        STORAGE_KEYS.POPULAR_DESTINATIONS,
         JSON.stringify(DEFAULT_POPULAR_DESTINATIONS)
       );
       await AsyncStorage.setItem(
-        STORAGE_KEYS.CACHE_TIMESTAMP, 
+        STORAGE_KEYS.CACHE_TIMESTAMP,
         Date.now().toString()
       );
       setPopularDestinations(DEFAULT_POPULAR_DESTINATIONS);
@@ -240,7 +240,7 @@ export function LocationSearchInput({
 
       setRecentSearches(updatedRecent);
       await AsyncStorage.setItem(
-        STORAGE_KEYS.RECENT_SEARCHES, 
+        STORAGE_KEYS.RECENT_SEARCHES,
         JSON.stringify(updatedRecent)
       );
     } catch (error) {
@@ -261,12 +261,12 @@ export function LocationSearchInput({
   // Get current location
   const getCurrentLocation = async () => {
     if (!showCurrentLocation) return;
-    
+
     setIsGettingLocation(true);
-    
+
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      
+
       if (status !== 'granted') {
         Alert.alert(
           'Permission Denied',
@@ -330,7 +330,7 @@ export function LocationSearchInput({
       }
     } catch (error) {
       console.error('Location error:', error);
-      
+
       let errorMessage = 'Unable to get your location';
       if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
         errorMessage = 'Location services are disabled';
@@ -339,7 +339,7 @@ export function LocationSearchInput({
       } else if (error.code === 'E_LOCATION_TIMEOUT') {
         errorMessage = 'Location request timed out';
       }
-      
+
       Alert.alert('Location Error', errorMessage);
     } finally {
       setIsGettingLocation(false);
@@ -349,11 +349,11 @@ export function LocationSearchInput({
   const handleLocationSelect = (location: Location) => {
     setShowSuggestions(false);
     setInputValue(location.name);
-    
+
     if (location.type !== 'current') {
       saveRecentSearch(location);
     }
-    
+
     onLocationSelect(location);
   };
 
@@ -377,7 +377,7 @@ export function LocationSearchInput({
   };
 
   const renderSuggestionItem = (location: Location) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       key={location.id}
       style={{
         flexDirection: 'row',
@@ -393,31 +393,31 @@ export function LocationSearchInput({
         {getLocationIcon(location.type)}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ 
-          fontSize: 16, 
-          color: '#111827', 
+        <Text style={{
+          fontSize: 16,
+          color: '#111827',
           fontWeight: '600',
-          marginBottom: 2 
+          marginBottom: 2
         }}>
           {location.name}
         </Text>
-        <Text style={{ 
-          fontSize: 14, 
-          color: '#6B7280' 
+        <Text style={{
+          fontSize: 14,
+          color: '#6B7280'
         }}>
           {location.description}
         </Text>
         {location.rating && (
-          <View style={{ 
-            flexDirection: 'row', 
-            alignItems: 'center', 
-            marginTop: 4 
+          <View style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginTop: 4
           }}>
             <Star size={14} color="#F59E0B" fill="#F59E0B" />
-            <Text style={{ 
-              fontSize: 12, 
-              color: '#6B7280', 
-              marginLeft: 4 
+            <Text style={{
+              fontSize: 12,
+              color: '#6B7280',
+              marginLeft: 4
             }}>
               {location.rating}
             </Text>
@@ -431,8 +431,8 @@ export function LocationSearchInput({
           paddingVertical: 4,
           borderRadius: 12,
         }}>
-          <Text style={{ 
-            fontSize: 12, 
+          <Text style={{
+            fontSize: 12,
             color: '#2563EB',
             fontWeight: '500'
           }}>
@@ -447,8 +447,8 @@ export function LocationSearchInput({
           paddingVertical: 4,
           borderRadius: 12,
         }}>
-          <Text style={{ 
-            fontSize: 12, 
+          <Text style={{
+            fontSize: 12,
             color: '#059669',
             fontWeight: '500'
           }}>
@@ -480,16 +480,16 @@ export function LocationSearchInput({
         )}
       </View>
       <View style={{ flex: 1 }}>
-        <Text style={{ 
-          fontSize: 16, 
+        <Text style={{
+          fontSize: 16,
           color: '#2563EB',
-          fontWeight: '600' 
+          fontWeight: '600'
         }}>
           {isGettingLocation ? 'Getting location...' : 'Use current location'}
         </Text>
-        <Text style={{ 
-          fontSize: 14, 
-          color: '#3B82F6' 
+        <Text style={{
+          fontSize: 14,
+          color: '#3B82F6'
         }}>
           {!isOnline ? 'No internet connection' : 'Find hotels near you'}
         </Text>
@@ -551,12 +551,12 @@ export function LocationSearchInput({
         fontSize: 14,
         marginBottom: 8,
       }}>
-        {!googleApiKey 
-          ? 'Please provide a valid Google Places API key' 
+        {!googleApiKey
+          ? 'Please provide a valid Google Places API key'
           : 'The provided Google Places API key is invalid or has insufficient permissions'
         }
       </Text>
-      <TouchableOpacity 
+      <TouchableOpacity
         onPress={validateApiKey}
         style={{
           backgroundColor: '#DC2626',
@@ -650,9 +650,10 @@ export function LocationSearchInput({
       <GooglePlacesAutocomplete
         ref={googlePlacesRef}
         placeholder={placeholder}
+        predefinedPlaces={[]}
         onPress={(data, details = null) => {
           setIsLoading(true);
-          
+
           let locationType: Location['type'] = 'address';
           if (data.types?.includes('locality') || data.types?.includes('administrative_area_level_1')) {
             locationType = 'city';
@@ -676,27 +677,34 @@ export function LocationSearchInput({
             placeId: data.place_id,
             rating: details?.rating
           };
-          
+
           setIsLoading(false);
           handleLocationSelect(location);
         }}
         query={{
           key: googleApiKey,
           language: 'en',
-          types: '(cities)|establishment|tourist_attraction',
+          // Fixed: Remove the problematic types parameter or use a single type
+          // types: 'geocode', // Use 'geocode' for addresses and localities
+          // OR use 'establishment' for businesses
+          // OR remove types entirely to get all results
           components: `country:${countryCode}`,
         }}
         fetchDetails={true}
         enablePoweredByContainer={false}
-        debounce={300}
-        minLength={2}
-        requestUrl={{
-          useOnPlatform: 'web',
-          url: 'https://cors-anywhere.herokuapp.com/https://maps.googleapis.com/maps/api',
-          headers: {
-            'X-Requested-With': 'XMLHttpRequest',
-          },
+        debounce={200}
+        timeout={20000} // Fixed: Ensure timeout is properly set
+        minLength={2} // Fixed: Reduced from 3 to 2 for better UX
+        
+        // Additional props to fix the issues
+        nearbyPlacesAPI="GooglePlacesSearch"
+        GooglePlacesSearchQuery={{
+          rankby: 'distance',
         }}
+        GooglePlacesDetailsQuery={{
+          fields: 'geometry,formatted_address,name,rating,types,address_components',
+        }}
+        
         styles={{
           container: {
             flex: 0,
@@ -781,10 +789,10 @@ export function LocationSearchInput({
         )}
         listEmptyComponent={() => (
           <View style={{ padding: 16 }}>
-            <Text style={{ 
-              textAlign: 'center', 
+            <Text style={{
+              textAlign: 'center',
               color: '#6B7280',
-              fontSize: 14 
+              fontSize: 14
             }}>
               No results found
             </Text>
@@ -801,8 +809,21 @@ export function LocationSearchInput({
             ]
           );
         }}
+        // Additional error handling props
+        onTimeout={() => {
+          console.warn('Google Places request timeout');
+          Alert.alert('Timeout', 'Search request timed out. Please try again.');
+        }}
+        onNotFound={() => {
+          console.log('No results found');
+        }}
+        // Performance optimizations
+        keyboardShouldPersistTaps="handled"
+        listViewDisplayed="auto"
+        keepResultsAfterBlur={false}
+        suppressDefaultStyles={false}
       />
-      
+
       {/* Custom suggestions overlay */}
       {showSuggestions && inputValue.length === 0 && (
         <View style={{
@@ -826,7 +847,7 @@ export function LocationSearchInput({
           <ScrollView showsVerticalScrollIndicator={false}>
             {/* Current Location Button */}
             {showCurrentLocation && renderCurrentLocationButton()}
-            
+
             {/* Recent Searches */}
             {showRecentSearches && recentSearches.length > 0 && (
               <>
@@ -834,7 +855,7 @@ export function LocationSearchInput({
                 {recentSearches.map(renderSuggestionItem)}
               </>
             )}
-            
+
             {/* Popular Destinations */}
             {showPopularDestinations && popularDestinations.length > 0 && (
               <>
@@ -842,7 +863,7 @@ export function LocationSearchInput({
                 {popularDestinations.map(renderSuggestionItem)}
               </>
             )}
-            
+
             {/* Empty State */}
             {!showRecentSearches && !showPopularDestinations && !showCurrentLocation && renderEmptyState()}
           </ScrollView>
