@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { MapPin, Clock, Search, Star, Building, MapIcon, Navigation, Wifi, WifiOff } from 'lucide-react-native';
+import { MapPin, Clock, Search, Star, Building, Map as MapIcon, Navigation, Wifi, WifiOff } from 'lucide-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Location from 'expo-location';
 import NetInfo from '@react-native-community/netinfo';
