@@ -1,264 +1,53 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, ActivityIndicator, Alert, Platform } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TouchableOpacity, Modal, TextInput, ScrollView, ActivityIndicator, Alert, Keyboard } from 'react-native';
 import { GooglePlacesAutocomplete } from 'react-native-google-places-autocomplete';
-import { MapPin, Clock, Search, Star, Building, Map as MapIcon, Navigation, Wifi, WifiOff } from 'lucide-react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { MapPin, Search, X, Navigation } from 'lucide-react-native';
 import * as Location from 'expo-location';
-import NetInfo from '@react-native-community/netinfo';
 
 interface Location {
   id: string;
   name: string;
   description: string;
-  type: 'city' | 'region' | 'country' | 'recent' | 'popular' | 'address' | 'hotel' | 'landmark' | 'current';
+  type: 'city' | 'region' | 'country' | 'address' | 'hotel' | 'landmark' | 'current';
   coordinates?: {
     lat: number;
     lng: number;
   };
   placeId?: string;
   rating?: number;
-  category?: string;
-  timestamp?: number;
 }
 
 interface LocationSearchInputProps {
   value: string;
   onLocationSelect: (location: Location) => void;
   placeholder?: string;
-  showPopularDestinations?: boolean;
-  showRecentSearches?: boolean;
   showCurrentLocation?: boolean;
   countryCode?: string;
   googleApiKey: string;
-  maxRecentSearches?: number;
 }
-
-// Storage keys
-const STORAGE_KEYS = {
-  RECENT_SEARCHES: '@hotel_app_recent_searches',
-  POPULAR_DESTINATIONS: '@hotel_app_popular_destinations',
-  CACHE_TIMESTAMP: '@hotel_app_cache_timestamp',
-};
-
-// Cache duration (24 hours)
-const CACHE_DURATION = 24 * 60 * 60 * 1000;
-
-// Default popular destinations (fallback)
-const DEFAULT_POPULAR_DESTINATIONS: Location[] = [
-  {
-    id: 'p1',
-    name: 'Goa',
-    description: 'Beach paradise',
-    type: 'popular',
-    rating: 4.5,
-    coordinates: { lat: 15.2993, lng: 74.1240 }
-  },
-  {
-    id: 'p2',
-    name: 'Kerala',
-    description: 'God\'s Own Country',
-    type: 'popular',
-    rating: 4.7,
-    coordinates: { lat: 10.8505, lng: 76.2711 }
-  },
-  {
-    id: 'p3',
-    name: 'Rajasthan',
-    description: 'Land of Kings',
-    type: 'popular',
-    rating: 4.4,
-    coordinates: { lat: 27.0238, lng: 74.2179 }
-  },
-  {
-    id: 'p4',
-    name: 'Manali',
-    description: 'Hill station',
-    type: 'popular',
-    rating: 4.3,
-    coordinates: { lat: 32.2432, lng: 77.1892 }
-  },
-  {
-    id: 'p5',
-    name: 'Udaipur',
-    description: 'City of Lakes',
-    type: 'popular',
-    rating: 4.6,
-    coordinates: { lat: 24.5854, lng: 73.7125 }
-  },
-  {
-    id: 'p6',
-    name: 'Shimla',
-    description: 'Queen of Hills',
-    type: 'popular',
-    rating: 4.2,
-    coordinates: { lat: 31.1048, lng: 77.1734 }
-  },
-];
 
 export function LocationSearchInput({
   value,
   onLocationSelect,
-  placeholder = "Search cities, hotels, or addresses",
-  showPopularDestinations = true,
-  showRecentSearches = true,
+  placeholder = "Search destinations",
   showCurrentLocation = true,
   countryCode = 'in',
-  googleApiKey,
-  maxRecentSearches = 10
+  googleApiKey
 }: LocationSearchInputProps) {
-  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [searchText, setSearchText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [inputValue, setInputValue] = useState(value);
-  const [recentSearches, setRecentSearches] = useState<Location[]>([]);
-  const [popularDestinations, setPopularDestinations] = useState<Location[]>(DEFAULT_POPULAR_DESTINATIONS);
-  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
   const [isGettingLocation, setIsGettingLocation] = useState(false);
-  const [isOnline, setIsOnline] = useState(true);
-  const [apiKeyValid, setApiKeyValid] = useState<boolean | null>(null);
-  const [isValidatingKey, setIsValidatingKey] = useState(false);
-  const googlePlacesRef = useRef(null);
+  const [suggestions, setSuggestions] = useState<Location[]>([]);
+  const googlePlacesRef = useRef<any>(null);
 
-  // Check network status
-  useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener(state => {
-      setIsOnline(state.isConnected ?? false);
-    });
-    return unsubscribe;
-  }, []);
-
-  // Validate API key on mount
-  useEffect(() => {
-    if (googleApiKey) {
-      validateApiKey();
-    }
-  }, [googleApiKey]);
-
-  // Load cached data on mount
-  useEffect(() => {
-    loadCachedData();
-  }, []);
-
-  // Update input value when prop changes
-  useEffect(() => {
-    setInputValue(value);
-  }, [value]);
-
-  // Validate Google Places API key
-  const validateApiKey = async () => {
-    if (!googleApiKey || !isOnline) {
-      setApiKeyValid(false);
-      return;
-    }
-
-    setIsValidatingKey(true);
-
-    try {
-      // Test the API key with a simple request
-      const testUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=test&key=${googleApiKey}`;
-      const response = await fetch(testUrl);
-      const data = await response.json();
-
-      if (data.status === 'OK' || data.status === 'ZERO_RESULTS') {
-        setApiKeyValid(true);
-      } else if (data.status === 'REQUEST_DENIED') {
-        setApiKeyValid(false);
-        console.error('Google Places API key validation failed:', data.error_message);
-      } else {
-        setApiKeyValid(false);
-        console.error('Google Places API error:', data.status, data.error_message);
-      }
-    } catch (error) {
-      console.error('API key validation error:', error);
-      setApiKeyValid(false);
-    } finally {
-      setIsValidatingKey(false);
-    }
+  const handleLocationSelect = (location: Location) => {
+    onLocationSelect(location);
+    setIsModalVisible(false);
+    setSearchText('');
+    setSuggestions([]);
   };
 
-  // Load data from AsyncStorage
-  const loadCachedData = async () => {
-    try {
-      // Load recent searches
-      const cachedRecent = await AsyncStorage.getItem(STORAGE_KEYS.RECENT_SEARCHES);
-      if (cachedRecent) {
-        const parsedRecent = JSON.parse(cachedRecent);
-        setRecentSearches(parsedRecent.slice(0, maxRecentSearches));
-      }
-
-      // Load popular destinations with cache validation
-      const cachedPopular = await AsyncStorage.getItem(STORAGE_KEYS.POPULAR_DESTINATIONS);
-      const cacheTimestamp = await AsyncStorage.getItem(STORAGE_KEYS.CACHE_TIMESTAMP);
-
-      if (cachedPopular && cacheTimestamp) {
-        const timestamp = parseInt(cacheTimestamp);
-        const isValidCache = Date.now() - timestamp < CACHE_DURATION;
-
-        if (isValidCache) {
-          const parsedPopular = JSON.parse(cachedPopular);
-          setPopularDestinations(parsedPopular);
-        } else {
-          refreshPopularDestinations();
-        }
-      } else {
-        refreshPopularDestinations();
-      }
-    } catch (error) {
-      console.error('Error loading cached data:', error);
-    }
-  };
-
-  // Refresh popular destinations
-  const refreshPopularDestinations = async () => {
-    try {
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.POPULAR_DESTINATIONS,
-        JSON.stringify(DEFAULT_POPULAR_DESTINATIONS)
-      );
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.CACHE_TIMESTAMP,
-        Date.now().toString()
-      );
-      setPopularDestinations(DEFAULT_POPULAR_DESTINATIONS);
-    } catch (error) {
-      console.error('Error refreshing popular destinations:', error);
-    }
-  };
-
-  // Save recent search to AsyncStorage
-  const saveRecentSearch = async (location: Location) => {
-    try {
-      const searchWithTimestamp = {
-        ...location,
-        type: 'recent' as const,
-        timestamp: Date.now(),
-      };
-
-      const updatedRecent = [
-        searchWithTimestamp,
-        ...recentSearches.filter(item => item.id !== location.id)
-      ].slice(0, maxRecentSearches);
-
-      setRecentSearches(updatedRecent);
-      await AsyncStorage.setItem(
-        STORAGE_KEYS.RECENT_SEARCHES,
-        JSON.stringify(updatedRecent)
-      );
-    } catch (error) {
-      console.error('Error saving recent search:', error);
-    }
-  };
-
-  // Clear recent searches
-  const clearRecentSearches = async () => {
-    try {
-      await AsyncStorage.removeItem(STORAGE_KEYS.RECENT_SEARCHES);
-      setRecentSearches([]);
-    } catch (error) {
-      console.error('Error clearing recent searches:', error);
-    }
-  };
-
-  // Get current location
   const getCurrentLocation = async () => {
     if (!showCurrentLocation) return;
 
@@ -270,7 +59,7 @@ export function LocationSearchInput({
       if (status !== 'granted') {
         Alert.alert(
           'Permission Denied',
-          'Location permission is required to find hotels near you',
+          'Location permission is required to find your current location',
           [
             {
               text: 'Open Settings',
@@ -285,8 +74,6 @@ export function LocationSearchInput({
 
       const position = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
-        timeInterval: 10000,
-        distanceInterval: 0,
       });
 
       const { latitude, longitude } = position.coords;
@@ -314,65 +101,28 @@ export function LocationSearchInput({
           coordinates: { lat: latitude, lng: longitude },
         };
 
-        setCurrentLocation(location);
-        handleLocationSelect(location);
-      } else {
-        const location: Location = {
-          id: 'current_location',
-          name: 'Current Location',
-          description: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
-          type: 'current',
-          coordinates: { lat: latitude, lng: longitude },
-        };
-
-        setCurrentLocation(location);
         handleLocationSelect(location);
       }
     } catch (error) {
       console.error('Location error:', error);
-
-      let errorMessage = 'Unable to get your location';
-      if (error.code === 'E_LOCATION_SERVICES_DISABLED') {
-        errorMessage = 'Location services are disabled';
-      } else if (error.code === 'E_LOCATION_UNAVAILABLE') {
-        errorMessage = 'Location is temporarily unavailable';
-      } else if (error.code === 'E_LOCATION_TIMEOUT') {
-        errorMessage = 'Location request timed out';
-      }
-
-      Alert.alert('Location Error', errorMessage);
+      Alert.alert('Location Error', 'Unable to get your location');
     } finally {
       setIsGettingLocation(false);
     }
   };
 
-  const handleLocationSelect = (location: Location) => {
-    setShowSuggestions(false);
-    setInputValue(location.name);
-
-    if (location.type !== 'current') {
-      saveRecentSearch(location);
-    }
-
-    onLocationSelect(location);
-  };
-
   const getLocationIcon = (type: string) => {
     switch (type) {
-      case 'recent':
-        return <Clock size={20} color="#6B7280" />;
-      case 'popular':
-        return <Star size={20} color="#F59E0B" />;
       case 'hotel':
-        return <Building size={20} color="#8B5CF6" />;
+        return '🏨';
       case 'landmark':
-        return <MapIcon size={20} color="#10B981" />;
-      case 'address':
-        return <MapPin size={20} color="#EF4444" />;
+        return '🏛️';
+      case 'city':
+        return '🏙️';
       case 'current':
-        return <Navigation size={20} color="#3B82F6" />;
+        return '📍';
       default:
-        return <MapPin size={20} color="#6B7280" />;
+        return '📍';
     }
   };
 
@@ -382,80 +132,35 @@ export function LocationSearchInput({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#F9FAFB',
+        borderBottomColor: '#F1F5F9',
         backgroundColor: 'white',
       }}
       onPress={() => handleLocationSelect(location)}
     >
-      <View style={{ marginRight: 12 }}>
+      <Text style={{ fontSize: 20, marginRight: 12 }}>
         {getLocationIcon(location.type)}
-      </View>
+      </Text>
       <View style={{ flex: 1 }}>
         <Text style={{
           fontSize: 16,
-          color: '#111827',
+          color: '#0F172A',
           fontWeight: '600',
-          marginBottom: 2
+          marginBottom: 2,
+          fontFamily: 'PlusJakartaSans-SemiBold'
         }}>
           {location.name}
         </Text>
         <Text style={{
           fontSize: 14,
-          color: '#6B7280'
+          color: '#64748B',
+          fontFamily: 'PlusJakartaSans-Regular'
         }}>
           {location.description}
         </Text>
-        {location.rating && (
-          <View style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginTop: 4
-          }}>
-            <Star size={14} color="#F59E0B" fill="#F59E0B" />
-            <Text style={{
-              fontSize: 12,
-              color: '#6B7280',
-              marginLeft: 4
-            }}>
-              {location.rating}
-            </Text>
-          </View>
-        )}
       </View>
-      {location.type === 'popular' && (
-        <View style={{
-          backgroundColor: '#DBEAFE',
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          borderRadius: 12,
-        }}>
-          <Text style={{
-            fontSize: 12,
-            color: '#2563EB',
-            fontWeight: '500'
-          }}>
-            Popular
-          </Text>
-        </View>
-      )}
-      {location.type === 'current' && (
-        <View style={{
-          backgroundColor: '#D1FAE5',
-          paddingHorizontal: 8,
-          paddingVertical: 4,
-          borderRadius: 12,
-        }}>
-          <Text style={{
-            fontSize: 12,
-            color: '#059669',
-            fontWeight: '500'
-          }}>
-            Current
-          </Text>
-        </View>
-      )}
     </TouchableOpacity>
   );
 
@@ -464,13 +169,14 @@ export function LocationSearchInput({
       style={{
         flexDirection: 'row',
         alignItems: 'center',
-        padding: 16,
+        paddingHorizontal: 16,
+        paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#F9FAFB',
-        backgroundColor: '#EFF6FF',
+        borderBottomColor: '#F1F5F9',
+        backgroundColor: '#F0F9FF',
       }}
       onPress={getCurrentLocation}
-      disabled={isGettingLocation || !isOnline}
+      disabled={isGettingLocation}
     >
       <View style={{ marginRight: 12 }}>
         {isGettingLocation ? (
@@ -483,392 +189,267 @@ export function LocationSearchInput({
         <Text style={{
           fontSize: 16,
           color: '#2563EB',
-          fontWeight: '600'
+          fontWeight: '600',
+          fontFamily: 'PlusJakartaSans-SemiBold'
         }}>
           {isGettingLocation ? 'Getting location...' : 'Use current location'}
         </Text>
         <Text style={{
           fontSize: 14,
-          color: '#3B82F6'
+          color: '#3B82F6',
+          fontFamily: 'PlusJakartaSans-Regular'
         }}>
-          {!isOnline ? 'No internet connection' : 'Find hotels near you'}
+          Find places near you
         </Text>
       </View>
     </TouchableOpacity>
   );
 
-  const renderSectionHeader = (title: string, onAction?: () => void, actionText?: string) => (
-    <View style={{
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: 16,
-      paddingVertical: 12,
-      backgroundColor: '#F9FAFB',
-      borderBottomWidth: 1,
-      borderBottomColor: '#E5E7EB',
-    }}>
-      <Text style={{
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#374151',
-      }}>
-        {title}
-      </Text>
-      {onAction && actionText && (
-        <TouchableOpacity onPress={onAction}>
-          <Text style={{
-            fontSize: 12,
-            color: '#2563EB',
-            fontWeight: '500',
-          }}>
-            {actionText}
-          </Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
-  const renderApiKeyError = () => (
-    <View style={{
-      padding: 16,
-      backgroundColor: '#FEF2F2',
-      borderWidth: 1,
-      borderColor: '#FECACA',
-      borderRadius: 8,
-      margin: 16,
-    }}>
-      <Text style={{
-        color: '#DC2626',
-        fontSize: 16,
-        fontWeight: '600',
-        marginBottom: 4,
-      }}>
-        {!googleApiKey ? 'Google API Key Required' : 'Invalid API Key'}
-      </Text>
-      <Text style={{
-        color: '#EF4444',
-        fontSize: 14,
-        marginBottom: 8,
-      }}>
-        {!googleApiKey
-          ? 'Please provide a valid Google Places API key'
-          : 'The provided Google Places API key is invalid or has insufficient permissions'
-        }
-      </Text>
-      <TouchableOpacity
-        onPress={validateApiKey}
-        style={{
-          backgroundColor: '#DC2626',
-          paddingHorizontal: 12,
-          paddingVertical: 8,
-          borderRadius: 6,
-          alignSelf: 'flex-start',
-        }}
-      >
-        <Text style={{ color: 'white', fontSize: 14, fontWeight: '500' }}>
-          {isValidatingKey ? 'Validating...' : 'Retry Validation'}
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  const renderEmptyState = () => (
-    <View style={{
-      padding: 24,
-      alignItems: 'center',
-      justifyContent: 'center',
-    }}>
-      {!isOnline ? (
-        <>
-          <WifiOff size={32} color="#EF4444" />
-          <Text style={{
-            color: '#EF4444',
-            marginTop: 8,
-            textAlign: 'center',
-            fontSize: 16,
-            fontWeight: '500',
-          }}>
-            No internet connection
-          </Text>
-          <Text style={{
-            color: '#6B7280',
-            textAlign: 'center',
-            fontSize: 14,
-            marginTop: 4,
-          }}>
-            Check your connection and try again
-          </Text>
-        </>
-      ) : (
-        <>
-          <Search size={32} color="#9CA3AF" />
-          <Text style={{
-            color: '#6B7280',
-            marginTop: 8,
-            textAlign: 'center',
-            fontSize: 16,
-          }}>
-            Search for cities, hotels, landmarks, or addresses
-          </Text>
-        </>
-      )}
-    </View>
-  );
-
-  // API key validation
-  if (!googleApiKey || apiKeyValid === false) {
-    return renderApiKeyError();
-  }
-
-  // Show loading while validating API key
-  if (isValidatingKey) {
-    return (
-      <View style={{
-        padding: 16,
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: '#F8FAFC',
-        borderRadius: 8,
-        margin: 16,
-      }}>
-        <ActivityIndicator size="small" color="#3B82F6" />
-        <Text style={{
-          color: '#6B7280',
-          marginTop: 8,
-          fontSize: 14,
-        }}>
-          Validating API key...
-        </Text>
-      </View>
-    );
-  }
-
   return (
-    <View style={{ position: 'relative' }}>
-      {/* Google Places Autocomplete */}
-      <GooglePlacesAutocomplete
-        ref={googlePlacesRef}
-        placeholder={placeholder}
-        predefinedPlaces={[]}
-        onPress={(data, details = null) => {
-          setIsLoading(true);
-
-          let locationType: Location['type'] = 'address';
-          if (data.types?.includes('locality') || data.types?.includes('administrative_area_level_1')) {
-            locationType = 'city';
-          } else if (data.types?.includes('country')) {
-            locationType = 'country';
-          } else if (data.types?.includes('establishment')) {
-            locationType = 'hotel';
-          } else if (data.types?.includes('tourist_attraction')) {
-            locationType = 'landmark';
-          }
-
-          const location: Location = {
-            id: data.place_id || Math.random().toString(),
-            name: data.structured_formatting?.main_text || data.description,
-            description: data.structured_formatting?.secondary_text || data.description,
-            type: locationType,
-            coordinates: details?.geometry?.location ? {
-              lat: details.geometry.location.lat,
-              lng: details.geometry.location.lng
-            } : undefined,
-            placeId: data.place_id,
-            rating: details?.rating
-          };
-
-          setIsLoading(false);
-          handleLocationSelect(location);
-        }}
-        query={{
-          key: googleApiKey,
-          language: 'en',
-          // Fixed: Remove the problematic types parameter or use a single type
-          // types: 'geocode', // Use 'geocode' for addresses and localities
-          // OR use 'establishment' for businesses
-          // OR remove types entirely to get all results
-          components: `country:${countryCode}`,
-        }}
-        fetchDetails={true}
-        enablePoweredByContainer={false}
-        debounce={200}
-        timeout={20000} // Fixed: Ensure timeout is properly set
-        minLength={2} // Fixed: Reduced from 3 to 2 for better UX
-        
-        // Additional props to fix the issues
-        nearbyPlacesAPI="GooglePlacesSearch"
-        GooglePlacesSearchQuery={{
-          rankby: 'distance',
-        }}
-        GooglePlacesDetailsQuery={{
-          fields: 'geometry,formatted_address,name,rating,types,address_components',
-        }}
-        
-        styles={{
-          container: {
-            flex: 0,
-            zIndex: 1,
-          },
-          textInputContainer: {
-            backgroundColor: 'transparent',
-            borderWidth: 0,
-            height: 56,
-          },
-          textInput: {
-            height: 56,
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#E2E8F0',
-            backgroundColor: '#F8FAFC',
-            paddingLeft: 48,
-            paddingRight: 16,
-            fontSize: 16,
-            color: '#0F172A',
-          },
-          listView: {
-            backgroundColor: 'white',
-            borderRadius: 12,
-            borderWidth: 1,
-            borderColor: '#E5E7EB',
-            marginTop: 4,
-            maxHeight: 300,
-            elevation: 8,
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.1,
-            shadowRadius: 8,
-          },
-          row: {
-            backgroundColor: 'white',
-            padding: 16,
-            borderBottomWidth: 1,
-            borderBottomColor: '#F3F4F6',
-          },
-          separator: {
-            height: 1,
-            backgroundColor: '#F3F4F6',
-          },
-          description: {
-            fontSize: 16,
-            color: '#111827',
-            fontWeight: '500',
-          },
-        }}
-        textInputProps={{
-          onFocus: () => setShowSuggestions(true),
-          onBlur: () => {
-            // Delay hiding suggestions to allow for tap events
-            setTimeout(() => setShowSuggestions(false), 200);
-          },
-          placeholderTextColor: '#94A3B8',
-          onChangeText: (text) => {
-            setInputValue(text);
-            // Show suggestions when user starts typing
-            if (text.length === 0) {
-              setShowSuggestions(true);
-            }
-          },
-          value: inputValue,
-        }}
-        renderLeftButton={() => (
-          <View style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 16,
-            justifyContent: 'center',
-            zIndex: 10,
-          }}>
-            {isLoading ? (
-              <ActivityIndicator size="small" color="#94A3B8" />
-            ) : (
-              <Search size={20} color="#94A3B8" />
-            )}
-          </View>
-        )}
-        listEmptyComponent={() => (
-          <View style={{ padding: 16 }}>
-            <Text style={{
-              textAlign: 'center',
-              color: '#6B7280',
-              fontSize: 14
-            }}>
-              No results found
-            </Text>
-          </View>
-        )}
-        onFail={(error) => {
-          console.error('GooglePlacesAutocomplete error:', error);
-          Alert.alert(
-            'Search Error',
-            'Unable to search locations. Please check your internet connection and API key.',
-            [
-              { text: 'OK' },
-              { text: 'Validate API Key', onPress: validateApiKey }
-            ]
-          );
-        }}
-        // Additional error handling props
-        onTimeout={() => {
-          console.warn('Google Places request timeout');
-          Alert.alert('Timeout', 'Search request timed out. Please try again.');
-        }}
-        onNotFound={() => {
-          console.log('No results found');
-        }}
-        // Performance optimizations
-        keyboardShouldPersistTaps="handled"
-        listViewDisplayed="auto"
-        keepResultsAfterBlur={false}
-        suppressDefaultStyles={false}
-      />
-
-      {/* Custom suggestions overlay */}
-      {showSuggestions && inputValue.length === 0 && (
-        <View style={{
-          position: 'absolute',
-          top: 60,
-          left: 0,
-          right: 0,
-          backgroundColor: 'white',
-          borderWidth: 1,
-          borderColor: '#E5E7EB',
-          borderRadius: 12,
-          marginTop: 4,
-          maxHeight: 400,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 4 },
-          shadowOpacity: 0.1,
-          shadowRadius: 8,
-          zIndex: 1000,
-        }}>
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {/* Current Location Button */}
-            {showCurrentLocation && renderCurrentLocationButton()}
-
-            {/* Recent Searches */}
-            {showRecentSearches && recentSearches.length > 0 && (
-              <>
-                {renderSectionHeader('Recent Searches', clearRecentSearches, 'Clear')}
-                {recentSearches.map(renderSuggestionItem)}
-              </>
-            )}
-
-            {/* Popular Destinations */}
-            {showPopularDestinations && popularDestinations.length > 0 && (
-              <>
-                {renderSectionHeader('Popular Destinations', refreshPopularDestinations, 'Refresh')}
-                {popularDestinations.map(renderSuggestionItem)}
-              </>
-            )}
-
-            {/* Empty State */}
-            {!showRecentSearches && !showPopularDestinations && !showCurrentLocation && renderEmptyState()}
-          </ScrollView>
+    <>
+      <TouchableOpacity
+        className="relative"
+        onPress={() => setIsModalVisible(true)}
+      >
+        <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
+          <MapPin size={20} color="#94A3B8" />
         </View>
-      )}
-    </View>
+        <View className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 justify-center">
+          <Text 
+            className={`text-base ${value ? 'text-slate-900' : 'text-slate-400'}`}
+            style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+          >
+            {value || placeholder}
+          </Text>
+        </View>
+      </TouchableOpacity>
+
+      <Modal
+        visible={isModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setIsModalVisible(false)}
+      >
+        <View className="flex-1 bg-white">
+          {/* Header */}
+          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
+            <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+              <X size={24} color="#6B7280" />
+            </TouchableOpacity>
+            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Search Location
+            </Text>
+            <View className="w-6" />
+          </View>
+
+          {/* Search Input */}
+          <View className="px-4 py-4 border-b border-gray-100">
+            <View className="relative">
+              <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
+                <Search size={20} color="#94A3B8" />
+              </View>
+              <GooglePlacesAutocomplete
+                ref={googlePlacesRef}
+                placeholder={placeholder}
+                predefinedPlaces={[]}
+                onPress={(data, details = null) => {
+                  setIsLoading(true);
+
+                  let locationType: Location['type'] = 'address';
+                  if (data.types?.includes('locality') || data.types?.includes('administrative_area_level_1')) {
+                    locationType = 'city';
+                  } else if (data.types?.includes('country')) {
+                    locationType = 'country';
+                  } else if (data.types?.includes('establishment')) {
+                    locationType = 'hotel';
+                  } else if (data.types?.includes('tourist_attraction')) {
+                    locationType = 'landmark';
+                  }
+
+                  const location: Location = {
+                    id: data.place_id || Math.random().toString(),
+                    name: data.structured_formatting?.main_text || data.description,
+                    description: data.structured_formatting?.secondary_text || data.description,
+                    type: locationType,
+                    coordinates: details?.geometry?.location ? {
+                      lat: details.geometry.location.lat,
+                      lng: details.geometry.location.lng
+                    } : undefined,
+                    placeId: data.place_id,
+                    rating: details?.rating
+                  };
+
+                  setIsLoading(false);
+                  handleLocationSelect(location);
+                }}
+                query={{
+                  key: googleApiKey,
+                  language: 'en',
+                  components: `country:${countryCode}`,
+                }}
+                fetchDetails={true}
+                enablePoweredByContainer={false}
+                debounce={300}
+                timeout={20000}
+                minLength={2}
+                nearbyPlacesAPI="GooglePlacesSearch"
+                GooglePlacesDetailsQuery={{
+                  fields: 'geometry,formatted_address,name,rating,types,address_components',
+                }}
+                styles={{
+                  container: {
+                    flex: 0,
+                    zIndex: 1,
+                  },
+                  textInputContainer: {
+                    backgroundColor: 'transparent',
+                    borderWidth: 0,
+                    height: 50,
+                    paddingHorizontal: 0,
+                  },
+                  textInput: {
+                    height: 50,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: '#E2E8F0',
+                    backgroundColor: '#F8FAFC',
+                    paddingLeft: 48,
+                    paddingRight: 16,
+                    fontSize: 16,
+                    color: '#0F172A',
+                    fontFamily: 'PlusJakartaSans-Regular',
+                  },
+                  listView: {
+                    backgroundColor: 'white',
+                    borderRadius: 12,
+                    marginTop: 8,
+                    maxHeight: 300,
+                    elevation: 4,
+                    shadowColor: '#000',
+                    shadowOffset: { width: 0, height: 2 },
+                    shadowOpacity: 0.1,
+                    shadowRadius: 4,
+                  },
+                  row: {
+                    backgroundColor: 'white',
+                    paddingHorizontal: 16,
+                    paddingVertical: 12,
+                    borderBottomWidth: 1,
+                    borderBottomColor: '#F1F5F9',
+                  },
+                  separator: {
+                    height: 1,
+                    backgroundColor: '#F1F5F9',
+                  },
+                  description: {
+                    fontSize: 16,
+                    color: '#0F172A',
+                    fontWeight: '600',
+                    fontFamily: 'PlusJakartaSans-SemiBold',
+                  },
+                  predefinedPlacesDescription: {
+                    fontSize: 14,
+                    color: '#64748B',
+                    fontFamily: 'PlusJakartaSans-Regular',
+                  },
+                }}
+                textInputProps={{
+                  placeholderTextColor: '#94A3B8',
+                  onChangeText: (text) => {
+                    setSearchText(text);
+                  },
+                  value: searchText,
+                  autoFocus: true,
+                  returnKeyType: 'search',
+                  clearButtonMode: 'while-editing',
+                }}
+                renderLeftButton={() => (
+                  <View style={{
+                    position: 'absolute',
+                    top: 0,
+                    bottom: 0,
+                    left: 16,
+                    justifyContent: 'center',
+                    zIndex: 10,
+                  }}>
+                    {isLoading ? (
+                      <ActivityIndicator size="small" color="#94A3B8" />
+                    ) : (
+                      <Search size={20} color="#94A3B8" />
+                    )}
+                  </View>
+                )}
+                listEmptyComponent={() => (
+                  <View style={{ padding: 16 }}>
+                    <Text style={{
+                      textAlign: 'center',
+                      color: '#6B7280',
+                      fontSize: 14,
+                      fontFamily: 'PlusJakartaSans-Regular'
+                    }}>
+                      {searchText.length > 0 ? 'No results found' : 'Start typing to search'}
+                    </Text>
+                  </View>
+                )}
+                onFail={(error) => {
+                  console.error('GooglePlacesAutocomplete error:', error);
+                  Alert.alert('Search Error', 'Unable to search locations. Please try again.');
+                }}
+                keyboardShouldPersistTaps="handled"
+                listViewDisplayed="auto"
+                keepResultsAfterBlur={false}
+                suppressDefaultStyles={false}
+              />
+            </View>
+          </View>
+
+          {/* Current Location Option */}
+          {showCurrentLocation && searchText.length === 0 && (
+            <View className="flex-1">
+              <ScrollView>
+                {renderCurrentLocationButton()}
+                
+                {/* Helper text */}
+                <View className="p-4">
+                  <Text style={{
+                    color: '#64748B',
+                    fontSize: 14,
+                    textAlign: 'center',
+                    fontFamily: 'PlusJakartaSans-Regular'
+                  }}>
+                    Search for cities, hotels, landmarks, or addresses
+                  </Text>
+                </View>
+              </ScrollView>
+            </View>
+          )}
+
+          {/* Empty state when searching */}
+          {searchText.length === 0 && !showCurrentLocation && (
+            <View className="flex-1 justify-center items-center p-8">
+              <Search size={48} color="#CBD5E1" />
+              <Text style={{
+                color: '#64748B',
+                fontSize: 16,
+                textAlign: 'center',
+                marginTop: 16,
+                fontFamily: 'PlusJakartaSans-Regular'
+              }}>
+                Search for your destination
+              </Text>
+              <Text style={{
+                color: '#94A3B8',
+                fontSize: 14,
+                textAlign: 'center',
+                marginTop: 8,
+                fontFamily: 'PlusJakartaSans-Regular'
+              }}>
+                Type a city, hotel, or landmark name
+              </Text>
+            </View>
+          )}
+        </View>
+      </Modal>
+    </>
   );
 }
