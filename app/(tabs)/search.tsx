@@ -1,19 +1,79 @@
-import React, { useState, useLayoutEffect } from 'react';
+import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, RefreshControl } from 'react-native';
-import { useNavigation, router } from 'expo-router';
+import { useNavigation, router, useLocalSearchParams } from 'expo-router';
 import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
-import { useHotels } from '@/hooks/useHotels';
+import { apiService } from '@/services/api';
+
+interface SearchFilters {
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+  rating?: number;
+  amenities?: string[];
+  propertyType?: string[];
+  sortBy?: string;
+}
+
+interface Hotel {
+  id: string;
+  name: string;
+  description: string | null;
+  address: string;
+  city: string;
+  starRating: number;
+  amenities: string[];
+  coordinates: {
+    lat: number;
+    lng: number;
+  };
+  distance: number | null;
+  rating: {
+    average: number;
+    count: number;
+  };
+  pricing: {
+    startingFrom: number;
+    range: {
+      min: number;
+      max: number;
+    };
+    currency: string;
+    totalPrice: number | null;
+    perNight: boolean;
+  } | null;
+  offers?: Array<{
+    title: string;
+    discountType: 'percentage' | 'fixed';
+    discountValue: number;
+    code: string;
+    validUntil?: string;
+  }>;
+  images: {
+    primary: string | null;
+    gallery?: string[];
+  };
+  paymentOptions: {
+    onlineEnabled: boolean;
+    offlineEnabled: boolean;
+  };
+}
 
 export default function SearchScreen() {
-  const [sortBy, setSortBy] = useState('recommended');
-  const [searchFilters, setSearchFilters] = useState({
-    location: '',
+  const [hotels, setHotels] = useState<Hotel[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [total, setTotal] = useState(0);
+  const [currentSearchData, setCurrentSearchData] = useState<any>(null);
+  const [filters, setFilters] = useState<SearchFilters>({
     sortBy: 'recommended'
   });
+  
   const navigation = useNavigation();
-  const { hotels, loading, error, total, searchHotels, refresh, refreshing } = useHotels(searchFilters);
+  const params = useLocalSearchParams();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -34,25 +94,89 @@ export default function SearchScreen() {
     });
   }, [navigation, total]);
 
-  const handleFilterChange = (newFilters: any) => {
-    setSearchFilters(prev => ({ ...prev, ...newFilters }));
+  // Parse search data from params
+  useEffect(() => {
+    if (params.searchData) {
+      try {
+        const searchData = JSON.parse(params.searchData as string);
+        setCurrentSearchData(searchData);
+        performSearch(searchData, filters);
+      } catch (error) {
+        console.error('Error parsing search data:', error);
+      }
+    }
+  }, [params.searchData]);
+
+  const performSearch = async (searchData: any, searchFilters: SearchFilters = {}) => {
+    if (!searchData) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      // Prepare request body according to API specification
+      const requestBody = {
+        coordinates: searchData.location?.coordinates || { lat: 0, lng: 0 },
+        city: searchData.location?.name || '',
+        radius: 50,
+        dateRange: {
+          startDate: searchData.dateRange?.startDate || new Date().toISOString(),
+          endDate: searchData.dateRange?.endDate || new Date().toISOString(),
+        },
+        guests: searchData.guests || { adults: 1, children: 0, infants: 0 },
+        priceRange: searchFilters.priceRange || { min: 0, max: 999999 },
+        starRating: searchFilters.rating || 0,
+        amenities: searchFilters.amenities || [],
+        sortBy: searchFilters.sortBy || 'recommended',
+        page: 1,
+        limit: 20
+      };
+
+      console.log('Search request body:', JSON.stringify(requestBody, null, 2));
+
+      const response = await apiService.post('/search/search', requestBody);
+
+      console.log('Search response:', JSON.stringify(response, null, 2));
+
+      if (response.success) {
+        setHotels(response.data.hotels || []);
+        setTotal(response.data.total || 0);
+      } else {
+        setError(response.error || 'Search failed');
+        setHotels([]);
+        setTotal(0);
+      }
+    } catch (err: any) {
+      console.error('Search error:', err);
+      setError(err.message || 'Search failed');
+      setHotels([]);
+      setTotal(0);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterChange = (newFilters: SearchFilters) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    if (currentSearchData) {
+      performSearch(currentSearchData, updatedFilters);
+    }
   };
 
   const handleSearch = (searchData: any) => {
-    const filters = {
-      location: searchData.destination || searchData.location?.name || '',
-      checkIn: searchData.dateRange?.startDate,
-      checkOut: searchData.dateRange?.endDate,
-      guests: searchData.guests?.adults + searchData.guests?.children || 1,
-      query: searchData.query || searchData.destination || '',
-      sortBy: searchFilters.sortBy
-    };
-    
-    setSearchFilters(filters);
-    searchHotels(filters);
+    setCurrentSearchData(searchData);
+    performSearch(searchData, filters);
   };
 
-  const renderHotelCard = (hotel: any) => (
+  const handleRefresh = () => {
+    if (currentSearchData) {
+      setRefreshing(true);
+      performSearch(currentSearchData, filters).finally(() => setRefreshing(false));
+    }
+  };
+
+  const renderHotelCard = (hotel: Hotel) => (
     <TouchableOpacity 
       key={hotel.id}
       className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
@@ -60,14 +184,14 @@ export default function SearchScreen() {
     >
       <View className="relative">
         <Image
-          source={{ uri: hotel.images[0] }}
+          source={{ uri: hotel.images.primary || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800' }}
           className="w-full h-48"
           style={{ resizeMode: 'cover' }}
         />
-        {hotel.offer && (
+        {hotel.offers && hotel.offers.length > 0 && (
           <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
             <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              {hotel.offer}
+              {hotel.offers[0].title}
             </Text>
           </View>
         )}
@@ -85,24 +209,24 @@ export default function SearchScreen() {
             <View className="flex-row items-center mt-1">
               <MapPin size={14} color="#6B7280" />
               <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                {hotel.address || hotel.location}
+                {hotel.address}, {hotel.city}
               </Text>
             </View>
           </View>
           <View className="flex-row items-center">
             <Star size={14} color="#FCD34D" fill="#FCD34D" />
             <Text className="text-sm text-gray-900 ml-1" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {hotel.rating}
+              {hotel.rating.average.toFixed(1)}
             </Text>
             <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              ({hotel.reviewCount})
+              ({hotel.rating.count})
             </Text>
           </View>
         </View>
         
         {hotel.distance && (
           <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {hotel.distance}
+            {hotel.distance.toFixed(1)} km away
           </Text>
         )}
         
@@ -126,11 +250,11 @@ export default function SearchScreen() {
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-baseline">
             <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              ₹{hotel.price.toLocaleString()}
+              ₹{hotel.pricing?.startingFrom.toLocaleString() || 0}
             </Text>
-            {hotel.originalPrice && (
+            {hotel.pricing?.range?.max && hotel.pricing.range.max > hotel.pricing.startingFrom && (
               <Text className="text-sm text-gray-500 line-through ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                ₹{hotel.originalPrice.toLocaleString()}
+                ₹{hotel.pricing.range.max.toLocaleString()}
               </Text>
             )}
             <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -183,13 +307,7 @@ export default function SearchScreen() {
           className="bg-gray-100 px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('filters', {
             payload: {
-              currentFilters: {
-                priceRange: { min: 0, max: 999999 },
-                rating: 0,
-                amenities: [],
-                propertyType: [],
-                sortBy: 'recommended'
-              },
+              currentFilters: filters,
               onApplyFilters: handleFilterChange
             }
           })}
@@ -225,7 +343,7 @@ export default function SearchScreen() {
       </Text>
       <TouchableOpacity
         className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
-        onPress={refresh}
+        onPress={handleRefresh}
       >
         <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
           Try Again
@@ -248,7 +366,7 @@ export default function SearchScreen() {
         >
           <Search size={20} color="#6B7280" />
           <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {searchFilters.location || 'Search destinations, hotels...'}
+            {currentSearchData?.location?.name || 'Search destinations, hotels...'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -262,13 +380,7 @@ export default function SearchScreen() {
                 className="flex-row items-center bg-gray-100 px-4 py-2 rounded-full"
                 onPress={() => SheetManager.show('filters', {
                   payload: {
-                    currentFilters: {
-                      priceRange: { min: 0, max: 999999 },
-                      rating: 0,
-                      amenities: [],
-                      propertyType: [],
-                      sortBy: searchFilters.sortBy || 'recommended'
-                    },
+                    currentFilters: filters,
                     onApplyFilters: handleFilterChange
                   }
                 })}
@@ -312,7 +424,7 @@ export default function SearchScreen() {
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={refresh}
+            onRefresh={handleRefresh}
             colors={['#FF5A5F']}
             tintColor="#FF5A5F"
           />
@@ -327,7 +439,7 @@ export default function SearchScreen() {
         ) : error ? (
           renderErrorState()
         ) : hotels.length === 0 ? (
-          searchFilters.location || searchFilters.query ? renderNoResultsState() : renderEmptyState()
+          currentSearchData ? renderNoResultsState() : renderEmptyState()
         ) : (
           <View>
             {hotels.map(renderHotelCard)}

@@ -141,7 +141,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
       closable={true}
       closeOnTouchBackdrop={true}
     >
-      <View className="flex-col items-stretch rounded-t-2xl bg-white pt-3">
+      <View className="flex-col items-stretch rounded-t-2xl bg-white pt-3" style={{ maxHeight: '90%' }}>
         {/* Handle */}
         <View className="flex h-5 w-full items-center justify-center">
           <View className="h-1.5 w-10 rounded-full bg-gray-200" />
@@ -162,10 +162,12 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
           </TouchableOpacity>
         </View>
 
-        {/* Filters Content */}
+        {/* Filters Content - Fixed scrolling */}
         <ScrollView 
-          className=""
+          className="flex-1"
           showsVerticalScrollIndicator={false}
+          nestedScrollEnabled={true}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
           {/* Sort By */}
           <View className="px-6 py-4 border-b border-gray-100">
@@ -328,7 +330,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
         </ScrollView>
 
         {/* Footer */}
-        <View className="px-6 py-4 border-t border-gray-200">
+        <View className="px-6 py-4 border-t border-gray-200 bg-white">
           <TouchableOpacity 
             onPress={handleApplyFilters}
             className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"

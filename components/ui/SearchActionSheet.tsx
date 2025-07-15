@@ -6,13 +6,16 @@ import { LocationSearchInput } from './LocationSearchInput';
 import { DateRangePicker } from './DateRangePicker';
 import { GuestSelector } from './GuestSelector';
 import { router } from 'expo-router';
-import { SheetManager as ActionSheetManager } from 'react-native-actions-sheet';
 
 interface Location {
   id: string;
   name: string;
   description: string;
-  type: 'city' | 'region' | 'country' | 'recent';
+  type: 'city' | 'region' | 'country' | 'recent' | 'current';
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
 }
 
 interface DateRange {
@@ -60,25 +63,24 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     
     // Simulate search API call
     setTimeout(() => {
+      // Pass the complete search data to the search screen
       if (payload?.onSearch) {
-        payload.onSearch({
-          destination: searchData.location?.name || '',
-          guests: searchData.guests.adults + searchData.guests.children,
-          query: searchData.location?.name || '',
-          guests: `${searchData.guests.adults + searchData.guests.children} guests`
-        });
+        payload.onSearch(searchData);
       }
       
       // Navigate to explore tab with search results
       router.push({
         pathname: '/(tabs)/search',
+        params: {
+          searchData: JSON.stringify(searchData)
+        }
       });
       
       // Close the sheet
       handleClose();
       
       setIsSearching(false);
-    }, 1500);
+    }, 1000);
   };
     
   const handleLocationSelect = (location: Location) => {
@@ -106,11 +108,13 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       snapPoints={[100]}
       initialSnapIndex={0}
     >
-      <View className="flex-col items-stretch bg-white" >
+      <View className="flex-col items-stretch bg-white" style={{ minHeight: 600 }}>
         {/* Handle */}
-       
+        <View className="flex h-5 w-full items-center justify-center pt-3">
+          <View className="h-1.5 w-10 rounded-full bg-gray-200" />
+        </View>
 
-        <View className="justify-between">
+        <View className="flex-1 justify-between">
           {/* Header */}
           <View className="flex-col">
             <View className="flex-row items-center justify-between px-4 py-4 pb-2">
@@ -141,8 +145,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 </Text>
                 <LocationSearchInput
                   value={searchData.location?.name || ''}
-                   googleApiKey='AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM'
-
+                  googleApiKey='AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM'
                   onLocationSelect={handleLocationSelect}
                   placeholder="Search destinations"
                 />

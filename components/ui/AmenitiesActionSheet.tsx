@@ -49,7 +49,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
     const IconComponent = amenity.icon;
     
     return (
-      <View key={amenity.id} className="flex-row items-center gap-4">
+      <View key={amenity.id} className="flex-row items-center gap-4 py-3">
         <IconComponent size={24} color="#1F2937" strokeWidth={2} />
         <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
       </View>
@@ -59,7 +59,6 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
   return (
     <ActionSheet 
       id={sheetId}
-      
       containerStyle={{
         paddingHorizontal: 0,
         paddingBottom: 0,
@@ -68,31 +67,32 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
       closable={true}
       closeOnTouchBackdrop={true}
     >
-      <View className="flex-col items-stretch rounded-t-2xl bg-white pt-3">
+      <View className="flex-col items-stretch rounded-t-2xl bg-white pt-3" style={{ maxHeight: '80%' }}>
         {/* Handle */}
         <View className="flex h-5 w-full items-center justify-center">
           <View className="h-1.5 w-10 rounded-full bg-gray-200" />
         </View>
 
         {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-4">
+        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
           <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>What this place offers</Text>
           <TouchableOpacity onPress={handleClose} className="p-2">
             <X size={24} color="#6B7280" />
           </TouchableOpacity>
         </View>
 
-        {/* Amenities Grid */}
+        {/* Amenities Grid - Fixed scrolling */}
         <ScrollView 
-          className=" px-4"
+          className="flex-1 px-4 py-4"
           showsVerticalScrollIndicator={false}
-          style={{ maxHeight: 500 }}
+          nestedScrollEnabled={true}
+          contentContainerStyle={{ paddingBottom: 20 }}
         >
-          <View className="grid grid-cols-2 gap-x-4 gap-y-6 pb-6">
+          <View className="flex-row flex-wrap justify-between">
             {amenities.map((amenity, index) => (
               <View 
                 key={amenity.id}
-                className={`${index % 2 === 0 ? 'pr-2' : 'pl-2'}`}
+                className="w-[48%] mb-4"
               >
                 {renderAmenityItem(amenity)}
               </View>
@@ -101,7 +101,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
         </ScrollView>
 
         {/* Close Button */}
-        <View className="mt-4 border-t border-gray-200 bg-white px-4 py-3">
+        <View className="border-t border-gray-200 bg-white px-4 py-4">
           <TouchableOpacity 
             onPress={handleClose}
             className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
