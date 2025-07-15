@@ -72,9 +72,6 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       // Navigate to explore tab with search results
       router.push({
         pathname: '/(tabs)/search',
-        params: {
-          payload: payload.onSearch(searchData)
-        }
       });
       
       // Close the sheet

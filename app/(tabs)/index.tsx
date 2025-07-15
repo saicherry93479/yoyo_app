@@ -1,11 +1,11 @@
 import React, { useState, useLayoutEffect } from "react"
-import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView, Pressable, Image } from "react-native"
+import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView, Pressable, Image, RefreshControl } from "react-native"
 import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
 import { Search, Star } from "lucide-react-native"
-import { useHotels } from '@/hooks/useHotels';
+import { useNearbyHotels, useLatestHotels, useOffersHotels } from '@/hooks/useHotels';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 
 // SVG Icons as components
@@ -102,16 +102,30 @@ const HeartIcon = ({ size = 20, color = "currentColor" }) => (
   </Svg>
 )
 
-const StarIcon = ({ size = 16, color = "#EAB308" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-    <Path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
-  </Svg>
-)
-
 export default function HotelBookingApp() {
   const [activeTab, setActiveTab] = useState('nearby')
   const navigation = useNavigation()
-  const { hotels, loading, error, refresh } = useHotels()
+  
+  // Use different hooks based on active tab
+  const nearbyData = useNearbyHotels()
+  const latestData = useLatestHotels()
+  const offersData = useOffersHotels()
+
+  // Get current data based on active tab
+  const getCurrentData = () => {
+    switch (activeTab) {
+      case 'nearby':
+        return nearbyData
+      case 'latest':
+        return latestData
+      case 'offers':
+        return offersData
+      default:
+        return nearbyData
+    }
+  }
+
+  const currentData = getCurrentData()
 
   // Hide the default header
   useLayoutEffect(() => {
@@ -121,69 +135,24 @@ export default function HotelBookingApp() {
         <View className="bg-white flex-row items-center w-full px-4 py-3 ">
           <TouchableOpacity
             className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
-            onPress={
-              // Navigate back to search or open search sheet
-              () => SheetManager.show('search')
-            }
+            onPress={() => SheetManager.show('search')}
           >
             <Search size={20} color="#6B7280" />
             <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            Anywhere • Any week • Add guests
+              Anywhere • Any week • Add guests
             </Text>
           </TouchableOpacity>
         </View>
-        // <Pressable onPress={()=>SheetManager.show('search')} className="flex-row items-center justify-between rounded-full border border-gray-200 bg-white p-2 w-full shadow-sm">
-        //   <View className="flex-row items-center gap-2">
-        //     <View className="text-red-500">
-        //       <MagnifyingGlassIcon size={24} color="#EF4444" />
-        //     </View>
-        //     <View className="flex-col">
-        //       <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Where to?</Text>
-        //       <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Anywhere • Any week • Add guests</Text>
-        //     </View>
-        //   </View>
-        //   <TouchableOpacity 
-        //     className="rounded-full border border-gray-300 p-2"
-        //     onPress={() => SheetManager.show('filters', {
-        //       payload: {
-        //         currentFilters: {
-        //           priceRange: { min: 0, max: 999999 },
-        //           rating: 0,
-        //           amenities: [],
-        //           propertyType: [],
-        //           sortBy: 'recommended'
-        //         },
-        //         onApplyFilters: (filters) => {
-        //           console.log('Applied filters:', filters);
-        //           // Here you would typically update the hotel list based on filters
-        //         }
-        //       }
-        //     })}
-        //   >
-        //     <FilterIcon />
-        //   </TouchableOpacity>
-        // </Pressable>
       ),
       headerTitleAlign: 'left',
     });
   }, [navigation]);
 
-  const getCurrentHotels = () => {
-    if (loading || !hotels.length) return [];
-    
-    switch (activeTab) {
-      case 'nearby':
-        return hotels.filter(hotel => hotel.location.includes('Mumbai')).slice(0, 4)
-      case 'latest':
-        return hotels.slice(0, 2)
-      case 'offers':
-        return hotels.filter(hotel => hotel.offer).slice(0, 2)
-      default:
-        return hotels.slice(0, 4)
-    }
+  const handleRefresh = () => {
+    currentData.refresh()
   }
 
-  const renderHotelCard = (hotel) => (
+  const renderHotelCard = (hotel: any) => (
     <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
       <View className="relative">
         <Image
@@ -226,9 +195,11 @@ export default function HotelBookingApp() {
           </View>
         </View>
 
-        <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-          {hotel.distance}
-        </Text>
+        {hotel.distance && (
+          <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            {hotel.distance}
+          </Text>
+        )}
 
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-baseline">
@@ -249,7 +220,7 @@ export default function HotelBookingApp() {
     </Pressable>
   );
 
-  const renderCompactHotelCard = (hotel) => (
+  const renderCompactHotelCard = (hotel: any) => (
     <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="flex-col gap-3 w-72 mr-4">
       <View className="relative w-full overflow-hidden rounded-xl">
         <Image
@@ -286,6 +257,79 @@ export default function HotelBookingApp() {
     </Pressable>
   );
 
+  const renderEmptyState = () => {
+    const getEmptyStateContent = () => {
+      switch (activeTab) {
+        case 'nearby':
+          return {
+            title: 'No nearby hotels found',
+            subtitle: 'We couldn\'t find any hotels in your area. Try searching in a different location.',
+            icon: '📍'
+          }
+        case 'latest':
+          return {
+            title: 'No latest hotels available',
+            subtitle: 'Check back later for newly added hotels and accommodations.',
+            icon: '🆕'
+          }
+        case 'offers':
+          return {
+            title: 'No offers available',
+            subtitle: 'There are currently no special offers. Check back soon for great deals!',
+            icon: '🎉'
+          }
+        default:
+          return {
+            title: 'No hotels found',
+            subtitle: 'Try refreshing or check back later.',
+            icon: '🏨'
+          }
+      }
+    }
+
+    const content = getEmptyStateContent()
+
+    return (
+      <View className="flex-1 items-center justify-center py-12 px-6">
+        <Text className="text-6xl mb-4">{content.icon}</Text>
+        <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+          {content.title}
+        </Text>
+        <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+          {content.subtitle}
+        </Text>
+        <TouchableOpacity
+          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          onPress={() => SheetManager.show('search')}
+        >
+          <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Search Hotels
+          </Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
+  const renderErrorState = () => (
+    <View className="flex-1 items-center justify-center py-12 px-6">
+      <Text className="text-6xl mb-4">⚠️</Text>
+      <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+        Something went wrong
+      </Text>
+      <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+        {currentData.error}
+      </Text>
+      <TouchableOpacity
+        className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+        onPress={handleRefresh}
+      >
+        <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+          Try Again
+        </Text>
+      </TouchableOpacity>
+    </View>
+  )
+
   return (
     <SafeAreaView className="flex-1 bg-gray-50">
       {/* Navigation Tabs */}
@@ -315,71 +359,72 @@ export default function HotelBookingApp() {
         </View>
       </View>
 
-      <ScrollView className="flex-1"  // Makes the tabs sticky
-        showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={currentData.refreshing}
+            onRefresh={handleRefresh}
+            colors={['#FF5A5F']}
+            tintColor="#FF5A5F"
+          />
+        }
+      >
         {/* Hotel Listings */}
         <View className="px-4 py-4">
-          <View className="gap-6">
-            {loading ? (
-              <>
-                <HotelCardSkeleton />
-                <HotelCardSkeleton />
-                <HotelCardSkeleton />
-              </>
-            ) : error ? (
-              <View className="p-4 bg-red-50 rounded-lg">
-                <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  {error}
-                </Text>
-                <TouchableOpacity onPress={refresh} className="mt-2">
-                  <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    Try Again
-                  </Text>
-                </TouchableOpacity>
+          {currentData.loading ? (
+            <View className="gap-6">
+              <HotelCardSkeleton />
+              <HotelCardSkeleton />
+              <HotelCardSkeleton />
+            </View>
+          ) : currentData.error ? (
+            renderErrorState()
+          ) : currentData.hotels.length === 0 ? (
+            renderEmptyState()
+          ) : (
+            <View className="gap-6">
+              {currentData.hotels.map(renderHotelCard)}
+            </View>
+          )}
+        </View>
+
+        {/* Only show additional sections if we have hotels and not in loading/error state */}
+        {!currentData.loading && !currentData.error && currentData.hotels.length > 0 && (
+          <>
+            {/* Deals & Coupons */}
+            <View className="px-4 flex-col gap-4 mt-4">
+              <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Deals & Coupons</Text>
+              <View className="bg-white p-4 rounded-xl flex-row items-center justify-between gap-4 border border-gray-100">
+                <View className="flex-col gap-2 flex-1">
+                  <Text className="text-gray-900 text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Last Minute Deals</Text>
+                  <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Up to 30% off on select hotels</Text>
+                  <TouchableOpacity className="bg-red-500 rounded-lg h-10 px-4 justify-center items-center mt-2 self-start">
+                    <Text className="text-white text-sm" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>View Deals</Text>
+                  </TouchableOpacity>
+                </View>
+                <ImageBackground
+                  source={{
+                    uri: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=300"
+                  }}
+                  className="w-20 h-20 rounded-lg"
+                  style={{ resizeMode: 'cover' }}
+                />
               </View>
-            ) : (
-              getCurrentHotels().map(renderHotelCard)
-            )}
-          </View>
-        </View>
-
-        {/* Deals & Coupons */}
-        <View className="px-4 flex-col gap-4 mt-4">
-          <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Deals & Coupons</Text>
-          <View className="bg-white p-4 rounded-xl flex-row items-center justify-between gap-4 border border-gray-100">
-            <View className="flex-col gap-2 flex-1">
-              <Text className="text-gray-900 text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Last Minute Deals</Text>
-              <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Up to 30% off on select hotels</Text>
-              <TouchableOpacity className="bg-red-500 rounded-lg h-10 px-4 justify-center items-center mt-2 self-start">
-                <Text className="text-white text-sm" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>View Deals</Text>
-              </TouchableOpacity>
             </View>
-            <ImageBackground
-              source={{
-                uri: "https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=300"
-              }}
-              className="w-20 h-20 rounded-lg"
-              style={{ resizeMode: 'cover' }}
-            />
-          </View>
-        </View>
 
-        {/* Featured Hotels Section */}
-        <View className="px-4 flex-col gap-4 mt-4">
-          <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Featured Hotels</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-4">
-            <View className="flex-row">
-              {loading ? (
-                <>
-                  <HotelCardSkeleton />
-                  <HotelCardSkeleton />
-                </>
-              ) : (
-                hotels.slice(0, 3).map(renderCompactHotelCard)
-              )}
+            {/* Featured Hotels Section */}
+            <View className="px-4 flex-col gap-4 mt-4">
+              <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Featured Hotels</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} className="gap-4">
+                <View className="flex-row">
+                  {currentData.hotels.slice(0, 3).map(renderCompactHotelCard)}
+                </View>
+              </ScrollView>
             </View>
-          </ScrollView>
-        </View>
+          </>
+        )}
 
         {/* Bottom spacing */}
         <View className="h-8" />
