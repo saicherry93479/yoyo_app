@@ -2,9 +2,11 @@ import React, { useLayoutEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Image } from 'react-native';
 import { router, useNavigation } from 'expo-router';
 import Svg, { Path } from 'react-native-svg';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
+  const {logout} = useAuth()
   
   // SVG Components based on your original HTML
   const BackIcon = ({ size = 24, color = "#374151" }) => (
@@ -137,7 +139,7 @@ const ProfileScreen = () => {
 
         {/* Logout Button */}
         <View className="px-4 pt-4 border-t border-gray-100 mt-6">
-          <TouchableOpacity className="w-full py-3">
+          <TouchableOpacity className="w-full py-3" onPress={async ()=>await logout()}>
             <Text className="text-gray-700 text-left" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Log out</Text>
           </TouchableOpacity>
         </View>

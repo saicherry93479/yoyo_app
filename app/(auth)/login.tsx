@@ -56,6 +56,7 @@ const EmailIcon = ({ size = 20 }) => (
 
 export default function LoginSignupScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [loading, setLoading] = useState(false);
   const { sendOTP } = useAuth()
 
   const handleContinue = async () => {
@@ -63,20 +64,19 @@ export default function LoginSignupScreen() {
       Alert.alert('Error', 'Please enter your phone number');
       return;
     }
+    setLoading(true);
     try {
-      await sendOTP(phoneNumber, 'customer')
-
+      await sendOTP(phoneNumber, 'user');
       router.push({
         pathname: '/(auth)/otp',
-        params: { phoneNumber: phoneNumber }
+        params: { phoneNumber: phoneNumber },
       });
     } catch (e) {
-      console.log('error ', e)
-      alert('Unable to send Otp')
+      console.log('error ', e);
+      alert('Unable to send OTP');
+    } finally {
+      setLoading(false);
     }
-
-
-
   };
 
   const handleGoogleSignIn = () => {
@@ -155,16 +155,27 @@ export default function LoginSignupScreen() {
             {/* Continue Button */}
             <View className="mb-8">
               <TouchableOpacity
-                className="w-full rounded-xl bg-red-500 py-4 shadow-sm active:bg-red-600"
+                className="w-full rounded-xl bg-red-500 py-4 shadow-sm active:bg-red-600 flex-row justify-center items-center"
                 onPress={handleContinue}
+                disabled={loading}
               >
-                <Text
-                  className="text-base text-white text-center"
-                  style={{ fontFamily: 'PlusJakartaSans-Bold' }}
-                >
-                  Continue
-                </Text>
+                {loading ? (
+                  <Text
+                    className="text-base text-white text-center"
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                  >
+                    Loading...
+                  </Text>
+                ) : (
+                  <Text
+                    className="text-base text-white text-center"
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                  >
+                    Continue
+                  </Text>
+                )}
               </TouchableOpacity>
+
             </View>
 
             {/* Divider */}

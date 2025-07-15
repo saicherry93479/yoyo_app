@@ -8,7 +8,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { RelativePathString, router, useLocalSearchParams } from 'expo-router';
 import { ArrowLeft } from 'lucide-react-native';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -19,7 +19,7 @@ export default function OTPScreen() {
   const [resendTimer, setResendTimer] = useState(30);
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<TextInput[]>([]);
-  const { sendOTP } = useAuth()
+  const { sendOTP, verifyOTP } = useAuth()
 
   useEffect(() => {
     if (resendTimer > 0) {
@@ -59,18 +59,12 @@ export default function OTPScreen() {
     setIsLoading(true);
     try {
       // Simulate OTP verification
-      await new Promise(resolve => setTimeout(resolve, 2000));
+       await verifyOTP(otpCode, 'user')
 
-      // For demo purposes, accept any 6-digit OTP
-      if (otpCode === '123456') {
-        // Existing user - go to main app
-        router.replace('/(tabs)');
-      } else {
-        // New user - go to onboarding
-        router.replace('/(tabs)');
-      }
+
+      
     } catch (error) {
-      Alert.alert('Error', 'Invalid OTP. Please try again.');
+      Alert.alert('Error', 'Unable to verify OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -81,7 +75,7 @@ export default function OTPScreen() {
 
     try {
       // Simulate resend OTP
-      await sendOTP(phoneNumber, 'customer')
+      await sendOTP(phoneNumber, 'user')
       setResendTimer(30);
       setCanResend(false);
       Alert.alert('Success', 'OTP sent successfully');

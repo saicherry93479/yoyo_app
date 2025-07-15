@@ -1,23 +1,26 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  ScrollView, 
-  SafeAreaView, 
+import React, { useState, useLayoutEffect } from 'react';
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  ScrollView,
+  SafeAreaView,
   Alert,
   ActivityIndicator,
   Image
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Camera, User, Mail, Phone, MapPin } from 'lucide-react-native';
+import { apiService } from '@/services/api';
 
 interface OnboardingData {
   name: string;
   email: string;
   location: string;
+  dob: string;
+  gender: string;
   avatar?: string;
 }
 
@@ -28,27 +31,63 @@ export default function OnboardingScreen() {
     name: '',
     email: '',
     location: '',
+    dob: '',
+    gender: '',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const { user, setUser } = useAuth();
+  const navigation = useNavigation();
 
   const steps = [
     {
-      title: 'Welcome to HotelBooking!',
-      subtitle: 'Let\'s get you set up to start booking amazing hotels',
+      title: '',
+      subtitle: '',
       component: WelcomeStep,
     },
     {
       title: 'Tell us about yourself',
       subtitle: 'Help us personalize your experience',
       component: PersonalInfoStep,
-    },
-    {
-      title: 'You\'re all set!',
-      subtitle: 'Start exploring and booking your perfect stay',
-      component: CompletionStep,
-    },
+    }
   ];
+
+  // Configure header based on current step
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShadowVisible: false,
+      headerTitle: () => (
+        <View className="flex-row gap-2">
+          {steps.map((_, index) => (
+            <View
+              key={index}
+              className={`w-2 h-2 rounded-full ${index <= currentStep ? 'bg-[#FF5A5F]' : 'bg-gray-200'
+                }`}
+            />
+          ))}
+        </View>
+      ),
+      headerTitleAlign: 'center',
+      headerLeft: () => (
+        currentStep > 0 ? (
+          <TouchableOpacity
+            onPress={handleBack}
+            className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center ml-4"
+          >
+            <ArrowLeft size={20} color="#374151" />
+          </TouchableOpacity>
+        ) : null
+      ),
+      headerRight: () => (
+        currentStep === 1 ? (
+          <TouchableOpacity onPress={handleSkip} className="mr-4">
+            <Text className="text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+              Skip
+            </Text>
+          </TouchableOpacity>
+        ) : null
+      ),
+    });
+  }, [navigation, currentStep]);
 
   function WelcomeStep() {
     return (
@@ -60,7 +99,7 @@ export default function OnboardingScreen() {
           className="w-64 h-48 rounded-2xl mb-8"
           resizeMode="cover"
         />
-        
+
         <View className="items-center mb-8">
           <Text className="text-3xl text-gray-900 text-center mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             Welcome to HotelBooking!
@@ -118,17 +157,18 @@ export default function OnboardingScreen() {
   }
 
   function PersonalInfoStep() {
-    const updateFormData = (field: keyof OnboardingData, value: string) => {
+    // Memoize the updateFormData function to prevent unnecessary re-renders
+    const updateFormData = React.useCallback((field: keyof OnboardingData, value: string) => {
       setFormData(prev => ({ ...prev, [field]: value }));
       if (errors[field]) {
         setErrors(prev => ({ ...prev, [field]: '' }));
       }
-    };
+    }, [errors]);
 
     return (
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         {/* Avatar Section */}
-        <View className="items-center mb-8">
+        {/* <View className="items-center mb-8">
           <View className="relative">
             <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
               {formData.avatar ? (
@@ -144,7 +184,7 @@ export default function OnboardingScreen() {
           <Text className="text-sm text-gray-500 mt-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
             Add a profile photo (optional)
           </Text>
-        </View>
+        </View> */}
 
         {/* Form Fields */}
         <View className="gap-4">
@@ -163,6 +203,8 @@ export default function OnboardingScreen() {
                 value={formData.name}
                 onChangeText={(value) => updateFormData('name', value)}
                 autoCapitalize="words"
+                returnKeyType="next"
+                blurOnSubmit={false}
               />
             </View>
             {errors.name && (
@@ -188,6 +230,8 @@ export default function OnboardingScreen() {
                 onChangeText={(value) => updateFormData('email', value)}
                 keyboardType="email-address"
                 autoCapitalize="none"
+                returnKeyType="next"
+                blurOnSubmit={false}
               />
             </View>
             {errors.email && (
@@ -197,8 +241,67 @@ export default function OnboardingScreen() {
             )}
           </View>
 
-          {/* Location */}
+          {/* Date of Birth */}
+          {/* <View>
+            <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              Date of Birth
+            </Text> */}
+          {/* <View className="flex-row items-center rounded-lg border border-gray-300 px-4 py-3">
+              <Text className="text-gray-400 mr-3">📅</Text>
+              <TextInput
+                className="flex-1 text-base text-gray-900"
+                style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                placeholder="DD/MM/YYYY"
+                placeholderTextColor="#9CA3AF"
+                value={formData.dob}
+                onChangeText={(value) => updateFormData('dob', value)}
+                keyboardType="numeric"
+                returnKeyType="done"
+                blurOnSubmit={false}
+              />
+            </View> */}
+          {/* {errors.dob && (
+              <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                {errors.dob}
+              </Text>
+            )}
+          </View> */}
+
+          {/* Gender */}
           <View>
+            <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              Gender
+            </Text>
+            <View className="flex-row gap-3">
+              {['Male', 'Female', 'Other'].map((gender) => (
+                <TouchableOpacity
+                  key={gender}
+                  className={`flex-1 py-3 rounded-lg border items-center ${formData.gender === gender
+                    ? 'border-[#FF5A5F] bg-red-50'
+                    : 'border-gray-300 bg-white'
+                    }`}
+                  onPress={() => updateFormData('gender', gender)}
+                  activeOpacity={0.7}
+                >
+                  <Text
+                    className={`text-sm ${formData.gender === gender ? 'text-[#FF5A5F]' : 'text-gray-700'
+                      }`}
+                    style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+                  >
+                    {gender}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            {errors.gender && (
+              <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                {errors.gender}
+              </Text>
+            )}
+          </View>
+
+          {/* Location */}
+          {/* <View>
             <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
               Location (Optional)
             </Text>
@@ -211,9 +314,11 @@ export default function OnboardingScreen() {
                 placeholderTextColor="#9CA3AF"
                 value={formData.location}
                 onChangeText={(value) => updateFormData('location', value)}
+                returnKeyType="done"
+                blurOnSubmit={false}
               />
             </View>
-          </View>
+          </View> */}
         </View>
 
         <Text className="text-xs text-gray-500 mt-6 text-center leading-5" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -223,69 +328,21 @@ export default function OnboardingScreen() {
     );
   }
 
-  function CompletionStep() {
-    return (
-      <View className="flex-1 items-center justify-center px-6">
-        <View className="w-24 h-24 bg-green-100 rounded-full items-center justify-center mb-8">
-          <Text className="text-4xl">🎉</Text>
-        </View>
-        
-        <Text className="text-3xl text-gray-900 text-center mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-          You're all set!
-        </Text>
-        <Text className="text-base text-gray-600 text-center mb-8 leading-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-          Welcome to HotelBooking! Start exploring amazing hotels and book your perfect stay.
-        </Text>
-
-        <View className="w-full bg-gray-50 rounded-xl p-6">
-          <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-            What's next?
-          </Text>
-          <View className="gap-3">
-            <View className="flex-row items-center">
-              <View className="w-6 h-6 bg-[#FF5A5F] rounded-full items-center justify-center mr-3">
-                <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>1</Text>
-              </View>
-              <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Browse hotels in your favorite destinations
-              </Text>
-            </View>
-            <View className="flex-row items-center">
-              <View className="w-6 h-6 bg-[#FF5A5F] rounded-full items-center justify-center mr-3">
-                <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>2</Text>
-              </View>
-              <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Read reviews and compare prices
-              </Text>
-            </View>
-            <View className="flex-row items-center">
-              <View className="w-6 h-6 bg-[#FF5A5F] rounded-full items-center justify-center mr-3">
-                <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>3</Text>
-              </View>
-              <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Book your perfect stay with confidence
-              </Text>
-            </View>
-          </View>
-        </View>
-      </View>
-    );
-  }
 
   const validateStep = () => {
     if (currentStep === 1) {
       const newErrors: Record<string, string> = {};
-      
+
       if (!formData.name.trim()) {
         newErrors.name = 'Name is required';
       }
-      
+
       if (!formData.email.trim()) {
         newErrors.email = 'Email is required';
       } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
         newErrors.email = 'Please enter a valid email';
       }
-      
+
       setErrors(newErrors);
       return Object.keys(newErrors).length === 0;
     }
@@ -294,7 +351,7 @@ export default function OnboardingScreen() {
 
   const handleNext = () => {
     if (!validateStep()) return;
-    
+
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     }
@@ -306,31 +363,44 @@ export default function OnboardingScreen() {
     }
   };
 
-  const handleSkip = () => {
-    if (currentStep === 1) {
-      setCurrentStep(2);
+  const handleSkip = async () => {
+
+    try {
+      await apiService.post('profile/onboarding/skip')
+      setUser({
+        ...user,
+        hasOnboarded: true
+      })
+      router.replace('/(tabs)')
+    } catch (e) {
+      Alert.alert('Error', 'Unable to skip now')
     }
+
+
   };
 
   const completeOnboarding = async () => {
     try {
       setIsLoading(true);
-      
+
       // Simulate API call to update user profile
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
+      await apiService.post('profile/onboarding/complete', {
+        fullName: formData.name,
+        email: formData.email,
+        gender: formData.gender?.toLowerCase() || "prefer_not_to_say",
+      })
+
       // Update user with onboarding completion and profile data
       if (user) {
-        const updatedUser = { 
-          ...user, 
+        const updatedUser = {
+          ...user,
           hasOnboarded: true,
           name: formData.name || user.name,
           email: formData.email || user.email,
-          location: formData.location,
-          avatar: formData.avatar,
+
         };
         setUser(updatedUser);
-        
+
         // Navigate to main app
         router.replace('/(tabs)');
       }
@@ -345,39 +415,6 @@ export default function OnboardingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      {/* Header */}
-      <View className="flex-row items-center justify-between px-6 py-4">
-        {currentStep > 0 ? (
-          <TouchableOpacity onPress={handleBack} className="w-10 h-10 rounded-full bg-gray-100 items-center justify-center">
-            <ArrowLeft size={20} color="#374151" />
-          </TouchableOpacity>
-        ) : (
-          <View className="w-10" />
-        )}
-        
-        {/* Progress Indicator */}
-        <View className="flex-row gap-2">
-          {steps.map((_, index) => (
-            <View
-              key={index}
-              className={`w-2 h-2 rounded-full ${
-                index <= currentStep ? 'bg-[#FF5A5F]' : 'bg-gray-200'
-              }`}
-            />
-          ))}
-        </View>
-        
-        {currentStep === 1 ? (
-          <TouchableOpacity onPress={handleSkip}>
-            <Text className="text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              Skip
-            </Text>
-          </TouchableOpacity>
-        ) : (
-          <View className="w-10" />
-        )}
-      </View>
-
       {/* Step Title */}
       <View className="px-6 mb-6">
         <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

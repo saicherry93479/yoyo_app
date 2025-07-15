@@ -2,7 +2,7 @@ import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { mockHotels, mockBookings, mockWishlistItems, getHotelById, getBookingById, searchHotels, filterHotels } from './mockData';
 
-const BASE_URL = 'https://hotel-booking-api.example.com/api';
+const BASE_URL = 'http://192.168.1.3:3000/api/v1';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -14,7 +14,7 @@ export interface ApiResponse<T = any> {
 class ApiService {
   private axiosInstance: AxiosInstance;
   private refreshPromise: Promise<string> | null = null;
-  private isMockMode = false; // Always use mock mode
+  private isMockMode = false; // Set to true to enable mock mode
 
   constructor() {
     this.axiosInstance = axios.create({
@@ -110,17 +110,22 @@ class ApiService {
     await AsyncStorage.multiRemove(['accessToken', 'refreshToken', 'userProfile']);
   }
 
-  // Generic request method with mock fallback
+  // Generic request method
   async request<T = any>(config: AxiosRequestConfig): Promise<ApiResponse<T>> {
-    try {
-      // Always use mock data - no real API calls
+    // Use mock data only when mock mode is enabled
+    if (this.isMockMode) {
       return this.getMockResponse<T>(config);
+    }
+
+    try {
+      const response = await this.axiosInstance.request<ApiResponse<T>>(config);
+      return response.data;
     } catch (error: any) {
-      // Always fallback to mock data
+      // Return actual error instead of mock fallback
       return {
-        success: true,
-        data: {} as T,
-        message: 'Mock response (fallback)',
+        success: false,
+        data: null,
+        error: error.response?.data?.error || error.message || 'An error occurred',
       };
     }
   }
@@ -368,6 +373,11 @@ class ApiService {
       } as T,
       message: 'Mock response - endpoint not implemented'
     };
+  }
+
+  // Method to toggle mock mode (useful for testing)
+  setMockMode(enabled: boolean) {
+    this.isMockMode = enabled;
   }
 
   // HTTP methods

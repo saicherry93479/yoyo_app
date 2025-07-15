@@ -94,9 +94,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         'userProfile',
       ]);
 
+
       if (accessToken[1] && userProfile[1]) {
         const parsedUser = JSON.parse(userProfile[1]);
         setUser(parsedUser);
+        console.log('parsed user ', parsedUser)
 
         try {
           await refreshUser();
@@ -116,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const sendOTP = async (phoneNumber: string, customerType: string = 'customer'): Promise<any> => {
+  const sendOTP = async (phoneNumber: string, customerType: string = 'user'): Promise<any> => {
     try {
       console.log('=== Starting OTP Process ===');
       console.log('Phone number:', phoneNumber);
@@ -161,7 +163,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Send idToken and role to backend for authentication
       const response = await apiService.post('/auth/login', {
         idToken,
-        role: 'customer' // Send the role that was selected during login
+        role: 'user' // Send the role that was selected during login
       });
 
       console.log('Backend login response:', response);
@@ -181,12 +183,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
         setConfirmation(null); // Clear confirmation after successful verification
 
-        let nextScreen = !userData.hasOnboarded ? '/OnboardDetails' : '/';
+        if (userData.hasOnboarded) {
+          router.replace('/(tabs)');
+        } else {
+          router.replace('/onboarding');
+        }
 
-        return {
-          nextScreen: nextScreen,
-          success: true,
-        };
+
+
       } else {
         throw new Error(response.error || 'Login failed');
       }
@@ -274,6 +278,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await apiService.get('/auth/me');
 
+      console.log('response in me ', response)
+
       if (response.success) {
         const updatedUser = {
           ...response.data.user,
@@ -284,7 +290,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         // Update stored user data
         await AsyncStorage.setItem('userProfile', JSON.stringify(updatedUser));
-        router.replace('/(tabs)');
+       
+        if(updatedUser.hasOnboarded){
+          router.replace('/(tabs)');
+        }else{
+          router.replace('/onboarding');
+        }
 
         // if (updatedUser.hasOnboarded) {
         //   router.replace('/(tabs)');
