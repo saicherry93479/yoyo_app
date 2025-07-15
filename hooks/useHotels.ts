@@ -44,7 +44,7 @@ export interface BackendHotel {
     totalPrice: number | null;
     perNight: boolean;
   } | null;
-  offers: Array<{
+  offers?: Array<{
     title: string;
     discountType: 'percentage' | 'fixed';
     discountValue: number;
@@ -53,7 +53,7 @@ export interface BackendHotel {
   }>;
   images: {
     primary: string | null;
-    gallery: string[];
+    gallery?: string[];
   };
   paymentOptions: {
     onlineEnabled: boolean;
@@ -64,24 +64,23 @@ export interface BackendHotel {
 // Transform backend hotel to frontend format
 const transformHotel = (backendHotel: BackendHotel): MockHotel => {
   return {
-    id: backendHotel.id,
-    name: backendHotel.name,
+    id: backendHotel?.id,
+    name: backendHotel?.name,
     location: `${backendHotel.city}, ${backendHotel.address}`,
     address: backendHotel.address,
-    rating: backendHotel.rating.average,
-    reviewCount: backendHotel.rating.count,
+    rating: backendHotel.rating?.average || 0,
+    reviewCount: backendHotel.rating?.count || 0,
     price: backendHotel.pricing?.startingFrom || 0,
-    originalPrice: backendHotel.pricing?.range.max || undefined,
+    originalPrice: backendHotel.pricing?.range?.max || undefined,
     images: [
-      backendHotel.images.primary || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800',
-      ...backendHotel.images.gallery
+      backendHotel.images?.primary || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800'
     ],
-    amenities: backendHotel.amenities,
+    amenities: backendHotel.amenities || [],
     description: backendHotel.description || '',
-    latitude: backendHotel.coordinates.lat,
-    longitude: backendHotel.coordinates.lng,
+    latitude: backendHotel.coordinates?.lat || 0,
+    longitude: backendHotel.coordinates?.lng || 0,
     distance: backendHotel.distance ? `${backendHotel.distance.toFixed(1)} km away` : undefined,
-    offer: backendHotel.offers.length > 0 ? backendHotel.offers[0].title : undefined,
+    offer: backendHotel.offers && backendHotel.offers.length > 0 ? backendHotel.offers[0].title : undefined,
     rooms: [], // Will be populated when needed
     reviews: [] // Will be populated when needed
   };
@@ -174,7 +173,7 @@ export function useHotels(filters?: SearchFilters) {
 }
 
 // Hook for nearby hotels
-export function useNearbyHotels(coordinates?: { lat: number; lng: number }) {
+export function useNearbyHotels(coordinates: { lat: number; lng: number }) {
   const [hotels, setHotels] = useState<MockHotel[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -246,15 +245,19 @@ export function useLatestHotels() {
       setError(null);
 
       const response = await apiService.get('/search/latest', { params: { limit: 10 } });
+      console.log('response latest  ', JSON.stringify(response.data))
 
       if (response.success) {
         const transformedHotels = response.data.hotels?.map(transformHotel) || [];
+        console.log('transformedHotels ', transformedHotels)
         setHotels(transformedHotels);
       } else {
         setError(response.error || 'Failed to fetch latest hotels');
         setHotels([]);
+        console.log('error ', response.error)
       }
     } catch (err: any) {
+      console.log('error ', err)
       setError(err.message || 'An error occurred while fetching latest hotels');
       setHotels([]);
     } finally {

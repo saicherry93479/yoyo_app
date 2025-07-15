@@ -1,12 +1,13 @@
-import React, { useState, useLayoutEffect } from "react"
-import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView, Pressable, Image, RefreshControl } from "react-native"
+import React, { useState, useLayoutEffect, useEffect } from "react"
+import { View, Text, ScrollView, TouchableOpacity, ImageBackground, SafeAreaView, Pressable, Image, RefreshControl, Alert } from "react-native"
 import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
 import { Search, Star } from "lucide-react-native"
-import { useNearbyHotels, useLatestHotels, useOffersHotels } from '@/hooks/useHotels';
-import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
+import * as Location from 'expo-location'
+import { useNearbyHotels, useLatestHotels, useOffersHotels } from '@/hooks/useHotels'
+import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader'
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -102,12 +103,96 @@ const HeartIcon = ({ size = 20, color = "currentColor" }) => (
   </Svg>
 )
 
+interface LocationState {
+  coordinates: { lat: number; lng: number } | null
+  hasPermission: boolean
+  permissionDenied: boolean
+  loading: boolean
+  error: string | null
+}
+
 export default function HotelBookingApp() {
   const [activeTab, setActiveTab] = useState('nearby')
+  const [location, setLocation] = useState<LocationState>({
+    coordinates: null,
+    hasPermission: false,
+    permissionDenied: false,
+    loading: false,
+    error: null
+  })
   const navigation = useNavigation()
   
+  // Location permission and fetching logic
+  const requestLocationPermission = async () => {
+    try {
+      setLocation(prev => ({ ...prev, loading: true, error: null }))
+      
+      const { status } = await Location.requestForegroundPermissionsAsync()
+      
+      if (status !== 'granted') {
+        setLocation(prev => ({ 
+          ...prev, 
+          hasPermission: false, 
+          permissionDenied: true, 
+          loading: false,
+          error: 'Location permission denied' 
+        }))
+        return
+      }
+
+      const currentLocation = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      })
+
+      setLocation({
+        coordinates: {
+          lat: currentLocation.coords.latitude,
+          lng: currentLocation.coords.longitude
+        },
+        hasPermission: true,
+        permissionDenied: false,
+        loading: false,
+        error: null
+      })
+    } catch (error) {
+      setLocation(prev => ({ 
+        ...prev, 
+        loading: false, 
+        error: 'Failed to get location' 
+      }))
+    }
+  }
+
+  const checkLocationPermission = async () => {
+    try {
+      const { status } = await Location.getForegroundPermissionsAsync()
+      
+      if (status === 'granted') {
+        await requestLocationPermission()
+      } else {
+        setLocation(prev => ({ 
+          ...prev, 
+          hasPermission: false, 
+          permissionDenied: status === 'denied' 
+        }))
+      }
+    } catch (error) {
+      setLocation(prev => ({ 
+        ...prev, 
+        error: 'Failed to check location permission' 
+      }))
+    }
+  }
+
+  // Initialize location on component mount
+  useEffect(() => {
+    if (activeTab === 'nearby') {
+      checkLocationPermission()
+    }
+  }, [activeTab])
+
   // Use different hooks based on active tab
-  const nearbyData = useNearbyHotels()
+  const nearbyData = useNearbyHotels(location.coordinates || { lat: 0, lng: 0 })
   const latestData = useLatestHotels()
   const offersData = useOffersHotels()
 
@@ -126,6 +211,8 @@ export default function HotelBookingApp() {
   }
 
   const currentData = getCurrentData()
+
+  // console.log('current data is ',currentData)
 
   // Hide the default header
   useLayoutEffect(() => {
@@ -149,8 +236,41 @@ export default function HotelBookingApp() {
   }, [navigation]);
 
   const handleRefresh = () => {
-    currentData.refresh()
+    if (activeTab === 'nearby' && !location.hasPermission) {
+      requestLocationPermission()
+    } else {
+      currentData.refresh()
+    }
   }
+
+  const renderLocationPermissionScreen = () => (
+    <View className="flex-1 items-center justify-center py-12 px-6">
+      <Text className="text-6xl mb-4">📍</Text>
+      <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+        Location Access Required
+      </Text>
+      <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+        Please allow location access to see nearby hotels in your area
+      </Text>
+      <TouchableOpacity
+        className="bg-[#FF5A5F] px-6 py-3 rounded-lg mb-3"
+        onPress={requestLocationPermission}
+        disabled={location.loading}
+      >
+        <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+          {location.loading ? 'Getting Location...' : 'Enable Location'}
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        className="px-6 py-3"
+        onPress={() => SheetManager.show('search')}
+      >
+        <Text className="text-gray-600 text-base" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+          Search Manually Instead
+        </Text>
+      </TouchableOpacity>
+    </View>
+  )
 
   const renderHotelCard = (hotel: any) => (
     <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
@@ -364,34 +484,50 @@ export default function HotelBookingApp() {
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
-            refreshing={currentData.refreshing}
+            refreshing={activeTab === 'nearby' ? location.loading || currentData.refreshing : currentData.refreshing}
             onRefresh={handleRefresh}
             colors={['#FF5A5F']}
             tintColor="#FF5A5F"
           />
         }
       >
-        {/* Hotel Listings */}
-        <View className="px-4 py-4">
-          {currentData.loading ? (
-            <View className="gap-6">
-              <HotelCardSkeleton />
-              <HotelCardSkeleton />
-              <HotelCardSkeleton />
-            </View>
-          ) : currentData.error ? (
-            renderErrorState()
-          ) : currentData.hotels.length === 0 ? (
-            renderEmptyState()
-          ) : (
-            <View className="gap-6">
-              {currentData.hotels.map(renderHotelCard)}
-            </View>
-          )}
-        </View>
+        {/* Show location permission screen for nearby tab if permission is needed */}
+        {activeTab === 'nearby' && !location.hasPermission && !location.loading && (
+          renderLocationPermissionScreen()
+        )}
+
+        {/* Show loading state for location */}
+        {activeTab === 'nearby' && location.loading && (
+          <View className="flex-1 items-center justify-center py-12">
+            <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              Getting your location...
+            </Text>
+          </View>
+        )}
+
+        {/* Hotel Listings - only show if we have location permission for nearby tab or other tabs */}
+        {(activeTab !== 'nearby' || location.hasPermission) && (
+          <View className="px-4 py-4">
+            {currentData.loading ? (
+              <View className="gap-6">
+                <HotelCardSkeleton />
+                <HotelCardSkeleton />
+                <HotelCardSkeleton />
+              </View>
+            ) : currentData.error ? (
+              renderErrorState()
+            ) : currentData.hotels.length === 0 ? (
+              renderEmptyState()
+            ) : (
+              <View className="gap-6">
+                {currentData.hotels.map(renderHotelCard)}
+              </View>
+            )}
+          </View>
+        )}
 
         {/* Only show additional sections if we have hotels and not in loading/error state */}
-        {!currentData.loading && !currentData.error && currentData.hotels.length > 0 && (
+        {(activeTab !== 'nearby' || location.hasPermission) && !currentData.loading && !currentData.error && currentData.hotels.length > 0 && (
           <>
             {/* Deals & Coupons */}
             <View className="px-4 flex-col gap-4 mt-4">

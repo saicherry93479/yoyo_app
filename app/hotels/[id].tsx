@@ -34,6 +34,8 @@ const HotelDetails = () => {
         setLoading(true);
         setError(null);
         const response = await apiService.get(`/hotels/${id}`);
+
+        console.log('response from backend for hotel ',JSON.stringify(response))
         
         if (response.success) {
           setHotel(response.data.hotel);
