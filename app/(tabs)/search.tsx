@@ -75,7 +75,7 @@ export default function SearchScreen() {
   
   const navigation = useNavigation();
   const params = useLocalSearchParams();
-  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems } = useWishlist();
+  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems, refresh: refreshWishlist } = useWishlist();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -110,6 +110,9 @@ export default function SearchScreen() {
       } else {
         await addToWishlist(hotel.id)
       }
+      
+      // Force refresh to ensure UI is in sync
+      setTimeout(() => refreshWishlist(), 100);
     } catch (error) {
       console.error('Error toggling wishlist:', error)
       // You might want to show a toast or alert here

@@ -58,30 +58,64 @@ export function useWishlist() {
 
   const addToWishlist = async (hotelId: string) => {
     try {
+      // Optimistically add to local state first
+      const tempItem = {
+        id: `temp_${Date.now()}`,
+        hotelId,
+        hotelName: 'Loading...',
+        location: 'Loading...',
+        image: 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=300',
+        price: 0,
+        rating: 0,
+        addedDate: new Date().toISOString()
+      };
+      
+      setItems(prev => [tempItem, ...prev]);
+
       const response = await apiService.post('/wishlist/', { hotelId });
 
       if (response.success) {
+        // Refresh to get actual data and replace the temp item
         await fetchWishlist();
         return response.data;
       } else {
+        // Remove the temp item if API call failed
+        setItems(prev => prev.filter(item => item.id !== tempItem.id));
         throw new Error(response.error || 'Failed to add to wishlist');
       }
     } catch (err: any) {
+      // Remove the temp item if API call failed
+      setItems(prev => prev.filter(item => item.id.startsWith('temp_')));
       throw new Error(err.message || 'Failed to add to wishlist');
     }
   };
 
   const removeFromWishlist = async (itemId: string) => {
     try {
+      // Store the item being removed for potential rollback
+      const itemToRemove = items.find(item => item.id === itemId);
+      
+      // Optimistically remove from local state
+      setItems(prev => prev.filter(item => item.id !== itemId));
+
       const response = await apiService.delete(`/wishlist/${itemId}`);
 
       if (response.success) {
-        setItems(prev => prev.filter(item => item.id !== itemId));
+        // Keep the optimistic update
         return response.data;
       } else {
+        // Rollback the optimistic update
+        if (itemToRemove) {
+          setItems(prev => [...prev, itemToRemove]);
+        }
         throw new Error(response.error || 'Failed to remove from wishlist');
       }
     } catch (err: any) {
+      // Rollback the optimistic update
+      const itemToRestore = items.find(item => item.id === itemId);
+      if (itemToRestore) {
+        setItems(prev => [...prev, itemToRestore]);
+      }
       throw new Error(err.message || 'Failed to remove from wishlist');
     }
   };

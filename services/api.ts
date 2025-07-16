@@ -74,7 +74,7 @@ class ApiService {
     }
 
     this.refreshPromise = this.performTokenRefresh();
-    
+
     try {
       const newToken = await this.refreshPromise;
       this.refreshPromise = null;
@@ -87,7 +87,7 @@ class ApiService {
 
   private async performTokenRefresh(): Promise<string> {
     const refreshToken = await AsyncStorage.getItem('refreshToken');
-    
+
     if (!refreshToken) {
       throw new Error('No refresh token available');
     }
@@ -97,7 +97,7 @@ class ApiService {
     });
 
     const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-    
+
     await AsyncStorage.setItem('accessToken', accessToken);
     if (newRefreshToken) {
       await AsyncStorage.setItem('refreshToken', newRefreshToken);
@@ -199,7 +199,7 @@ class ApiService {
       const filteredHotels = searchHotels(searchQuery).filter(hotel => 
         !location || hotel.location.toLowerCase().includes(location.toLowerCase())
       );
-      
+
       return {
         success: true,
         data: {
@@ -215,7 +215,7 @@ class ApiService {
     if (url.includes('/hotels/') && !url.includes('/search')) {
       const hotelId = url.split('/hotels/')[1];
       const hotel = getHotelById(hotelId);
-      
+
       if (hotel) {
         return {
           success: true,
@@ -238,7 +238,7 @@ class ApiService {
         amenities: params.amenities,
         location: params.location
       });
-      
+
       return {
         success: true,
         data: {
@@ -254,7 +254,7 @@ class ApiService {
     if (url.includes('/bookings/') && method === 'GET') {
       const bookingId = url.split('/bookings/')[1].split('/')[0];
       const booking = getBookingById(bookingId);
-      
+
       if (booking) {
         return {
           success: true,
@@ -289,7 +289,7 @@ class ApiService {
         bookingDate: new Date().toISOString().split('T')[0],
         bookingReference: `BK${Date.now().toString().slice(-6)}`
       };
-      
+
       return {
         success: true,
         data: { booking: newBooking } as T,
@@ -312,7 +312,7 @@ class ApiService {
         const startIndex = (page - 1) * limit;
         const endIndex = startIndex + limit;
         const paginatedItems = mockWishlistItems.slice(startIndex, endIndex);
-        
+
         return {
           success: true,
           data: {
@@ -343,7 +343,7 @@ class ApiService {
           message: 'Wishlist fetched successfully'
         };
       }
-      
+
       if (method === 'POST') {
         const { hotelId } = config.data || {};
         const newWishlistItem = {
@@ -351,7 +351,7 @@ class ApiService {
           hotelId,
           addedAt: new Date().toISOString()
         };
-        
+
         return {
           success: true,
           data: {
@@ -360,15 +360,24 @@ class ApiService {
           message: 'Hotel added to wishlist successfully'
         };
       }
-      
+
       if (method === 'DELETE') {
-        return {
-          success: true,
-          data: {
-            message: 'Hotel removed from wishlist successfully'
-          } as T,
-          message: 'Hotel removed from wishlist successfully'
-        };
+        const itemId = url.split('/').pop();
+        const itemIndex = mockWishlistItems.findIndex(item => item.id === itemId);
+
+        if (itemIndex !== -1) {
+          mockWishlistItems.splice(itemIndex, 1);
+          return {
+            success: true,
+            data: { message: 'Removed from wishlist successfully' } as T,
+            message: 'Removed from wishlist successfully'
+          };
+        } else {
+          return {
+            success: false,
+            error: 'Wishlist item not found'
+          };
+        }
       }
     }
 
@@ -389,7 +398,7 @@ class ApiService {
     if (url.includes('/reviews/') && method === 'GET') {
       const hotelId = url.split('/reviews/')[1];
       const hotel = getHotelById(hotelId);
-      
+
       return {
         success: true,
         data: {

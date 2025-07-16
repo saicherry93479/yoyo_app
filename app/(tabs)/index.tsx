@@ -122,7 +122,7 @@ export default function HotelBookingApp() {
     error: null
   })
   const navigation = useNavigation()
-  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems } = useWishlist()
+  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems, refresh: refreshWishlist } = useWishlist()
   
   // Wishlist handlers
   const handleWishlistToggle = async (hotel: any) => {
@@ -138,6 +138,9 @@ export default function HotelBookingApp() {
       } else {
         await addToWishlist(hotel.id)
       }
+      
+      // Force refresh to ensure UI is in sync
+      setTimeout(() => refreshWishlist(), 100);
     } catch (error) {
       console.error('Error toggling wishlist:', error)
       Alert.alert('Error', 'Failed to update wishlist. Please try again.')
