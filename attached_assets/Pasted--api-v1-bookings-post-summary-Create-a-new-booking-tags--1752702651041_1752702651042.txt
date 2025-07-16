@@ -1,0 +1,163 @@
+"/api/v1/bookings/": {
+      "post": {
+        "summary": "Create a new booking",
+        "tags": [
+          "bookings"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "hotelId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "roomId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "checkIn": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "checkOut": {
+                    "type": "string",
+                    "format": "date-time"
+                  },
+                  "guests": {
+                    "type": "integer",
+                    "minimum": 1
+                  },
+                  "specialRequests": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "hotelId",
+                  "roomId",
+                  "checkIn",
+                  "checkOut",
+                  "guests"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Default Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "booking": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "userId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "hotelId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "roomId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "checkIn": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "checkOut": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "guests": {
+                              "type": "integer"
+                            },
+                            "totalAmount": {
+                              "type": "number"
+                            },
+                            "status": {
+                              "type": "string",
+                              "enum": [
+                                "pending",
+                                "confirmed",
+                                "cancelled",
+                                "completed"
+                              ]
+                            },
+                            "specialRequests": {
+                              "type": [
+                                "null",
+                                "string"
+                              ]
+                            },
+                            "createdAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            "updatedAt": {
+                              "type": "string",
+                              "format": "date-time"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "userId",
+                            "hotelId",
+                            "roomId",
+                            "checkIn",
+                            "checkOut",
+                            "guests",
+                            "totalAmount",
+                            "status",
+                            "specialRequests",
+                            "createdAt",
+                            "updatedAt"
+                          ],
+                          "additionalProperties": false
+                        }
+                      },
+                      "required": [
+                        "booking"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "message",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          }
+        }
+      }
