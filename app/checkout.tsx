@@ -14,6 +14,7 @@ import { router, useNavigation, useLocalSearchParams } from 'expo-router';
 import { X, Bed, Clock } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import Svg, { Path } from 'react-native-svg';
 
 // Define the RoomIcon component directly
 const RoomIcon = () => (
@@ -25,18 +26,18 @@ const CheckoutScreen = () => {
     const params = useLocalSearchParams();
     const [loading, setLoading] = useState(false);
 
-    // Extract booking data from params
+    // Extract booking data from params with safe parsing
     const bookingData = {
-      hotelId: params.hotelId as string,
-      roomId: params.roomId as string,
-      checkIn: params.checkIn as string,
-      checkOut: params.checkOut as string,
-      guests: parseInt(params.guests as string) || 2,
-      hotelName: params.hotelName as string,
-      roomName: params.roomName as string,
-      totalAmount: parseFloat(params.totalAmount as string) || 0,
-      address: params.address as string,
-      image: params.image as string
+      hotelId: String(params.hotelId || ''),
+      roomId: String(params.roomId || ''),
+      checkIn: String(params.checkIn || ''),
+      checkOut: String(params.checkOut || ''),
+      guests: parseInt(String(params.guests || '2'), 10) || 2,
+      hotelName: String(params.hotelName || ''),
+      roomName: String(params.roomName || ''),
+      totalAmount: parseFloat(String(params.totalAmount || '0')) || 0,
+      address: String(params.address || ''),
+      image: String(params.image || '')
     };
 
 useLayoutEffect(() => {
@@ -58,6 +59,13 @@ useLayoutEffect(() => {
     const handleConfirmBooking = async () => {
       try {
         setLoading(true);
+
+        // Validate required fields
+        if (!bookingData.hotelId || !bookingData.roomId || !bookingData.checkIn || !bookingData.checkOut) {
+          Alert.alert('Error', 'Missing required booking information. Please go back and try again.');
+          setLoading(false);
+          return;
+        }
 
         const bookingRequest = {
           hotelId: bookingData.hotelId,
