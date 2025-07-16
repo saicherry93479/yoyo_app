@@ -23,10 +23,16 @@ const HotelDetails = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [searchParams, setSearchParams] = useState({
+      guests: (guests as string) || '2',
+      checkIn: (checkIn as string) || new Date(Date.now() + 24*60*60*1000).toISOString(),
+      checkOut: (checkOut as string) || new Date(Date.now() + 3*24*60*60*1000).toISOString()
+    });
+    const [selectedRoom, setSelectedRoom] = useState(null);
 
     useEffect(() => {
       fetchHotelDetails();
-    }, [id, guests, checkIn, checkOut]);
+    }, [id, searchParams]);
 
     const fetchHotelDetails = async () => {
       try {
@@ -35,12 +41,12 @@ const HotelDetails = () => {
         
         // Build query parameters
         const params = new URLSearchParams();
-        if (guests) params.append('guests', guests as string);
-        if (checkIn) params.append('checkIn', checkIn as string);
-        if (checkOut) params.append('checkOut', checkOut as string);
+        params.append('guests', searchParams.guests);
+        params.append('checkIn', searchParams.checkIn);
+        params.append('checkOut', searchParams.checkOut);
         
         const queryString = params.toString();
-        const url = queryString ? `/hotels/${id}/details?${queryString}` : `/hotels/${id}/details`;
+        const url = `/hotels/${id}/details?${queryString}`;
         
         const response = await apiService.get(url);
 
@@ -48,6 +54,10 @@ const HotelDetails = () => {
         
         if (response.success) {
           setHotel(response.data.hotel);
+          // Set initial selected room if available
+          if (response.data.hotel.roomUpgradeData?.currentRoom) {
+            setSelectedRoom(response.data.hotel.roomUpgradeData.currentRoom);
+          }
         } else {
           setError(response.error || 'Failed to fetch hotel details');
         }
@@ -98,6 +108,55 @@ const HotelDetails = () => {
         return ['https://via.placeholder.com/400x300?text=No+Image'];
       }
       return images.map(img => getImageUrl(img));
+    };
+
+    // Helper function to format dates
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    };
+
+    // Handler for editing search parameters
+    const handleEditSearch = () => {
+      SheetManager.show('search', {
+        payload: {
+          searchData: {
+            location: `${hotel.address}, ${hotel.city}`,
+            guests: {
+              adults: parseInt(searchParams.guests) || 2,
+              children: 0,
+              infants: 0
+            },
+            checkIn: searchParams.checkIn,
+            checkOut: searchParams.checkOut
+          },
+          onSearch: (newSearchData) => {
+            const totalGuests = newSearchData.guests.adults + newSearchData.guests.children;
+            setSearchParams({
+              guests: totalGuests.toString(),
+              checkIn: newSearchData.checkIn,
+              checkOut: newSearchData.checkOut
+            });
+          }
+        }
+      });
+    };
+
+    // Handler for room selection
+    const handleRoomSelect = (room) => {
+      setSelectedRoom(room);
+    };
+
+    // Get current room price
+    const getCurrentRoomPrice = () => {
+      if (selectedRoom) {
+        return selectedRoom.pricePerNight;
+      }
+      return hotel?.pricing?.startingFrom || hotel?.price || 0;
     };
     
   if (loading) {
@@ -181,6 +240,52 @@ const HotelDetails = () => {
           </View>
         </View>
 
+        {/* Booking Details */}
+        <View className="border-t border-b border-stone-200 p-5">
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Your stay
+            </Text>
+            <TouchableOpacity 
+              onPress={handleEditSearch}
+              className="flex-row items-center gap-1"
+            >
+              <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                Edit
+              </Text>
+              <Ionicons name="create-outline" size={18} color="#dc2626" />
+            </TouchableOpacity>
+          </View>
+          
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Check-in
+              </Text>
+              <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {formatDate(searchParams.checkIn)}
+              </Text>
+            </View>
+            <View className="w-8 h-px bg-stone-300" />
+            <View>
+              <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Check-out
+              </Text>
+              <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {formatDate(searchParams.checkOut)}
+              </Text>
+            </View>
+            <View>
+              <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Guests
+              </Text>
+              <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {searchParams.guests} {parseInt(searchParams.guests) === 1 ? 'guest' : 'guests'}
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {/* Amenities */}
         <View className="border-t border-b border-stone-200 p-5">
           <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Amenities</Text>
@@ -227,7 +332,11 @@ const HotelDetails = () => {
           
           <TouchableOpacity 
             className="flex-row items-center justify-between w-full"
-            onPress={() => SheetManager.show('amenities')}
+            onPress={() => SheetManager.show('amenities', {
+              payload: {
+                amenities: hotel.amenities || []
+              }
+            })}
           >
             <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
               View All Amenities
@@ -307,71 +416,59 @@ const HotelDetails = () => {
           )}
         </View>
 
-        {/* Room Upgrades */}
+        {/* Room Options */}
         <View className="p-5">
-          <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
+            {hotel.roomUpgradeData && (
+              <TouchableOpacity 
+                onPress={() => SheetManager.show('upgraderoom', {
+                  payload: {
+                    roomData: hotel.roomUpgradeData,
+                    selectedRoom: selectedRoom,
+                    onRoomSelect: handleRoomSelect
+                  }
+                })}
+                className="flex-row items-center gap-1"
+              >
+                <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  View All
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color="#dc2626" />
+              </TouchableOpacity>
+            )}
+          </View>
           
           <View className="mt-4 gap-4">
-            {/* Current Room */}
-            {hotel.roomUpgradeData?.currentRoom && (
-              <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
+            {/* Selected/Current Room */}
+            {(selectedRoom || hotel.roomUpgradeData?.currentRoom) && (
+              <View className="flex-row items-center gap-4 p-4 border border-green-200 bg-green-50 rounded-xl">
                 <Image
                   source={{
-                    uri: hotel.roomUpgradeData.currentRoom.image || imageUrls[0]
+                    uri: (selectedRoom || hotel.roomUpgradeData.currentRoom).image || imageUrls[0]
                   }}
                   className="w-24 h-24 rounded-lg"
                   style={{ resizeMode: 'cover' }}
                 />
                 <View className="flex-1">
                   <Text className="text-sm text-green-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    Current Selection
+                    {selectedRoom ? 'Selected Room' : 'Current Selection'}
                   </Text>
                   <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    {hotel.roomUpgradeData.currentRoom.name}
+                    {(selectedRoom || hotel.roomUpgradeData.currentRoom).name}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {hotel.roomUpgradeData.currentRoom.features}
+                    {(selectedRoom || hotel.roomUpgradeData.currentRoom).features}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{hotel.roomUpgradeData.currentRoom.pricePerNight}/night
+                    ₹{(selectedRoom || hotel.roomUpgradeData.currentRoom).pricePerNight}/night
                   </Text>
                 </View>
               </View>
             )}
 
-            {/* Upgrade Options */}
-            {hotel.roomUpgradeData?.upgradeOptions?.map((room, index) => (
-              <View key={index} className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
-                <Image
-                  source={{
-                    uri: room.image || imageUrls[0]
-                  }}
-                  className="w-24 h-24 rounded-lg"
-                  style={{ resizeMode: 'cover' }}
-                />
-                <View className="flex-1">
-                  <Text className="text-sm text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    Upgrade Available
-                  </Text>
-                  <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    {room.name}
-                  </Text>
-                  <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {room.features}
-                  </Text>
-                  <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{room.pricePerNight}/night
-                  </Text>
-                  <TouchableOpacity onPress={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
-                    <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Upgrade</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#1c1917" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-
-            {/* Default room if no upgrade data */}
-            {/* {(!hotel.roomUpgradeData || (!hotel.roomUpgradeData.currentRoom && !hotel.roomUpgradeData.upgradeOptions)) && (
+            {/* Default room if no room data */}
+            {!hotel.roomUpgradeData && (
               <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
                 <Image
                   source={{
@@ -395,7 +492,7 @@ const HotelDetails = () => {
                   </Text>
                 </View>
               </View>
-            )} */}
+            )}
           </View>
         </View>
       </ScrollView>
@@ -405,7 +502,7 @@ const HotelDetails = () => {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              ₹{(hotel.pricing?.startingFrom || hotel.price || 0).toLocaleString()}
+              ₹{getCurrentRoomPrice().toLocaleString()}
             </Text>
             <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
           </View>

@@ -56,20 +56,30 @@ interface RoomUpgradeActionSheetProps {
   roomData?: RoomUpgradeData;
   onRoomSelect?: (room: Room) => void;
   onNoThanks?: () => void;
+  payload?: {
+    roomData?: RoomUpgradeData;
+    selectedRoom?: Room;
+    onRoomSelect?: (room: Room) => void;
+  };
 }
 
 export function RoomUpgradeActionSheet({ 
   sheetId, 
-  roomData = mockRoomData,
+  roomData,
   onRoomSelect,
-  onNoThanks 
+  onNoThanks,
+  payload 
 }: RoomUpgradeActionSheetProps) {
+  const actualRoomData = payload?.roomData || roomData || mockRoomData;
+  const selectedRoom = payload?.selectedRoom;
+  const handleRoomSelection = payload?.onRoomSelect || onRoomSelect;
+  
   const handleClose = () => {
     SheetManager.hide(sheetId);
   };
 
   const handleRoomSelect = (room: Room) => {
-    onRoomSelect?.(room);
+    handleRoomSelection?.(room);
     handleClose();
   };
 
@@ -78,46 +88,92 @@ export function RoomUpgradeActionSheet({
     handleClose();
   };
 
-  const renderCurrentRoom = () => (
-    <View className="flex-row items-center gap-4 bg-white px-6 py-4 border-b border-gray-200">
-      <Image
-        source={{ uri: roomData.currentRoom.image }}
-        className="w-16 h-16 rounded-xl"
-        resizeMode="cover"
-      />
-      <View className="flex-1">
-        <Text className="text-sm text-gray-500 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Your current room</Text>
-        <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{roomData.currentRoom.name}</Text>
-        <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{roomData.currentRoom.features}</Text>
-      </View>
-    </View>
-  );
+  // Get base price for comparison (current or selected room)
+  const getBasePrice = () => {
+    if (selectedRoom) return selectedRoom.pricePerNight;
+    return actualRoomData.currentRoom?.pricePerNight || 0;
+  };
 
-  const renderUpgradeOption = (room: Room) => (
-    <View key={room.id} className="flex-row items-start gap-4 mb-4">
-      <Image
-        source={{ uri: room.image }}
-        className="w-20 h-20 rounded-xl"
-        resizeMode="cover"
-      />
-      <View className="flex-1">
-        <View className="flex-row items-center justify-between mb-1">
-          <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{room.name}</Text>
-          <Text className="text-lg text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            +${room.pricePerNight}
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>/night</Text>
+  // Calculate price difference
+  const getPriceDifference = (roomPrice: number) => {
+    const basePrice = getBasePrice();
+    return roomPrice - basePrice;
+  };
+
+  const renderCurrentRoom = () => {
+    const currentRoom = selectedRoom || actualRoomData.currentRoom;
+    if (!currentRoom) return null;
+    
+    return (
+      <View className="flex-row items-center gap-4 bg-white px-6 py-4 border-b border-gray-200">
+        <Image
+          source={{ uri: currentRoom.image }}
+          className="w-16 h-16 rounded-xl"
+          resizeMode="cover"
+        />
+        <View className="flex-1">
+          <Text className="text-sm text-gray-500 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+            {selectedRoom ? 'Selected room' : 'Your current room'}
+          </Text>
+          <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            {currentRoom.name}
+          </Text>
+          <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            {currentRoom.features}
           </Text>
         </View>
-        <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{room.features}</Text>
-        <TouchableOpacity
-          onPress={() => handleRoomSelect(room)}
-          className="w-full h-10 rounded-full bg-[#FF5A5F] items-center justify-center"
-        >
-          <Text className="text-sm text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Select</Text>
-        </TouchableOpacity>
       </View>
-    </View>
-  );
+    );
+  };
+
+  const renderRoomOption = (room: Room, isSelected: boolean = false) => {
+    const priceDiff = getPriceDifference(room.pricePerNight);
+    const isCurrentlySelected = selectedRoom?.id === room.id || 
+                               (!selectedRoom && actualRoomData.currentRoom?.id === room.id);
+    
+    return (
+      <View key={room.id} className={`flex-row items-start gap-4 mb-4 ${isCurrentlySelected ? 'opacity-50' : ''}`}>
+        <Image
+          source={{ uri: room.image }}
+          className="w-20 h-20 rounded-xl"
+          resizeMode="cover"
+        />
+        <View className="flex-1">
+          <View className="flex-row items-center justify-between mb-1">
+            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+              {room.name}
+            </Text>
+            <View className="items-end">
+              {priceDiff !== 0 && (
+                <Text className={`text-lg ${priceDiff > 0 ? 'text-[#FF5A5F]' : 'text-green-600'}`} style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  {priceDiff > 0 ? '+' : ''}₹{Math.abs(priceDiff)}
+                  <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>/night</Text>
+                </Text>
+              )}
+              <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                ₹{room.pricePerNight}/night
+              </Text>
+            </View>
+          </View>
+          <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            {room.features}
+          </Text>
+          {!isCurrentlySelected ? (
+            <TouchableOpacity
+              onPress={() => handleRoomSelect(room)}
+              className="w-full h-10 rounded-full bg-[#FF5A5F] items-center justify-center"
+            >
+              <Text className="text-sm text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Select</Text>
+            </TouchableOpacity>
+          ) : (
+            <View className="w-full h-10 rounded-full bg-green-100 items-center justify-center">
+              <Text className="text-sm text-green-700" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Selected</Text>
+            </View>
+          )}
+        </View>
+      </View>
+    );
+  };
 
   return (
     <ActionSheet 
@@ -147,14 +203,26 @@ export function RoomUpgradeActionSheet({
         {/* Current Room */}
         {renderCurrentRoom()}
 
-        {/* Upgrade Options */}
+        {/* Room Options */}
         <ScrollView 
           className="px-6 py-6"
           showsVerticalScrollIndicator={false}
           style={{ maxHeight: 400 }}
         >
+          <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Available Rooms
+          </Text>
           <View className="gap-4">
-            {roomData.upgradeOptions.map(renderUpgradeOption)}
+            {/* Show current room in the list if not selected */}
+            {actualRoomData.currentRoom && !selectedRoom && (
+              renderRoomOption(actualRoomData.currentRoom, true)
+            )}
+            {/* Show all upgrade options */}
+            {actualRoomData.upgradeOptions?.map(room => renderRoomOption(room))}
+            {/* Show selected room if it's different from current */}
+            {selectedRoom && selectedRoom.id !== actualRoomData.currentRoom?.id && (
+              renderRoomOption(selectedRoom, true)
+            )}
           </View>
         </ScrollView>
 

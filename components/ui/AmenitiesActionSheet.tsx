@@ -38,12 +38,61 @@ const amenities: Amenity[] = [
 
 interface AmenitiesActionSheetProps {
   sheetId: string;
+  payload?: {
+    amenities?: string[];
+  };
 }
 
-export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
+export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetProps) {
+  const hotelAmenities = payload?.amenities || [];
+  
   const handleClose = () => {
     SheetManager.hide(sheetId);
   };
+
+  // Map hotel amenity codes to display info
+  const getAmenityDisplayInfo = (amenityCode: string) => {
+    const amenityMap: Record<string, { name: string; icon: React.ComponentType<any> }> = {
+      'business_center': { name: 'Business Center', icon: Shield },
+      'parking': { name: 'Parking', icon: Car },
+      'restaurant': { name: 'Restaurant', icon: UtensilsCrossed },
+      'wifi': { name: 'Free Wi-Fi', icon: Wifi },
+      'pool': { name: 'Swimming Pool', icon: Waves },
+      'gym': { name: 'Fitness Center', icon: Dumbbell },
+      'spa': { name: 'Spa', icon: Wind },
+      'room_service': { name: 'Room Service', icon: Coffee },
+      'laundry': { name: 'Laundry', icon: WashingMachine },
+      'concierge': { name: 'Concierge', icon: Shield },
+      'tv': { name: 'Television', icon: Tv },
+      'kitchen': { name: 'Kitchen', icon: ChefHat },
+      'ac': { name: 'Air Conditioning', icon: Wind },
+      'fireplace': { name: 'Fireplace', icon: Flame },
+      'microwave': { name: 'Microwave', icon: Microwave },
+      'refrigerator': { name: 'Refrigerator', icon: Refrigerator },
+      'coffee': { name: 'Coffee Maker', icon: Coffee },
+      'outdoor': { name: 'Outdoor Seating', icon: Sun },
+      'smoke': { name: 'Smoke Alarm', icon: Shield },
+      'fire': { name: 'Fire Alarm', icon: AlertTriangle },
+      'lock': { name: 'Secure Lock', icon: Lock }
+    };
+    
+    return amenityMap[amenityCode.toLowerCase()] || { 
+      name: amenityCode.charAt(0).toUpperCase() + amenityCode.slice(1).replace(/_/g, ' '), 
+      icon: Plus 
+    };
+  };
+
+  // Get amenities to display - prioritize hotel amenities, fall back to all amenities
+  const amenitiesToShow = hotelAmenities.length > 0 
+    ? hotelAmenities.map(code => {
+        const info = getAmenityDisplayInfo(code);
+        return {
+          id: code,
+          name: info.name,
+          icon: info.icon
+        };
+      })
+    : amenities;
 
   const renderAmenityItem = (amenity: Amenity) => {
     const IconComponent = amenity.icon;
@@ -89,7 +138,7 @@ export function AmenitiesActionSheet({ sheetId }: AmenitiesActionSheetProps) {
           contentContainerStyle={{ paddingBottom: 20 }}
         >
           <View className="flex-row flex-wrap justify-between">
-            {amenities.map((amenity, index) => (
+            {amenitiesToShow.map((amenity, index) => (
               <View 
                 key={amenity.id}
                 className="w-[48%] mb-4"
