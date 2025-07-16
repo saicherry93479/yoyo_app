@@ -48,27 +48,6 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
 
   // Helper function to get amenity display info
   const getAmenityDisplayInfo = (amenityCode: string) => {
-    const amenityMap = {
-      'business_center': { name: 'Business Center', icon: 'business' },
-      'parking': { name: 'Parking', icon: 'car' },
-      'restaurant': { name: 'Restaurant', icon: 'restaurant' },
-      'wifi': { name: 'Free Wi-Fi', icon: 'wifi' },
-      'pool': { name: 'Swimming Pool', icon: 'water' },
-      'gym': { name: 'Fitness Center', icon: 'fitness' },
-      'spa': { name: 'Spa', icon: 'leaf' },
-      'room_service': { name: 'Room Service', icon: 'room-service' },
-      'laundry': { name: 'Laundry', icon: 'shirt' },
-      'concierge': { name: 'Concierge', icon: 'person' }
-    };
-    return amenityMap[amenityCode] || { name: amenityCode.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: 'checkmark-circle' };
-  };
-  
-  const handleClose = () => {
-    SheetManager.hide(sheetId);
-  };
-
-  // Map hotel amenity codes to display info
-  const getAmenityDisplayInfo = (amenityCode: string) => {
     const amenityMap: Record<string, { name: string; icon: React.ComponentType<any> }> = {
       'business_center': { name: 'Business Center', icon: Shield },
       'parking': { name: 'Parking', icon: Car },
@@ -98,13 +77,17 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
       icon: Plus 
     };
   };
+  
+  const handleClose = () => {
+    SheetManager.hide(sheetId);
+  };
 
   // Get amenities to display - prioritize hotel amenities, fall back to all amenities
   const amenitiesToShow = hotelAmenities.length > 0 
-    ? hotelAmenities.map(code => {
+    ? hotelAmenities.map((code, index) => {
         const info = getAmenityDisplayInfo(code);
         return {
-          id: code,
+          id: `${code}_${index}`, // Ensure unique keys
           name: info.name,
           icon: info.icon
         };
@@ -132,8 +115,9 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
       gestureEnabled={true}
       closable={true}
       closeOnTouchBackdrop={true}
+      snapPoints={[80]} // Increased snap point
     >
-      <View className="flex-col items-stretch rounded-t-2xl bg-white pt-3" style={{ maxHeight: '80%' }}>
+      <View className="flex-1 rounded-t-2xl bg-white pt-3">
         {/* Handle */}
         <View className="flex h-5 w-full items-center justify-center">
           <View className="h-1.5 w-10 rounded-full bg-gray-200" />
@@ -149,15 +133,19 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
 
         {/* Amenities Grid - Fixed scrolling */}
         <ScrollView 
-          className="flex-1 px-4 py-4"
+          className="flex-1 px-4"
           showsVerticalScrollIndicator={false}
           nestedScrollEnabled={true}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ 
+            paddingVertical: 16,
+            paddingBottom: 20,
+            flexGrow: 1
+          }}
         >
           <View className="flex-row flex-wrap justify-between">
             {amenitiesToShow.map((amenity, index) => (
               <View 
-                key={amenity.id}
+                key={`${amenity.id}_${index}`} // Ensure unique keys
                 className="w-[48%] mb-4"
               >
                 {renderAmenityItem(amenity)}
@@ -166,7 +154,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
           </View>
         </ScrollView>
 
-        {/* Close Button */}
+        {/* Close Button - Fixed at bottom */}
         <View className="border-t border-gray-200 bg-white px-4 py-4">
           <TouchableOpacity 
             onPress={handleClose}

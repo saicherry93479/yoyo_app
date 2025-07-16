@@ -415,83 +415,72 @@ const HotelDetails = () => {
           )}
         </View>
 
-        {/* Room Options */}
-        <View className="p-5">
-          <View className="flex-row items-center justify-between mb-4">
-            <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
-            {hotel.roomUpgradeData && (
-              <TouchableOpacity 
-                onPress={() => SheetManager.show('upgraderoom', {
-                  payload: {
-                    roomData: hotel.roomUpgradeData,
-                    selectedRoom: selectedRoom,
-                    onRoomSelect: handleRoomSelect
-                  }
-                })}
-                className="flex-row items-center gap-1"
-              >
-                <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  View All
-                </Text>
-                <Ionicons name="chevron-forward" size={18} color="#dc2626" />
-              </TouchableOpacity>
-            )}
-          </View>
+           {/* Room Upgrades */}
+           <View className="p-5">
+          <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
           
           <View className="mt-4 gap-4">
-            {/* Selected/Current Room */}
-            {(selectedRoom || hotel.roomUpgradeData?.currentRoom) && (
-              <View className="flex-row items-center gap-4 p-4 border border-green-200 bg-green-50 rounded-xl">
+            {/* Current Room */}
+            {hotel.roomUpgradeData?.currentRoom && (
+              <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
                 <Image
                   source={{
-                    uri: (selectedRoom || hotel.roomUpgradeData.currentRoom).image || imageUrls[0]
+                    uri: hotel.roomUpgradeData.currentRoom.image || imageUrls[0]
                   }}
                   className="w-24 h-24 rounded-lg"
                   style={{ resizeMode: 'cover' }}
                 />
                 <View className="flex-1">
                   <Text className="text-sm text-green-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    {selectedRoom ? 'Selected Room' : 'Current Selection'}
+                    Current Selection
                   </Text>
                   <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    {(selectedRoom || hotel.roomUpgradeData.currentRoom).name}
+                    {hotel.roomUpgradeData.currentRoom.name}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {(selectedRoom || hotel.roomUpgradeData.currentRoom).features}
+                    {hotel.roomUpgradeData.currentRoom.features}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{(selectedRoom || hotel.roomUpgradeData.currentRoom).pricePerNight}/night
+                    ₹{hotel.roomUpgradeData.currentRoom.pricePerNight}/night
                   </Text>
                 </View>
               </View>
             )}
 
-            {/* Default room if no room data */}
-            {!hotel.roomUpgradeData && (
-              <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
+            {/* Upgrade Options */}
+            {hotel.roomUpgradeData?.upgradeOptions?.map((room, index) => (
+              <View key={index} className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
                 <Image
                   source={{
-                    uri: imageUrls[0]
+                    uri: room.image || imageUrls[0]
                   }}
                   className="w-24 h-24 rounded-lg"
                   style={{ resizeMode: 'cover' }}
                 />
                 <View className="flex-1">
-                  <Text className="text-sm text-green-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    Available
+                  <Text className="text-sm text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    Upgrade Available
                   </Text>
                   <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    Standard Room
+                    {room.name}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {hotel.description || 'Comfortable accommodation'}
+                    {room.features}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{(hotel.pricing?.startingFrom || hotel.price || 0)}/night
+                    ₹{room.pricePerNight}/night
                   </Text>
+                  <TouchableOpacity onPress={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
+                    <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Upgrade</Text>
+                    <Ionicons name="arrow-forward" size={16} color="#1c1917" />
+                  </TouchableOpacity>
                 </View>
               </View>
-            )}
+            ))}
+
+
+           
+            
           </View>
         </View>
       </ScrollView>
