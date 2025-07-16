@@ -27,7 +27,7 @@ export function useWishlist() {
       }
       setError(null);
 
-      const response = await apiService.get('/wishlist');
+      const response = await apiService.get('/wishlist/');
 
       if (response.success) {
         setItems(response.data.items || []);
@@ -47,7 +47,7 @@ export function useWishlist() {
 
   const addToWishlist = async (hotelId: string) => {
     try {
-      const response = await apiService.post('/wishlist', { hotelId });
+      const response = await apiService.post('/wishlist/', { hotelId });
 
       if (response.success) {
         await fetchWishlist();

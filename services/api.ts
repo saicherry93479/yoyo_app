@@ -307,29 +307,67 @@ class ApiService {
 
     if (url.includes('/wishlist')) {
       if (method === 'GET') {
+        const page = params.page || 1;
+        const limit = params.limit || 10;
+        const startIndex = (page - 1) * limit;
+        const endIndex = startIndex + limit;
+        const paginatedItems = mockWishlistItems.slice(startIndex, endIndex);
+        
         return {
           success: true,
           data: {
-            items: mockWishlistItems,
-            total: mockWishlistItems.length
+            items: paginatedItems.map(item => ({
+              id: item.id,
+              addedAt: new Date(item.addedDate).toISOString(),
+              hotel: {
+                id: item.hotelId,
+                name: item.hotelName,
+                description: null,
+                address: item.location,
+                city: item.location.split(',')[1]?.trim() || item.location,
+                starRating: Math.floor(item.rating),
+                amenities: ['WiFi', 'Pool', 'Spa'],
+                coordinates: {
+                  lat: 19.0760 + Math.random() * 0.1,
+                  lng: 72.8777 + Math.random() * 0.1
+                }
+              }
+            })),
+            pagination: {
+              page,
+              limit,
+              total: mockWishlistItems.length,
+              pages: Math.ceil(mockWishlistItems.length / limit)
+            }
           } as T,
           message: 'Wishlist fetched successfully'
         };
       }
       
       if (method === 'POST') {
+        const { hotelId } = config.data || {};
+        const newWishlistItem = {
+          id: `wishlist_${Date.now()}`,
+          hotelId,
+          addedAt: new Date().toISOString()
+        };
+        
         return {
           success: true,
-          data: { added: true } as T,
-          message: 'Added to wishlist'
+          data: {
+            item: newWishlistItem
+          } as T,
+          message: 'Hotel added to wishlist successfully'
         };
       }
       
       if (method === 'DELETE') {
         return {
           success: true,
-          data: { removed: true } as T,
-          message: 'Removed from wishlist'
+          data: {
+            message: 'Hotel removed from wishlist successfully'
+          } as T,
+          message: 'Hotel removed from wishlist successfully'
         };
       }
     }

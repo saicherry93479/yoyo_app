@@ -8,6 +8,7 @@ import { Search, Star } from "lucide-react-native"
 import * as Location from 'expo-location'
 import { useNearbyHotels, useLatestHotels, useOffersHotels } from '@/hooks/useHotels'
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader'
+import { useWishlist } from '@/hooks/useWishlist'
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -121,6 +122,27 @@ export default function HotelBookingApp() {
     error: null
   })
   const navigation = useNavigation()
+  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems } = useWishlist()
+  
+  // Wishlist handlers
+  const handleWishlistToggle = async (hotel: any) => {
+    try {
+      const isCurrentlyInWishlist = isInWishlist(hotel.id)
+      
+      if (isCurrentlyInWishlist) {
+        // Find the wishlist item to get its ID for deletion
+        const wishlistItem = wishlistItems.find(item => item.hotelId === hotel.id)
+        if (wishlistItem) {
+          await removeFromWishlist(wishlistItem.id)
+        }
+      } else {
+        await addToWishlist(hotel.id)
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error)
+      Alert.alert('Error', 'Failed to update wishlist. Please try again.')
+    }
+  }
   
   // Location permission and fetching logic
   const requestLocationPermission = async () => {
@@ -287,8 +309,11 @@ export default function HotelBookingApp() {
             </Text>
           </View>
         )}
-        <TouchableOpacity className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center">
-          <HeartIcon size={18} color="#EF4444" />
+        <TouchableOpacity 
+          className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center"
+          onPress={() => handleWishlistToggle(hotel)}
+        >
+          <HeartIcon size={18} color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} />
         </TouchableOpacity>
       </View>
 
@@ -348,8 +373,11 @@ export default function HotelBookingApp() {
           className="w-full h-48 rounded-xl"
           style={{ resizeMode: 'cover' }}
         />
-        <TouchableOpacity className="absolute top-3 right-3 rounded-full bg-white/80 p-2">
-          <HeartIcon size={18} color="#EF4444" />
+        <TouchableOpacity 
+          className="absolute top-3 right-3 rounded-full bg-white/80 p-2"
+          onPress={() => handleWishlistToggle(hotel)}
+        >
+          <HeartIcon size={18} color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} />
         </TouchableOpacity>
         {hotel.offer && (
           <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-xl">

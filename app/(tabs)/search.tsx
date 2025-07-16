@@ -5,6 +5,7 @@ import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native'
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
 import { apiService } from '@/services/api';
+import { useWishlist } from '@/hooks/useWishlist';
 
 interface SearchFilters {
   priceRange?: {
@@ -74,6 +75,7 @@ export default function SearchScreen() {
   
   const navigation = useNavigation();
   const params = useLocalSearchParams();
+  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems } = useWishlist();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -93,6 +95,26 @@ export default function SearchScreen() {
       headerTitleAlign: 'left',
     });
   }, [navigation, total]);
+
+  // Wishlist handlers
+  const handleWishlistToggle = async (hotel: Hotel) => {
+    try {
+      const isCurrentlyInWishlist = isInWishlist(hotel.id)
+      
+      if (isCurrentlyInWishlist) {
+        // Find the wishlist item to get its ID for deletion
+        const wishlistItem = wishlistItems.find(item => item.hotelId === hotel.id)
+        if (wishlistItem) {
+          await removeFromWishlist(wishlistItem.id)
+        }
+      } else {
+        await addToWishlist(hotel.id)
+      }
+    } catch (error) {
+      console.error('Error toggling wishlist:', error)
+      // You might want to show a toast or alert here
+    }
+  }
 
   // Parse search data from params
   useEffect(() => {
@@ -195,8 +217,13 @@ export default function SearchScreen() {
             </Text>
           </View>
         )}
-        <TouchableOpacity className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center">
-          <Text className="text-red-500 text-lg">♡</Text>
+        <TouchableOpacity 
+          className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center"
+          onPress={() => handleWishlistToggle(hotel)}
+        >
+          <Text className={`text-lg ${isInWishlist(hotel.id) ? 'text-red-500' : 'text-gray-400'}`}>
+            {isInWishlist(hotel.id) ? '♥' : '♡'}
+          </Text>
         </TouchableOpacity>
       </View>
       
