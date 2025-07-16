@@ -284,9 +284,12 @@ class ApiService {
     if (url.includes('/bookings') && method === 'POST') {
       const newBooking = {
         id: `booking_${Date.now()}`,
+        userId: 'user_1',
         ...config.data,
         status: 'confirmed',
-        bookingDate: new Date().toISOString().split('T')[0],
+        totalAmount: config.data.totalAmount || 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         bookingReference: `BK${Date.now().toString().slice(-6)}`
       };
 

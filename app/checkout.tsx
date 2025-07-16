@@ -1,30 +1,121 @@
-import { useNavigation } from 'expo-router';
-import React, { useLayoutEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Image } from 'react-native';
-import { Svg, Path } from 'react-native-svg';
+import React, { useLayoutEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  Image,
+  StatusBar,
+  Alert,
+} from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { router, useNavigation, useLocalSearchParams } from 'expo-router';
+import { X, Bed, Clock } from 'lucide-react-native';
+import { apiService } from '@/services/api';
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+
+// Define the RoomIcon component directly
+const RoomIcon = () => (
+  <Bed size={16} color="#6B7280" />
+);
 
 const CheckoutScreen = () => {
     const navigation = useNavigation();
-    useLayoutEffect(() => {
-        navigation.setOptions({
-            headerShadowVisible: false,
-            headerTitle: () => (
-                <Text className="text-xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>CHECKOUT</Text>
-            ),
-            headerTitleAlign: 'center',
-        });
-    }, [navigation]);
-    const BackIcon = () => (
-        <Svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-            <Path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z" />
-        </Svg>
-    );
+    const params = useLocalSearchParams();
+    const [loading, setLoading] = useState(false);
 
-    const RoomIcon = () => (
-        <Svg width="16" height="16" viewBox="0 0 256 256" fill="currentColor">
-            <Path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM48,48H80V80H48ZM96,208V160H160v48Zm80-128v64H96V80a16,16,0,0,1,16-16h48A16,16,0,0,1,176,80ZM48,96H80v48H48Zm160,96H176V160h32v32Zm0-48H176V96h32v48Z" />
-        </Svg>
-    );
+    // Extract booking data from params
+    const bookingData = {
+      hotelId: params.hotelId as string,
+      roomId: params.roomId as string,
+      checkIn: params.checkIn as string,
+      checkOut: params.checkOut as string,
+      guests: parseInt(params.guests as string) || 2,
+      hotelName: params.hotelName as string,
+      roomName: params.roomName as string,
+      totalAmount: parseFloat(params.totalAmount as string) || 0,
+      address: params.address as string,
+      image: params.image as string
+    };
+
+useLayoutEffect(() => {
+        navigation.setOptions({
+          headerShadowVisible: false,
+          headerTitle: () => (
+            <Text className="text-xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Checkout</Text>
+          ),
+          headerTitleAlign: 'center',
+          headerLeft: () => (
+            <TouchableOpacity onPress={() => router.back()} className="p-2">
+              <X size={24} color="#121516" />
+            </TouchableOpacity>
+          ),
+        });
+      }, [navigation]);
+
+    // Handle booking creation
+    const handleConfirmBooking = async () => {
+      try {
+        setLoading(true);
+
+        const bookingRequest = {
+          hotelId: bookingData.hotelId,
+          roomId: bookingData.roomId,
+          checkIn: bookingData.checkIn,
+          checkOut: bookingData.checkOut,
+          guests: bookingData.guests,
+          specialRequests: '' // Can be added later if needed
+        };
+
+        const response = await apiService.post('/bookings/', bookingRequest);
+
+        if (response.success) {
+          Alert.alert(
+            'Booking Confirmed!',
+            'Your booking has been successfully created.',
+            [
+              {
+                text: 'View Booking',
+                onPress: () => {
+                  router.replace('/(tabs)/bookings');
+                }
+              }
+            ]
+          );
+        } else {
+          Alert.alert('Booking Failed', response.error || 'Something went wrong. Please try again.');
+        }
+      } catch (error) {
+        console.error('Booking error:', error);
+        Alert.alert('Booking Failed', 'Something went wrong. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    // Helper function to format date
+    const formatDate = (dateString) => {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    };
+
+    // Calculate nights
+    const calculateNights = () => {
+      const checkIn = new Date(bookingData.checkIn);
+      const checkOut = new Date(bookingData.checkOut);
+      const timeDiff = checkOut.getTime() - checkIn.getTime();
+      return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    };
+
+    const nights = calculateNights();
+    const subtotal = bookingData.totalAmount * nights;
+    const taxes = 0; // As requested, keeping taxes as 0
+    const total = subtotal + taxes;
 
     const VisaIcon = () => (
         <Svg width="48" height="32" viewBox="0 0 38 24">
@@ -45,7 +136,7 @@ const CheckoutScreen = () => {
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-1 justify-between">
                 {/* Header */}
-              
+
 
                 {/* Scrollable Content */}
                 <ScrollView className="flex-1 px-6 py-6">
@@ -54,7 +145,7 @@ const CheckoutScreen = () => {
                         <View className="w-24 h-24 rounded-xl overflow-hidden">
                             <Image
                                 source={{
-                                    uri: "https://lh3.googleusercontent.com/aida-public/AB6AXuDFPMR2qOcqvc2StCtGaa7NWcqX_cY0EQtWk4lqBdXM_crXbVqONxmPO0EMIGpbIRNtrrSvQU0S3yQU6FX51O-RfFJ0C7B3KNEm80etZX3nUvp2dyVr09Ap4QlAJHEPPdu4Hjp22eJAfpXR8gkSGicqsDK_XJcvIOmNDRtDnOeTO7mmNjyt3-jQ_AeyK8Gy2iUA3urgvym3vEOsqDqZQN0Mr3OoeG8DK_sx59bhlMYK3RvL8l3keMXLU4E9KyyGy3LVn-v2QOwy9Q"
+                                    uri: bookingData.image
                                 }}
                                 className="w-full h-full"
                                 resizeMode="cover"
@@ -62,17 +153,25 @@ const CheckoutScreen = () => {
                         </View>
                         <View className="flex-1 ml-4">
                             <Text className="text-gray-500 text-xs uppercase tracking-wider" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                                The Grand Majestic Hotel
+                                {bookingData.hotelName}
                             </Text>
                             <Text className="text-[#161312] text-lg  mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                Deluxe King Room
+                                {bookingData.roomName}
                             </Text>
+                            <View className="flex-row items-center mt-2">
+                                <View className="text-gray-500">
+                                    <Clock size={16} color="#6B7280" />
+                                </View>
+                                <Text className="text-gray-500 text-sm ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                    {nights} {nights === 1 ? 'night' : 'nights'}
+                                </Text>
+                            </View>
                             <View className="flex-row items-center mt-2">
                                 <View className="text-gray-500">
                                     <RoomIcon />
                                 </View>
                                 <Text className="text-gray-500 text-sm ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    1 Room
+                                    {bookingData.guests} {bookingData.guests === 1 ? 'guest' : 'guests'}
                                 </Text>
                             </View>
                         </View>
@@ -81,106 +180,69 @@ const CheckoutScreen = () => {
                     {/* Divider */}
                     <View className="h-px bg-gray-100 -mx-6 mb-6" />
 
-                    {/* Your Trip Section */}
-                    <View className="mb-6">
-                        <Text className="text-[#161312] text-lg  mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                            Your Trip
-                        </Text>
-                        <View className="gap-4">
-                            <View className="flex-row items-center justify-between">
-                                <View>
-                                    <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                        Dates
-                                    </Text>
-                                    <Text className="text-[#161312] font-semibold" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                        July 15 - 20, 2024
-                                    </Text>
-                                </View>
-                                <TouchableOpacity>
-                                    <Text className="text-[#e1a9a1] text-sm " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                        Edit
-                                    </Text>
-                                </TouchableOpacity>
+                    {/* Dates */}
+                    <View className="flex-row bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                        <View className="flex-1">
+                            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-in</Text>
+                            <Text className="text-[#161312] text-lg mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                {formatDate(bookingData.checkIn)}
+                            </Text>
+                            <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                After 2:00 PM
+                            </Text>
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-out</Text>
+                            <Text className="text-[#161312] text-lg mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                {formatDate(bookingData.checkOut)}
+                            </Text>
+                            <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                Before 12:00 PM
+                            </Text>
+                        </View>
+                        <View className="items-center justify-center">
+                            <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center">
+                                <Text className="text-[#161312] text-sm" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{bookingData.guests}</Text>
                             </View>
-                            <View className="flex-row items-center justify-between">
-                                <View>
-                                    <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                        Guests
-                                    </Text>
-                                    <Text className="text-[#161312] font-semibold" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                        2 guests
-                                    </Text>
-                                </View>
-                                <TouchableOpacity>
-                                    <Text className="text-[#e1a9a1] text-sm " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                        Edit
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
+                            <Text className="text-gray-500 text-xs mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Guests</Text>
                         </View>
                     </View>
 
-                    {/* Divider */}
-                    <View className="h-px bg-gray-100 -mx-6 mb-6" />
-
-                    {/* Price Details Section */}
-                    <View className="mb-6">
-                        <Text className="text-[#161312] text-lg  mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {/* Price Breakdown */}
+                    <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                        <Text className="text-[#161312] text-lg mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                             Price Details
                         </Text>
-                        <View className="gap-3">
-                            <View className="flex-row justify-between">
-                                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    5 nights
+
+                        <View className="flex-row justify-between items-center mb-3">
+                            <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                ₹{bookingData.totalAmount.toLocaleString()} x {nights} {nights === 1 ? 'night' : 'nights'}
+                            </Text>
+                            <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                ₹{subtotal.toLocaleString()}
+                            </Text>
+                        </View>
+
+                        <View className="flex-row justify-between items-center mb-3">
+                            <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                Taxes and fees
+                            </Text>
+                            <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                ₹{taxes.toLocaleString()}
+                            </Text>
+                        </View>
+
+                        <View className="border-t border-gray-200 pt-3">
+                            <View className="flex-row justify-between items-center">
+                                <Text className="text-[#161312] text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                    Total
                                 </Text>
-                                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    $1,250.00
+                                <Text className="text-[#161312] text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                    ₹{total.toLocaleString()}
                                 </Text>
-                            </View>
-                            <View className="flex-row justify-between">
-                                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    Taxes and fees
-                                </Text>
-                                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    $125.00
-                                </Text>
-                            </View>
-                            <View className="border-t border-gray-100 pt-2">
-                                <View className="flex-row justify-between">
-                                    <Text className="text-[#161312] text-base " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                        Total
-                                    </Text>
-                                    <Text className="text-[#161312] text-base " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                        $1,375.00
-                                    </Text>
-                                </View>
                             </View>
                         </View>
                     </View>
-
-                    {/* Divider */}
-                    <View className="h-px bg-gray-100 -mx-6 mb-6" />
-
-                    {/* Pay with Section */}
-                    {/* <View className="mb-6">
-                        <Text className="text-[#161312] text-lg  mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                            Pay with
-                        </Text>
-                        <TouchableOpacity className="flex-row items-center justify-between p-4 border border-gray-200 rounded-lg">
-                            <View className="flex-row items-center">
-                                <VisaIcon />
-                                <Text className="text-[#161312] font-semibold ml-4" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                    Visa ending in 1234
-                                </Text>
-                            </View>
-                            <View className="text-gray-400">
-                                <ChevronIcon />
-                            </View>
-                        </TouchableOpacity>
-                    </View> */}
-
-                    {/* Divider */}
-                    <View className="h-px bg-gray-100 -mx-6 mb-6" />
 
                     {/* Cancellation Policy Section */}
                     <View className="mb-6">
@@ -200,12 +262,20 @@ const CheckoutScreen = () => {
                     </View>
                 </ScrollView>
 
-                {/* Footer */}
-                <View className="px-4 py-4 border-t border-gray-100 bg-white">
-                    <TouchableOpacity className="bg-[#e1a9a1] rounded-full h-14 flex-row items-center justify-center shadow-lg">
-                        <Text className="text-white text-base  tracking-wide" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                            Confirm and Pay
-                        </Text>
+                {/* Confirm Button */}
+                <View className="px-6 py-4">
+                    <TouchableOpacity
+                        className={`w-full p-4 rounded-2xl items-center ${loading ? 'bg-gray-400' : 'bg-[#FF5A5F]'}`}
+                        onPress={handleConfirmBooking}
+                        disabled={loading}
+                    >
+                        {loading ? (
+                            <LoadingSpinner size="small" color="white" />
+                        ) : (
+                            <Text className="text-white text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                Confirm Booking
+                            </Text>
+                        )}
                     </TouchableOpacity>
                 </View>
             </View>

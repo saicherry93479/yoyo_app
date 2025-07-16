@@ -157,6 +157,35 @@ const HotelDetails = () => {
       }
       return hotel?.pricing?.startingFrom || hotel?.price || 0;
     };
+
+    // Check if rooms are available
+    const areRoomsAvailable = () => {
+      return hotel?.roomUpgradeData?.currentRoom || 
+             (hotel?.roomUpgradeData?.upgradeOptions && hotel.roomUpgradeData.upgradeOptions.length > 0);
+    };
+
+    // Handle booking
+    const handleBookNow = () => {
+      if (!areRoomsAvailable()) return;
+      
+      const bookingData = {
+        hotelId: hotel.id,
+        roomId: selectedRoom?.id || hotel.roomUpgradeData?.currentRoom?.id,
+        checkIn: searchParams.checkIn,
+        checkOut: searchParams.checkOut,
+        guests: parseInt(searchParams.guests),
+        hotelName: hotel.name,
+        roomName: selectedRoom?.name || hotel.roomUpgradeData?.currentRoom?.name || 'Standard Room',
+        totalAmount: getCurrentRoomPrice(),
+        address: hotel.address,
+        image: hotel.images?.[0] || 'https://via.placeholder.com/400x300'
+      };
+
+      router.push({
+        pathname: '/checkout',
+        params: bookingData
+      });
+    };
     
   if (loading) {
     return <LoadingSpinner fullScreen text="Loading hotel details..." />;
@@ -487,18 +516,37 @@ const HotelDetails = () => {
 
       {/* Bottom Booking Bar */}
       <View className="bg-white p-4 shadow-lg border-t border-stone-100">
-        <View className="flex-row items-center justify-between">
-          <View>
-            <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              ₹{getCurrentRoomPrice().toLocaleString()}
-            </Text>
-            <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
+        {areRoomsAvailable() ? (
+          <View className="flex-row items-center justify-between">
+            <View>
+              <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                ₹{getCurrentRoomPrice().toLocaleString()}
+              </Text>
+              <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
+            </View>
+            
+            <TouchableOpacity onPress={handleBookNow} className="bg-red-600 px-6 py-3 rounded-full">
+              <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book Now</Text>
+            </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity onPress={() => router.push('checkout')} className="bg-red-600 px-6 py-3 rounded-full">
-            <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book Now</Text>
-          </TouchableOpacity>
-        </View>
+        ) : (
+          <View className="items-center">
+            <Text className="text-xl text-stone-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              No Rooms Available
+            </Text>
+            <Text className="text-sm text-stone-500 mb-4 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              Try changing your check-in/check-out dates or number of guests for room availability
+            </Text>
+            <TouchableOpacity 
+              onPress={handleEditSearch}
+              className="bg-red-600 px-6 py-3 rounded-full"
+            >
+              <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                Change Dates/Guests
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
