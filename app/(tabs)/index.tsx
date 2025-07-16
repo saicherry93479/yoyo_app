@@ -214,7 +214,7 @@ export default function HotelBookingApp() {
   }, [activeTab])
 
   // Use different hooks based on active tab
-  const nearbyData = useNearbyHotels(location.coordinates || { lat: 0, lng: 0 })
+  const nearbyData = useNearbyHotels(location.coordinates)
   const latestData = useLatestHotels()
   const offersData = useOffersHotels()
 

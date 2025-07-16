@@ -173,13 +173,21 @@ export function useHotels(filters?: SearchFilters) {
 }
 
 // Hook for nearby hotels
-export function useNearbyHotels(coordinates: { lat: number; lng: number }) {
+export function useNearbyHotels(coordinates: { lat: number; lng: number } | null) {
   const [hotels, setHotels] = useState<MockHotel[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchNearbyHotels = async (isRefresh = false) => {
+    // Don't make API call if coordinates are not available
+    if (!coordinates || (coordinates.lat === 0 && coordinates.lng === 0)) {
+      setLoading(false);
+      setRefreshing(false);
+      setHotels([]);
+      return;
+    }
+
     try {
       if (isRefresh) {
         setRefreshing(true);
@@ -188,10 +196,10 @@ export function useNearbyHotels(coordinates: { lat: number; lng: number }) {
       }
       setError(null);
 
-      const params: any = { limit: 10 };
-      if (coordinates) {
-        params.coordinates = coordinates;
-      }
+      const params: any = { 
+        limit: 10,
+        coordinates: coordinates
+      };
 
       const response = await apiService.get('/search/nearby', { params });
 
@@ -212,12 +220,19 @@ export function useNearbyHotels(coordinates: { lat: number; lng: number }) {
   };
 
   const refresh = () => {
-    fetchNearbyHotels(true);
+    if (coordinates) {
+      fetchNearbyHotels(true);
+    }
   };
 
   useEffect(() => {
-    fetchNearbyHotels();
-  }, [coordinates]);
+    if (coordinates) {
+      fetchNearbyHotels();
+    } else {
+      setLoading(false);
+      setHotels([]);
+    }
+  }, [coordinates?.lat, coordinates?.lng]);
 
   return {
     hotels,
