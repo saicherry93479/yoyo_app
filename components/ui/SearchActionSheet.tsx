@@ -39,28 +39,14 @@ interface SearchActionSheetProps {
   sheetId: string;
   payload?: {
     onSearch?: (searchData: SearchData) => void;
-    searchData?: {
-      location?: string;
-      guests?: GuestCounts;
-      checkIn?: string;
-      checkOut?: string;
-    };
   };
 }
 
 export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
   const [searchData, setSearchData] = useState<SearchData>({
-    location: payload?.searchData?.location ? {
-      id: 'current',
-      name: payload.searchData.location,
-      description: payload.searchData.location,
-      type: 'current'
-    } : null,
-    dateRange: { 
-      startDate: payload?.searchData?.checkIn || null, 
-      endDate: payload?.searchData?.checkOut || null 
-    },
-    guests: payload?.searchData?.guests || { adults: 1, children: 0, infants: 0 }
+    location: null,
+    dateRange: { startDate: null, endDate: null },
+    guests: { adults: 1, children: 0, infants: 0 }
   });
   const [isSearching, setIsSearching] = useState(false);
 
@@ -77,18 +63,18 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     
     // Simulate search API call
     setTimeout(() => {
-      // Pass the complete search data to the callback
+      // Pass the complete search data to the search screen
       if (payload?.onSearch) {
         payload.onSearch(searchData);
-      } else {
-        // Navigate to explore tab with search results if no callback
-        router.push({
-          pathname: '/(tabs)/search',
-          params: {
-            searchData: JSON.stringify(searchData)
-          }
-        });
       }
+      
+      // Navigate to explore tab with search results
+      router.push({
+        pathname: '/(tabs)/search',
+        params: {
+          searchData: JSON.stringify(searchData)
+        }
+      });
       
       // Close the sheet
       handleClose();
