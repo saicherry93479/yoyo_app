@@ -30,7 +30,18 @@ export function useWishlist() {
       const response = await apiService.get('/wishlist/');
 
       if (response.success) {
-        setItems(response.data.items || []);
+        // Transform API response to match WishlistItem interface
+        const transformedItems = (response.data.items || []).map((item: any) => ({
+          id: item.id,
+          hotelId: item.hotel.id,
+          hotelName: item.hotel.name,
+          location: `${item.hotel.address}, ${item.hotel.city}`,
+          image: item.hotel.images?.primary || 'https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=300',
+          price: item.hotel.pricing?.startingFrom || 0,
+          rating: item.hotel.rating?.average || 0,
+          addedDate: item.addedAt
+        }));
+        setItems(transformedItems);
       } else {
         // In mock mode, always show success
         setItems([]);
