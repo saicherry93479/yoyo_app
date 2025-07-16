@@ -125,7 +125,7 @@ const HotelDetails = () => {
       SheetManager.show('search', {
         payload: {
           searchData: {
-            location: `${hotel.address}, ${hotel.city}`,
+            location: hotel ? `${hotel.address}, ${hotel.city}` : '',
             guests: {
               adults: parseInt(searchParams.guests) || 2,
               children: 0,
@@ -420,7 +420,7 @@ const HotelDetails = () => {
         <View className="p-5">
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
-            {hotel.roomUpgradeData && (
+            {hotel.roomUpgradeData && hotel.roomUpgradeData.upgradeOptions && hotel.roomUpgradeData.upgradeOptions.length > 0 && (
               <TouchableOpacity 
                 onPress={() => SheetManager.show('upgraderoom', {
                   payload: {
@@ -440,32 +440,85 @@ const HotelDetails = () => {
           </View>
           
           <View className="mt-4 gap-4">
-            {/* Selected/Current Room */}
-            {(selectedRoom || hotel.roomUpgradeData?.currentRoom) && (
-              <View className="flex-row items-center gap-4 p-4 border border-green-200 bg-green-50 rounded-xl">
+            {/* Show all available rooms */}
+            {hotel.roomUpgradeData && hotel.roomUpgradeData.currentRoom && (
+              <View className={`flex-row items-center gap-4 p-4 border rounded-xl ${selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id ? 'border-green-200 bg-green-50' : 'border-stone-200 bg-white'}`}>
                 <Image
                   source={{
-                    uri: (selectedRoom || hotel.roomUpgradeData.currentRoom).image || imageUrls[0]
+                    uri: hotel.roomUpgradeData.currentRoom.image || imageUrls[0]
                   }}
                   className="w-24 h-24 rounded-lg"
                   style={{ resizeMode: 'cover' }}
                 />
                 <View className="flex-1">
-                  <Text className="text-sm text-green-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    {selectedRoom ? 'Selected Room' : 'Current Selection'}
+                  <Text className={`text-sm ${selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id ? 'text-green-600' : 'text-blue-600'}`} style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    {selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id ? 'Selected' : 'Current Room'}
                   </Text>
                   <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    {(selectedRoom || hotel.roomUpgradeData.currentRoom).name}
+                    {hotel.roomUpgradeData.currentRoom.name}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {(selectedRoom || hotel.roomUpgradeData.currentRoom).features}
+                    {hotel.roomUpgradeData.currentRoom.features}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{(selectedRoom || hotel.roomUpgradeData.currentRoom).pricePerNight}/night
+                    ₹{hotel.roomUpgradeData.currentRoom.pricePerNight}/night
                   </Text>
                 </View>
+                <TouchableOpacity 
+                  onPress={() => handleRoomSelect(hotel.roomUpgradeData.currentRoom)}
+                  className={`px-4 py-2 rounded-full ${selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id ? 'bg-green-100' : 'bg-blue-100'}`}
+                >
+                  <Text className={`text-sm ${selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id ? 'text-green-700' : 'text-blue-700'}`} style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id ? 'Selected' : 'Select'}
+                  </Text>
+                </TouchableOpacity>
               </View>
             )}
+
+            {/* Show upgrade options */}
+            {hotel.roomUpgradeData && hotel.roomUpgradeData.upgradeOptions && hotel.roomUpgradeData.upgradeOptions.map((room) => (
+              <View 
+                key={room.id} 
+                className={`flex-row items-center gap-4 p-4 border rounded-xl ${selectedRoom?.id === room.id ? 'border-green-200 bg-green-50' : 'border-stone-200 bg-white'}`}
+              >
+                <Image
+                  source={{
+                    uri: room.image || imageUrls[0]
+                  }}
+                  className="w-24 h-24 rounded-lg"
+                  style={{ resizeMode: 'cover' }}
+                />
+                <View className="flex-1">
+                  <Text className={`text-sm ${selectedRoom?.id === room.id ? 'text-green-600' : 'text-orange-600'}`} style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    {selectedRoom?.id === room.id ? 'Selected' : 'Upgrade Option'}
+                  </Text>
+                  <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {room.name}
+                  </Text>
+                  <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {room.features}
+                  </Text>
+                  <View className="flex-row items-center gap-2 mt-1">
+                    <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                      ₹{room.pricePerNight}/night
+                    </Text>
+                    {hotel.roomUpgradeData.currentRoom && room.pricePerNight > hotel.roomUpgradeData.currentRoom.pricePerNight && (
+                      <Text className="text-sm text-orange-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                        (+₹{room.pricePerNight - hotel.roomUpgradeData.currentRoom.pricePerNight})
+                      </Text>
+                    )}
+                  </View>
+                </View>
+                <TouchableOpacity 
+                  onPress={() => handleRoomSelect(room)}
+                  className={`px-4 py-2 rounded-full ${selectedRoom?.id === room.id ? 'bg-green-100' : 'bg-orange-100'}`}
+                >
+                  <Text className={`text-sm ${selectedRoom?.id === room.id ? 'text-green-700' : 'text-orange-700'}`} style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {selectedRoom?.id === room.id ? 'Selected' : 'Select'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            ))}
 
             {/* Default room if no room data */}
             {!hotel.roomUpgradeData && (

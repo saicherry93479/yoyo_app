@@ -126,13 +126,12 @@ export function RoomUpgradeActionSheet({
     );
   };
 
-  const renderRoomOption = (room: Room, isSelected: boolean = false) => {
+  const renderRoomOption = (room: Room) => {
     const priceDiff = getPriceDifference(room.pricePerNight);
-    const isCurrentlySelected = selectedRoom?.id === room.id || 
-                               (!selectedRoom && actualRoomData.currentRoom?.id === room.id);
+    const isCurrentlySelected = selectedRoom?.id === room.id;
     
     return (
-      <View key={room.id} className={`flex-row items-start gap-4 mb-4 ${isCurrentlySelected ? 'opacity-50' : ''}`}>
+      <View key={room.id} className="flex-row items-start gap-4 mb-4">
         <Image
           source={{ uri: room.image }}
           className="w-20 h-20 rounded-xl"
@@ -213,16 +212,10 @@ export function RoomUpgradeActionSheet({
             Available Rooms
           </Text>
           <View className="gap-4">
-            {/* Show current room in the list if not selected */}
-            {actualRoomData.currentRoom && !selectedRoom && (
-              renderRoomOption(actualRoomData.currentRoom, true)
-            )}
+            {/* Show current room */}
+            {actualRoomData.currentRoom && renderRoomOption(actualRoomData.currentRoom)}
             {/* Show all upgrade options */}
             {actualRoomData.upgradeOptions?.map(room => renderRoomOption(room))}
-            {/* Show selected room if it's different from current */}
-            {selectedRoom && selectedRoom.id !== actualRoomData.currentRoom?.id && (
-              renderRoomOption(selectedRoom, true)
-            )}
           </View>
         </ScrollView>
 

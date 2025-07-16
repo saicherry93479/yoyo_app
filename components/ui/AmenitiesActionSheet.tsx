@@ -46,6 +46,8 @@ interface AmenitiesActionSheetProps {
 export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetProps) {
   const hotelAmenities = payload?.amenities || [];
   
+  console.log('AmenitiesActionSheet - hotelAmenities:', hotelAmenities);
+  
   const handleClose = () => {
     SheetManager.hide(sheetId);
   };
@@ -83,7 +85,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
   };
 
   // Get amenities to display - prioritize hotel amenities, fall back to all amenities
-  const amenitiesToShow = hotelAmenities.length > 0 
+  const amenitiesToShow = hotelAmenities && hotelAmenities.length > 0 
     ? hotelAmenities.map(code => {
         const info = getAmenityDisplayInfo(code);
         return {
@@ -92,7 +94,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
           icon: info.icon
         };
       })
-    : amenities;
+    : amenities.slice(0, 12); // Show first 12 amenities as fallback
 
   const renderAmenityItem = (amenity: Amenity) => {
     const IconComponent = amenity.icon;
