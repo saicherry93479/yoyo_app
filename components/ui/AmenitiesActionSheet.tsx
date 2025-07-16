@@ -45,8 +45,23 @@ interface AmenitiesActionSheetProps {
 
 export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetProps) {
   const hotelAmenities = payload?.amenities || [];
-  
-  console.log('AmenitiesActionSheet - hotelAmenities:', hotelAmenities);
+
+  // Helper function to get amenity display info
+  const getAmenityDisplayInfo = (amenityCode: string) => {
+    const amenityMap = {
+      'business_center': { name: 'Business Center', icon: 'business' },
+      'parking': { name: 'Parking', icon: 'car' },
+      'restaurant': { name: 'Restaurant', icon: 'restaurant' },
+      'wifi': { name: 'Free Wi-Fi', icon: 'wifi' },
+      'pool': { name: 'Swimming Pool', icon: 'water' },
+      'gym': { name: 'Fitness Center', icon: 'fitness' },
+      'spa': { name: 'Spa', icon: 'leaf' },
+      'room_service': { name: 'Room Service', icon: 'room-service' },
+      'laundry': { name: 'Laundry', icon: 'shirt' },
+      'concierge': { name: 'Concierge', icon: 'person' }
+    };
+    return amenityMap[amenityCode] || { name: amenityCode.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()), icon: 'checkmark-circle' };
+  };
   
   const handleClose = () => {
     SheetManager.hide(sheetId);
@@ -85,7 +100,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
   };
 
   // Get amenities to display - prioritize hotel amenities, fall back to all amenities
-  const amenitiesToShow = hotelAmenities && hotelAmenities.length > 0 
+  const amenitiesToShow = hotelAmenities.length > 0 
     ? hotelAmenities.map(code => {
         const info = getAmenityDisplayInfo(code);
         return {
@@ -94,7 +109,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
           icon: info.icon
         };
       })
-    : amenities.slice(0, 12); // Show first 12 amenities as fallback
+    : amenities;
 
   const renderAmenityItem = (amenity: Amenity) => {
     const IconComponent = amenity.icon;
