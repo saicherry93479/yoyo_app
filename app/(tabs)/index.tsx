@@ -298,7 +298,22 @@ export default function HotelBookingApp() {
   )
 
   const renderHotelCard = (hotel: any) => (
-    <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+    <Pressable onPress={() => {
+      // For home screen, we'll use default values since there's no active search
+      const searchParams = new URLSearchParams();
+      searchParams.append('guests', '2'); // Default to 2 guests
+      
+      // Default to next 2 nights
+      const checkIn = new Date();
+      checkIn.setDate(checkIn.getDate() + 1);
+      const checkOut = new Date();
+      checkOut.setDate(checkOut.getDate() + 3);
+      
+      searchParams.append('checkIn', checkIn.toISOString());
+      searchParams.append('checkOut', checkOut.toISOString());
+      
+      router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
+    }} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
       <View className="relative">
         <Image
           source={{ uri: hotel.images[0] }}

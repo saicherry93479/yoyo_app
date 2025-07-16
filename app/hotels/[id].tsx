@@ -17,7 +17,7 @@ import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
 const HotelDetails = () => {
-    const { id } = useLocalSearchParams();
+    const { id, guests, checkIn, checkOut } = useLocalSearchParams();
     const navigation = useNavigation()
     const [hotel, setHotel] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -26,13 +26,23 @@ const HotelDetails = () => {
 
     useEffect(() => {
       fetchHotelDetails();
-    }, [id]);
+    }, [id, guests, checkIn, checkOut]);
 
     const fetchHotelDetails = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await apiService.get(`/hotels/${id}/details`);
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (guests) params.append('guests', guests as string);
+        if (checkIn) params.append('checkIn', checkIn as string);
+        if (checkOut) params.append('checkOut', checkOut as string);
+        
+        const queryString = params.toString();
+        const url = queryString ? `/hotels/${id}/details?${queryString}` : `/hotels/${id}/details`;
+        
+        const response = await apiService.get(url);
 
         console.log('response from backend for hotel ', JSON.stringify(response))
         
@@ -381,7 +391,7 @@ const HotelDetails = () => {
                     {hotel.description || 'Comfortable accommodation'}
                   </Text>
                   <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{hotel.price}/night
+                    ₹{(hotel.pricing?.startingFrom || hotel.price || 0)}/night
                   </Text>
                 </View>
               </View>
@@ -395,7 +405,7 @@ const HotelDetails = () => {
         <View className="flex-row items-center justify-between">
           <View>
             <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              ₹{hotel.price.toLocaleString()}
+              ₹{(hotel.pricing?.startingFrom || hotel.price || 0).toLocaleString()}
             </Text>
             <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
           </View>

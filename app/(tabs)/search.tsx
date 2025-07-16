@@ -205,7 +205,23 @@ export default function SearchScreen() {
     <TouchableOpacity 
       key={hotel.id}
       className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
-      onPress={() => router.push(`/hotels/${hotel.id}`)}
+      onPress={() => {
+        const searchParams = new URLSearchParams();
+        if (currentSearchData?.guests) {
+          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
+          searchParams.append('guests', totalGuests.toString());
+        }
+        if (currentSearchData?.dateRange?.startDate) {
+          searchParams.append('checkIn', currentSearchData.dateRange.startDate);
+        }
+        if (currentSearchData?.dateRange?.endDate) {
+          searchParams.append('checkOut', currentSearchData.dateRange.endDate);
+        }
+        
+        const queryString = searchParams.toString();
+        const url = queryString ? `/hotels/${hotel.id}?${queryString}` : `/hotels/${hotel.id}`;
+        router.push(url);
+      }}
     >
       <View className="relative">
         <Image
