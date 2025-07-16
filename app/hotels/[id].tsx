@@ -371,7 +371,7 @@ const HotelDetails = () => {
             ))}
 
             {/* Default room if no upgrade data */}
-            {(!hotel.roomUpgradeData || (!hotel.roomUpgradeData.currentRoom && !hotel.roomUpgradeData.upgradeOptions)) && (
+            {/* {(!hotel.roomUpgradeData || (!hotel.roomUpgradeData.currentRoom && !hotel.roomUpgradeData.upgradeOptions)) && (
               <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
                 <Image
                   source={{
@@ -395,7 +395,7 @@ const HotelDetails = () => {
                   </Text>
                 </View>
               </View>
-            )}
+            )} */}
           </View>
         </View>
       </ScrollView>
