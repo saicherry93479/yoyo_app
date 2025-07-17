@@ -7,9 +7,12 @@ import {
   SafeAreaView,
   Switch,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import { useNavigation } from 'expo-router';
-import { Bell, Mail, MessageSquare, Calendar, Percent, Shield, Volume2 } from 'lucide-react-native';
+import { useAuth } from '@/contexts/AuthContext';
+import { Bell, Calendar, Shield, Percent, MessageSquare } from 'lucide-react-native';
+import { apiService } from '@/services/api';
 
 interface NotificationSetting {
   id: string;
@@ -17,75 +20,45 @@ interface NotificationSetting {
   description: string;
   icon: any;
   enabled: boolean;
-  category: 'booking' | 'marketing' | 'security' | 'general';
+  apiKey: string;
 }
 
 export default function NotificationsScreen() {
   const navigation = useNavigation();
+  const { user, setUser } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
   const [settings, setSettings] = useState<NotificationSetting[]>([
     {
       id: 'booking_updates',
       title: 'Booking Updates',
       description: 'Get notified about booking confirmations, changes, and reminders',
       icon: Calendar,
-      enabled: true,
-      category: 'booking',
+      enabled: user?.bookingUpdatesEnabled ?? true,
+      apiKey: 'bookingUpdatesEnabled',
     },
     {
-      id: 'payment_alerts',
-      title: 'Payment Alerts',
-      description: 'Receive notifications about payment confirmations and receipts',
-      icon: Shield,
-      enabled: true,
-      category: 'booking',
-    },
-    {
-      id: 'check_in_reminders',
+      id: 'checkin_reminders',
       title: 'Check-in Reminders',
       description: 'Get reminded about upcoming check-ins and travel dates',
       icon: Bell,
-      enabled: true,
-      category: 'booking',
-    },
-    {
-      id: 'special_offers',
-      title: 'Special Offers',
-      description: 'Receive notifications about deals, discounts, and promotions',
-      icon: Percent,
-      enabled: false,
-      category: 'marketing',
-    },
-    {
-      id: 'newsletter',
-      title: 'Newsletter',
-      description: 'Get travel tips, destination guides, and hotel recommendations',
-      icon: Mail,
-      enabled: false,
-      category: 'marketing',
+      enabled: user?.checkinRemindersEnabled ?? true,
+      apiKey: 'checkinRemindersEnabled',
     },
     {
       id: 'security_alerts',
       title: 'Security Alerts',
       description: 'Important notifications about account security and login attempts',
       icon: Shield,
-      enabled: true,
-      category: 'security',
+      enabled: user?.securityAlertsEnabled ?? true,
+      apiKey: 'securityAlertsEnabled',
     },
     {
-      id: 'app_updates',
-      title: 'App Updates',
-      description: 'Get notified about new features and app improvements',
-      icon: MessageSquare,
-      enabled: true,
-      category: 'general',
-    },
-    {
-      id: 'sound_notifications',
-      title: 'Sound & Vibration',
-      description: 'Enable sound and vibration for push notifications',
-      icon: Volume2,
-      enabled: true,
-      category: 'general',
+      id: 'promotional_offers',
+      title: 'Special Offers & Promotions',
+      description: 'Receive notifications about deals, discounts, and special promotions',
+      icon: Percent,
+      enabled: user?.promotionalOffersEnabled ?? false,
+      apiKey: 'promotionalOffersEnabled',
     },
   ]);
 
@@ -101,18 +74,75 @@ export default function NotificationsScreen() {
     });
   }, [navigation]);
 
-  const toggleSetting = (id: string) => {
+  const toggleSetting = async (id: string) => {
+    const setting = settings.find(s => s.id === id);
+    if (!setting) return;
+
+    const newValue = !setting.enabled;
+    
+    // Optimistically update UI
     setSettings(prev => 
-      prev.map(setting => 
-        setting.id === id 
-          ? { ...setting, enabled: !setting.enabled }
-          : setting
+      prev.map(s => 
+        s.id === id 
+          ? { ...s, enabled: newValue }
+          : s
       )
     );
-  };
 
-  const getSettingsByCategory = (category: string) => {
-    return settings.filter(setting => setting.category === category);
+    try {
+      setIsLoading(true);
+      
+      // Prepare request body with the specific notification setting
+      const requestBody = {
+        [setting.apiKey]: newValue,
+      };
+
+      const response = await apiService.put('/auth/profile', requestBody);
+      
+      if (response.success) {
+        // Update user context with response data
+        if (user && response.data.user) {
+          const updatedUser = { 
+            ...user, 
+            ...response.data.user,
+            profile: response.data.profile
+          };
+          setUser(updatedUser);
+        }
+        
+        // Show success message for important changes
+        if (setting.id === 'security_alerts' && !newValue) {
+          Alert.alert(
+            'Security Alerts Disabled',
+            'You will no longer receive security notifications. You can re-enable them anytime.',
+            [{ text: 'OK' }]
+          );
+        }
+      } else {
+        // Revert optimistic update on failure
+        setSettings(prev => 
+          prev.map(s => 
+            s.id === id 
+              ? { ...s, enabled: !newValue }
+              : s
+          )
+        );
+        Alert.alert('Error', response.message || 'Failed to update notification settings');
+      }
+    } catch (error) {
+      console.error('Notification setting update error:', error);
+      // Revert optimistic update on error
+      setSettings(prev => 
+        prev.map(s => 
+          s.id === id 
+            ? { ...s, enabled: !newValue }
+            : s
+        )
+      );
+      Alert.alert('Error', 'Failed to update notification settings. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderSettingItem = (setting: NotificationSetting) => {
@@ -121,8 +151,8 @@ export default function NotificationsScreen() {
     return (
       <View key={setting.id} className="flex-row items-center justify-between py-4">
         <View className="flex-row items-center flex-1">
-          <View className="w-10 h-10 bg-gray-100 rounded-full items-center justify-center mr-4">
-            <IconComponent size={20} color="#6B7280" />
+          <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mr-4">
+            <IconComponent size={22} color="#6B7280" />
           </View>
           <View className="flex-1">
             <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
@@ -133,40 +163,14 @@ export default function NotificationsScreen() {
             </Text>
           </View>
         </View>
-        <Switch
-          value={setting.enabled}
-          onValueChange={() => toggleSetting(setting.id)}
-          trackColor={{ false: '#E5E7EB', true: '#FEE2E2' }}
-          thumbColor={setting.enabled ? '#FF5A5F' : '#F3F4F6'}
-        />
-      </View>
-    );
-  };
-
-  const renderCategory = (title: string, category: string, description?: string) => {
-    const categorySettings = getSettingsByCategory(category);
-    
-    return (
-      <View className="mb-8">
-        <View className="mb-4">
-          <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            {title}
-          </Text>
-          {description && (
-            <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              {description}
-            </Text>
-          )}
-        </View>
-        <View className="bg-white rounded-xl border border-gray-100">
-          {categorySettings.map((setting, index) => (
-            <View key={setting.id}>
-              {renderSettingItem(setting)}
-              {index < categorySettings.length - 1 && (
-                <View className="h-px bg-gray-100 ml-14" />
-              )}
-            </View>
-          ))}
+        <View className="ml-3">
+          <Switch
+            value={setting.enabled}
+            onValueChange={() => toggleSetting(setting.id)}
+            trackColor={{ false: '#E5E7EB', true: '#FEE2E2' }}
+            thumbColor={setting.enabled ? '#FF5A5F' : '#F3F4F6'}
+            disabled={isLoading}
+          />
         </View>
       </View>
     );
@@ -175,7 +179,7 @@ export default function NotificationsScreen() {
   const handleTestNotification = () => {
     Alert.alert(
       'Test Notification',
-      'This is how notifications will appear on your device.',
+      'This is how notifications will appear on your device when enabled.',
       [{ text: 'OK' }]
     );
   };
@@ -200,11 +204,12 @@ export default function NotificationsScreen() {
         <TouchableOpacity
           className="bg-white rounded-xl border border-gray-100 p-4 mb-6"
           onPress={handleTestNotification}
+          activeOpacity={0.7}
         >
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
-              <View className="w-10 h-10 bg-purple-100 rounded-full items-center justify-center mr-4">
-                <MessageSquare size={20} color="#8B5CF6" />
+              <View className="w-12 h-12 bg-purple-100 rounded-full items-center justify-center mr-4">
+                <MessageSquare size={22} color="#8B5CF6" />
               </View>
               <View>
                 <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
@@ -221,35 +226,58 @@ export default function NotificationsScreen() {
           </View>
         </TouchableOpacity>
 
-        {/* Notification Categories */}
-        {renderCategory(
-          'Booking & Travel',
-          'booking',
-          'Important notifications about your reservations and trips'
+        {/* Notification Settings */}
+        <View className="mb-6">
+          <View className="mb-4">
+            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Notification Preferences
+            </Text>
+            <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              Choose which notifications you want to receive
+            </Text>
+          </View>
+          
+          <View className="bg-white rounded-xl border border-gray-100">
+            {settings.map((setting, index) => (
+              <View key={setting.id}>
+                {renderSettingItem(setting)}
+                {index < settings.length - 1 && (
+                  <View className="h-px bg-gray-100 ml-16" />
+                )}
+              </View>
+            ))}
+          </View>
+        </View>
+
+        {/* Loading Indicator */}
+        {isLoading && (
+          <View className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
+            <View className="flex-row items-center justify-center">
+              <ActivityIndicator size="small" color="#FF5A5F" />
+              <Text className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Updating notification settings...
+              </Text>
+            </View>
+          </View>
         )}
 
-        {renderCategory(
-          'Marketing & Promotions',
-          'marketing',
-          'Deals, offers, and travel inspiration'
-        )}
-
-        {renderCategory(
-          'Security & Account',
-          'security',
-          'Critical alerts about your account security'
-        )}
-
-        {renderCategory(
-          'General',
-          'general',
-          'App updates and general notifications'
-        )}
+        {/* Important Notice */}
+        <View className="bg-amber-50 rounded-xl p-4 mb-6">
+          <View className="flex-row items-center mb-2">
+            <Shield size={18} color="#F59E0B" />
+            <Text className="text-sm text-amber-800 ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+              Important Notice
+            </Text>
+          </View>
+          <Text className="text-sm text-amber-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            Security alerts are highly recommended to keep your account safe. Some critical notifications may still be sent regardless of your preferences.
+          </Text>
+        </View>
 
         {/* Footer Info */}
         <View className="bg-gray-100 rounded-xl p-4 mt-4">
           <Text className="text-sm text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            You can change these settings anytime. Some notifications may still be sent for important account security updates.
+            You can change these settings anytime. Changes are saved automatically to your account.
           </Text>
         </View>
 

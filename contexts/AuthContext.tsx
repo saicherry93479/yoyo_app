@@ -258,6 +258,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Reset state
       setUser(null);
       setConfirmation(null);
+      router.replace('/(auth)')
 
     } catch (error) {
       console.log('Logout error:', error);
