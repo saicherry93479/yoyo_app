@@ -7,13 +7,19 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Alert,
+  Linking,
+  Platform,
 } from 'react-native';
 import { useLocalSearchParams, useNavigation, router } from 'expo-router';
 import { SheetManager } from 'react-native-actions-sheet';
-import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, Share2 } from 'lucide-react-native';
+import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, X } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { MockBooking } from '@/services/mockData';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import * as FileSystem from 'expo-file-system';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 
 const BookingDetails = () => {
   const { id } = useLocalSearchParams();
@@ -21,6 +27,7 @@ const BookingDetails = () => {
   const [booking, setBooking] = useState<MockBooking | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   useEffect(() => {
     fetchBookingDetails();
@@ -30,7 +37,9 @@ const BookingDetails = () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await apiService.get(`/bookings/${id}`);
+      const response = await apiService.get(`/bookings/${id}/details`);
+
+      console.log('response in booking details  ', JSON.stringify(response))
       
       if (response.success) {
         setBooking(response.data.booking);
@@ -55,6 +64,233 @@ const BookingDetails = () => {
       headerTitleAlign: 'center',
     });
   }, [navigation]);
+
+  const handleCancelBooking = async () => {
+    if (!booking) return;
+
+    Alert.alert(
+      'Cancel Booking',
+      'Are you sure you want to cancel this booking? This action cannot be undone.',
+      [
+        {
+          text: 'No, Keep Booking',
+          style: 'cancel',
+        },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              setCancelling(true);
+              const response = await apiService.put(`/bookings/${booking.id}/cancel`);
+
+              console.log('response inn cancelling ',response)
+              
+              if (response.success) {
+                setBooking(prev => prev ? { ...prev, status: 'cancelled' } : null);
+                Alert.alert('Success', 'Your booking has been cancelled successfully.');
+              } else {
+                Alert.alert('Error', response.message || 'Failed to cancel booking');
+              }
+            } catch (err: any) {
+              Alert.alert('Error', err.message || 'An error occurred while cancelling');
+            } finally {
+              setCancelling(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const generateReceiptHTML = (booking: MockBooking) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8">
+        <title>Booking Receipt</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 20px; }
+          .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 20px; }
+          .booking-ref { background: #f5f5f5; padding: 10px; margin: 20px 0; text-align: center; }
+          .section { margin: 20px 0; }
+          .section-title { font-size: 18px; font-weight: bold; margin-bottom: 10px; color: #333; }
+          .detail-row { display: flex; justify-content: space-between; margin: 5px 0; }
+          .total { font-weight: bold; font-size: 18px; border-top: 2px solid #333; padding-top: 10px; }
+          .status { display: inline-block; padding: 5px 10px; border-radius: 5px; font-weight: bold; }
+          .status.confirmed { background: #d4edda; color: #155724; }
+          .status.cancelled { background: #f8d7da; color: #721c24; }
+          .status.completed { background: #cce5ff; color: #004085; }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <h1>Booking Receipt</h1>
+          <p>Thank you for choosing our service</p>
+        </div>
+        
+        <div class="booking-ref">
+          <h2>Booking Reference: ${booking.bookingReference}</h2>
+          <span class="status ${booking.status}">${booking.status.toUpperCase()}</span>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Hotel Information</div>
+          <div class="detail-row">
+            <span>Hotel Name:</span>
+            <span>${booking.hotelName}</span>
+          </div>
+          <div class="detail-row">
+            <span>Address:</span>
+            <span>${booking.address}</span>
+          </div>
+          <div class="detail-row">
+            <span>Room Type:</span>
+            <span>${booking.roomType}</span>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Trip Details</div>
+          <div class="detail-row">
+            <span>Check-in:</span>
+            <span>${new Date(booking.checkIn).toLocaleDateString('en-IN', { 
+              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
+            })}</span>
+          </div>
+          <div class="detail-row">
+            <span>Check-out:</span>
+            <span>${new Date(booking.checkOut).toLocaleDateString('en-IN', { 
+              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
+            })}</span>
+          </div>
+          <div class="detail-row">
+            <span>Guests:</span>
+            <span>${booking.guests} ${booking.guests === 1 ? 'guest' : 'guests'}</span>
+          </div>
+          <div class="detail-row">
+            <span>Nights:</span>
+            <span>${booking.nights} ${booking.nights === 1 ? 'night' : 'nights'}</span>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Price Breakdown</div>
+          <div class="detail-row">
+            <span>₹${booking.priceBreakdown.roomRate.toLocaleString()} × ${booking.nights} nights:</span>
+            <span>₹${booking.priceBreakdown.subtotal.toLocaleString()}</span>
+          </div>
+          <div class="detail-row">
+            <span>Taxes and fees:</span>
+            <span>₹${booking.priceBreakdown.taxes.toLocaleString()}</span>
+          </div>
+          <div class="detail-row">
+            <span>Service fee:</span>
+            <span>₹${booking.priceBreakdown.serviceFee.toLocaleString()}</span>
+          </div>
+          <div class="detail-row total">
+            <span>Total:</span>
+            <span>₹${booking.totalAmount.toLocaleString()}</span>
+          </div>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Amenities</div>
+          <p>${booking.amenities.join(', ')}</p>
+        </div>
+        
+        <div class="section">
+          <div class="section-title">Cancellation Policy</div>
+          <p>${booking.cancellationPolicy}</p>
+        </div>
+        
+        <div class="section">
+          <p><strong>Generated on:</strong> ${new Date().toLocaleDateString('en-IN')}</p>
+        </div>
+      </body>
+      </html>
+    `;
+  };
+
+  const handleDownloadReceipt = async () => {
+    if (!booking) return;
+    
+    try {
+      const html = generateReceiptHTML(booking);
+      const { uri } = await Print.printToFileAsync({
+        html,
+        base64: false,
+      });
+      
+      const filename = `booking_receipt_${booking.bookingReference}.pdf`;
+      const documentsDir = FileSystem.documentDirectory;
+      const newPath = `${documentsDir}${filename}`;
+      
+      await FileSystem.moveAsync({
+        from: uri,
+        to: newPath,
+      });
+      
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(newPath);
+      } else {
+        Alert.alert('Success', `Receipt saved to ${newPath}`);
+      }
+    } catch (error) {
+      console.error('Error generating receipt:', error);
+      Alert.alert('Error', 'Failed to generate receipt. Please try again.');
+    }
+  };
+
+  const handleContactHotel = () => {
+    const contactOptions = [];
+    
+    if (booking?.hotelPhone) {
+      contactOptions.push({
+        title: 'Call Hotel',
+        icon: 'phone',
+        onPress: () => Linking.openURL(`tel:${booking.hotelPhone}`)
+      });
+      
+      contactOptions.push({
+        title: 'WhatsApp',
+        icon: 'whatsapp',
+        onPress: () => {
+          const whatsappUrl = `whatsapp://send?phone=${booking.hotelPhone.replace(/\D/g, '')}&text=Hi, I have a booking inquiry regarding ${booking.bookingReference}`;
+          Linking.canOpenURL(whatsappUrl).then(supported => {
+            if (supported) {
+              Linking.openURL(whatsappUrl);
+            } else {
+              Alert.alert('WhatsApp not installed', 'Please install WhatsApp to use this feature.');
+            }
+          });
+        }
+      });
+    }
+    
+    if (booking?.hotelEmail) {
+      contactOptions.push({
+        title: 'Send Email',
+        icon: 'email',
+        onPress: () => {
+          const emailUrl = `mailto:${booking.hotelEmail}?subject=Booking Inquiry - ${booking.bookingReference}&body=Hi, I have a question regarding my booking ${booking.bookingReference}.`;
+          Linking.openURL(emailUrl);
+        }
+      });
+    }
+
+    if (contactOptions.length > 0) {
+      SheetManager.show('contact-hotel', {
+        payload: {
+          hotelName: booking?.hotelName,
+          contactOptions
+        }
+      });
+    } else {
+      Alert.alert('No Contact Info', 'Contact information is not available for this hotel.');
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner fullScreen text="Loading booking details..." />;
@@ -102,35 +338,7 @@ const BookingDetails = () => {
     }
   };
 
-  const handleContactHotel = () => {
-    SheetManager.show('contact-hotel', {
-      payload: {
-        hotelName: booking.hotelName,
-        phone: booking.hotelPhone,
-        email: booking.hotelEmail
-      }
-    });
-  };
-
-  const handleModifyBooking = () => {
-    SheetManager.show('modify-booking', {
-      payload: {
-        bookingId: booking.id,
-        canCancel: booking.status === 'upcoming' || booking.status === 'confirmed',
-        canModify: booking.status === 'upcoming' || booking.status === 'confirmed'
-      }
-    });
-  };
-
-  const handleShareBooking = () => {
-    // Implement share functionality
-    console.log('Share booking');
-  };
-
-  const handleDownloadReceipt = () => {
-    // Implement download functionality
-    console.log('Download receipt');
-  };
+  const canCancelBooking = booking.status === 'confirmed' || booking.status === 'upcoming';
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -305,35 +513,29 @@ const BookingDetails = () => {
           </TouchableOpacity>
           
           <View className="flex-row gap-3">
-            <TouchableOpacity
-              className="flex-1 h-12 bg-gray-100 rounded-lg items-center justify-center flex-row"
-              onPress={handleModifyBooking}
-            >
-              <Text className="text-gray-700 text-base" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                Modify Booking
-              </Text>
-            </TouchableOpacity>
+            {canCancelBooking && (
+              <TouchableOpacity
+                className="flex-1 h-12 bg-red-100 rounded-lg items-center justify-center flex-row"
+                onPress={handleCancelBooking}
+                disabled={cancelling}
+              >
+                <X size={16} color="#DC2626" />
+                <Text className="text-red-600 text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  {cancelling ? 'Cancelling...' : 'Cancel Booking'}
+                </Text>
+              </TouchableOpacity>
+            )}
             
             <TouchableOpacity
-              className="flex-1 h-12 bg-gray-100 rounded-lg items-center justify-center flex-row"
-              onPress={handleShareBooking}
+              className={`${canCancelBooking ? 'flex-1' : 'w-full'} h-12 border border-gray-300 rounded-lg items-center justify-center flex-row`}
+              onPress={handleDownloadReceipt}
             >
-              <Share2 size={16} color="#374151" />
+              <Download size={16} color="#374151" />
               <Text className="text-gray-700 text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                Share
+                Download Receipt
               </Text>
             </TouchableOpacity>
           </View>
-          
-          <TouchableOpacity
-            className="w-full h-12 border border-gray-300 rounded-lg items-center justify-center flex-row"
-            onPress={handleDownloadReceipt}
-          >
-            <Download size={16} color="#374151" />
-            <Text className="text-gray-700 text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              Download Receipt
-            </Text>
-          </TouchableOpacity>
         </View>
 
         {/* Bottom spacing */}

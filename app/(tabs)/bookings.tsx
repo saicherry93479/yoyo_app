@@ -16,7 +16,19 @@ const PlusIcon = ({ size = 24, color = "#FF5A5F" }) => (
 export default function MyTripsApp() {
   const [activeTab, setActiveTab] = useState('upcoming')
   const navigation = useNavigation()
-  const { bookings, loading, error, refresh } = useBookings()
+  
+  const { bookings, loading, error, refresh, getUpcomingBookings, getPastBookings } = useBookings()
+  
+  // Get filtered bookings based on active tab
+  const getFilteredBookings = () => {
+    if (activeTab === 'upcoming') {
+      return getUpcomingBookings();
+    } else {
+      return getPastBookings();
+    }
+  };
+  
+  const filteredBookings = getFilteredBookings();
 
   // Hide the default header
   useLayoutEffect(() => {
@@ -37,19 +49,6 @@ export default function MyTripsApp() {
     })
   }, [navigation])
 
-  const getFilteredBookings = () => {
-    const now = new Date();
-    const today = now.toISOString().split('T')[0];
-
-    return bookings.filter(booking => {
-      if (activeTab === 'upcoming') {
-        return booking.checkIn >= today || booking.status === 'upcoming' || booking.status === 'confirmed';
-      } else {
-        return booking.checkIn < today || booking.status === 'completed';
-      }
-    });
-  };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-IN', {
@@ -62,92 +61,106 @@ export default function MyTripsApp() {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
-      case 'upcoming':
         return 'text-green-600 bg-green-50';
       case 'completed':
         return 'text-blue-600 bg-blue-50';
       case 'cancelled':
         return 'text-red-600 bg-red-50';
+      case 'pending':
+        return 'text-yellow-600 bg-yellow-50';
       default:
         return 'text-gray-600 bg-gray-50';
     }
   };
 
-  const renderBookingCard = (booking: any) => (
-    <TouchableOpacity
-      key={booking.id}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
-      onPress={() => router.push(`/booking-details/${booking.id}`)}
-    >
-      <View className="relative">
-        <Image
-          source={{ uri: booking.image }}
-          className="w-full h-48"
-          style={{ resizeMode: 'cover' }}
-        />
-        <View className={`absolute top-3 right-3 px-2 py-1 rounded-full ${getStatusColor(booking.status)}`}>
-          <Text className="text-xs capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-            {booking.status}
+  const calculateNights = (checkIn: string, checkOut: string) => {
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+    return Math.ceil(timeDiff / (1000 * 3600 * 24));
+  };
+
+  const renderBookingCard = (booking: any) => {
+    const nights = calculateNights(booking.checkInDate, booking.checkOutDate);
+    
+    return (
+      <TouchableOpacity
+        key={booking.id}
+        className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
+        onPress={() => router.push(`/booking-details/${booking.id}`)}
+      >
+        <View className="relative">
+          {/* You'll need to get hotel image from hotel details API */}
+          <Image
+            source={{ 
+              uri: "https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=800" 
+            }}
+            className="w-full h-48"
+            style={{ resizeMode: 'cover' }}
+          />
+          <View className={`absolute top-3 right-3 px-2 py-1 rounded-full ${getStatusColor(booking.status)}`}>
+            <Text className="text-xs capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+              {booking.status}
+            </Text>
+          </View>
+        </View>
+
+        <View className="p-4">
+          {/* You'll need to fetch hotel details to get name and location */}
+          <Text className="text-lg text-gray-900 mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Hotel Booking #{booking.id.slice(-8)}
           </Text>
-        </View>
-      </View>
+          <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            Hotel ID: {booking.hotelId}
+          </Text>
 
-      <View className="p-4">
-        <Text className="text-lg text-gray-900 mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-          {booking.hotelName}
-        </Text>
-        <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-          {booking.location}
-        </Text>
+          <View className="flex-row items-center justify-between mb-3">
+            <View>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Check-in
+              </Text>
+              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {formatDate(booking.checkInDate)}
+              </Text>
+            </View>
+            <View className="w-8 h-px bg-gray-300" />
+            <View>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Check-out
+              </Text>
+              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {formatDate(booking.checkOutDate)}
+              </Text>
+            </View>
+            <View>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Guests
+              </Text>
+              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {booking.guests}
+              </Text>
+            </View>
+          </View>
 
-        <View className="flex-row items-center justify-between mb-3">
-          <View>
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Check-in
-            </Text>
-            <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {formatDate(booking.checkIn)}
-            </Text>
-          </View>
-          <View className="w-8 h-px bg-gray-300" />
-          <View>
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Check-out
-            </Text>
-            <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {formatDate(booking.checkOut)}
-            </Text>
-          </View>
-          <View>
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Guests
-            </Text>
-            <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {booking.guests}
-            </Text>
-          </View>
-        </View>
-
-        <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
-          <View>
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Total amount
-            </Text>
-            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              ₹{booking.totalAmount.toLocaleString()}
-            </Text>
-          </View>
-          <View className="bg-gray-50 px-3 py-1 rounded">
-            <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-              {booking.nights} nights
-            </Text>
+          <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
+            <View>
+              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Total amount
+              </Text>
+              <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                ₹{booking.totalAmount.toLocaleString()}
+              </Text>
+            </View>
+            <View className="bg-gray-50 px-3 py-1 rounded">
+              <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                {nights} nights
+              </Text>
+            </View>
           </View>
         </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const filteredBookings = getFilteredBookings();
+      </TouchableOpacity>
+    );
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -232,8 +245,7 @@ export default function MyTripsApp() {
           </View>
         ) : (
           filteredBookings.map(renderBookingCard)
-        )
-        }
+        )}
       </ScrollView>
     </SafeAreaView>
   )

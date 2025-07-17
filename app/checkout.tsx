@@ -74,7 +74,10 @@ useLayoutEffect(() => {
           checkOut: bookingData.checkOut,
           guests: bookingData.guests,
           specialRequests: '' // Can be added later if needed
-        };
+        }; 
+
+        console.log('booking request ',bookingRequest)
+
 
         const response = await apiService.post('/bookings/', bookingRequest);
         console.log('response in checkoutr ',response)

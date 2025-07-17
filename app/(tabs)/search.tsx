@@ -385,7 +385,7 @@ export default function SearchScreen() {
         Something went wrong
       </Text>
       <Text className="text-base text-gray-600 text-center mb-8 leading-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-        {error}
+        {/* {error} */}
       </Text>
       <TouchableOpacity
         className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
