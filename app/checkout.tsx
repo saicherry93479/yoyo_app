@@ -77,7 +77,7 @@ useLayoutEffect(() => {
         };
 
         const response = await apiService.post('/bookings/', bookingRequest);
-
+        console.log('response in checkoutr ',response)
         if (response.success) {
           Alert.alert(
             'Booking Confirmed!',
@@ -92,7 +92,7 @@ useLayoutEffect(() => {
             ]
           );
         } else {
-          Alert.alert('Booking Failed', response.error || 'Something went wrong. Please try again.');
+          Alert.alert('Booking Failed',  'Something went wrong. Please try again.');
         }
       } catch (error) {
         console.error('Booking error:', error);
