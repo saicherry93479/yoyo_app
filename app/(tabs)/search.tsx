@@ -1,11 +1,12 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, RefreshControl } from 'react-native';
 import { useNavigation, router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native';
+import { Search, MapPin, Star, ListFilter as Filter, Heart } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
 import { apiService } from '@/services/api';
-import { useWishlist } from '@/hooks/useWishlist';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { HeartIcon } from '@/components/ui/HeartIcon';
 
 interface SearchFilters {
   priceRange?: {
@@ -75,7 +76,7 @@ export default function SearchScreen() {
   
   const navigation = useNavigation();
   const params = useLocalSearchParams();
-  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems, refresh: refreshWishlist } = useWishlist();
+  const { addToWishlist, removeFromWishlistByHotelId, isInWishlist } = useWishlist();
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -102,20 +103,13 @@ export default function SearchScreen() {
       const isCurrentlyInWishlist = isInWishlist(hotel.id)
       
       if (isCurrentlyInWishlist) {
-        // Find the wishlist item to get its ID for deletion
-        const wishlistItem = wishlistItems.find(item => item.hotelId === hotel.id)
-        if (wishlistItem) {
-          await removeFromWishlist(wishlistItem.id)
-        }
+        await removeFromWishlistByHotelId(hotel.id)
       } else {
         await addToWishlist(hotel.id)
       }
-      
-      // Force refresh to ensure UI is in sync
-      setTimeout(() => refreshWishlist(), 100);
     } catch (error) {
       console.error('Error toggling wishlist:', error)
-      // You might want to show a toast or alert here
+      Alert.alert('Error', 'Failed to update wishlist. Please try again.')
     }
   }
 
@@ -236,14 +230,11 @@ export default function SearchScreen() {
             </Text>
           </View>
         )}
-        <TouchableOpacity 
-          className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center"
+        <HeartIcon
+          isInWishlist={isInWishlist(hotel.id)}
           onPress={() => handleWishlistToggle(hotel)}
-        >
-          <Text className={`text-lg ${isInWishlist(hotel.id) ? 'text-red-500' : 'text-gray-400'}`}>
-            {isInWishlist(hotel.id) ? '♥' : '♡'}
-          </Text>
-        </TouchableOpacity>
+          size={18}
+        />
       </View>
       
       <View className="p-4">
