@@ -15,6 +15,8 @@ import { useLocalSearchParams } from 'expo-router';
 import { useState, useEffect } from 'react';
 import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { useWishlist } from '@/contexts/WishlistContext';
+import { HeartIcon } from '@/components/ui/HeartIcon';
 
 const HotelDetails = () => {
     const { id, guests, checkIn, checkOut } = useLocalSearchParams();
@@ -29,6 +31,25 @@ const HotelDetails = () => {
       checkOut: (checkOut as string) || new Date(Date.now() + 3*24*60*60*1000).toISOString()
     });
     const [selectedRoom, setSelectedRoom] = useState(null);
+    const { addToWishlist, removeFromWishlistByHotelId, isInWishlist } = useWishlist();
+
+    // Wishlist handlers
+    const handleWishlistToggle = async () => {
+      if (!hotel) return;
+      
+      try {
+        const isCurrentlyInWishlist = isInWishlist(hotel.id);
+        
+        if (isCurrentlyInWishlist) {
+          await removeFromWishlistByHotelId(hotel.id);
+        } else {
+          await addToWishlist(hotel.id);
+        }
+      } catch (error) {
+        console.error('Error toggling wishlist:', error);
+        Alert.alert('Error', 'Failed to update wishlist. Please try again.');
+      }
+    };
 
     useEffect(() => {
       fetchHotelDetails();
@@ -231,6 +252,14 @@ const HotelDetails = () => {
           
           {/* Overlay */}
           <View className="absolute inset-0 bg-black/40" />
+          
+          {/* Wishlist Heart Icon */}
+          <HeartIcon
+            isInWishlist={isInWishlist(hotel.id)}
+            onPress={handleWishlistToggle}
+            size={24}
+            className="absolute top-4 right-4 w-10 h-10 bg-white/90 rounded-full items-center justify-center"
+          />
       
           {/* Image Indicators - only show if more than 1 image */}
           {imageUrls.length > 1 && (

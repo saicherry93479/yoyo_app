@@ -4,11 +4,12 @@ import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
-import { Search, Star } from "lucide-react-native"
+import { Search, Star, Heart } from "lucide-react-native"
 import * as Location from 'expo-location'
 import { useNearbyHotels, useLatestHotels, useOffersHotels } from '@/hooks/useHotels'
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader'
-import { useWishlist } from '@/hooks/useWishlist'
+import { useWishlist } from '@/contexts/WishlistContext'
+import { HeartIcon } from '@/components/ui/HeartIcon'
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -89,21 +90,6 @@ const OffersIcon = ({ size = 20, color = "currentColor" }) => (
   </Svg>
 )
 
-const HeartIcon = ({ size = 20, color = "currentColor" }) => (
-  <Svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <Path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />
-  </Svg>
-)
-
 interface LocationState {
   coordinates: { lat: number; lng: number } | null
   hasPermission: boolean
@@ -122,7 +108,7 @@ export default function HotelBookingApp() {
     error: null
   })
   const navigation = useNavigation()
-  const { addToWishlist, removeFromWishlist, isInWishlist, items: wishlistItems, refresh: refreshWishlist } = useWishlist()
+  const { addToWishlist, removeFromWishlistByHotelId, isInWishlist, forceRefresh } = useWishlist()
   
   // Wishlist handlers
   const handleWishlistToggle = async (hotel: any) => {
@@ -130,17 +116,10 @@ export default function HotelBookingApp() {
       const isCurrentlyInWishlist = isInWishlist(hotel.id)
       
       if (isCurrentlyInWishlist) {
-        // Find the wishlist item to get its ID for deletion
-        const wishlistItem = wishlistItems.find(item => item.hotelId === hotel.id)
-        if (wishlistItem) {
-          await removeFromWishlist(wishlistItem.id)
-        }
+        await removeFromWishlistByHotelId(hotel.id)
       } else {
         await addToWishlist(hotel.id)
       }
-      
-      // Force refresh to ensure UI is in sync
-      setTimeout(() => refreshWishlist(), 100);
     } catch (error) {
       console.error('Error toggling wishlist:', error)
       Alert.alert('Error', 'Failed to update wishlist. Please try again.')
@@ -327,12 +306,11 @@ export default function HotelBookingApp() {
             </Text>
           </View>
         )}
-        <TouchableOpacity 
-          className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center"
+        <HeartIcon
+          isInWishlist={isInWishlist(hotel.id)}
           onPress={() => handleWishlistToggle(hotel)}
-        >
-          <HeartIcon size={18} color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} />
-        </TouchableOpacity>
+          size={18}
+        />
       </View>
 
       <View className="p-4">
@@ -395,7 +373,11 @@ export default function HotelBookingApp() {
           className="absolute top-3 right-3 rounded-full bg-white/80 p-2"
           onPress={() => handleWishlistToggle(hotel)}
         >
-          <HeartIcon size={18} color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} />
+          <Heart 
+            size={18} 
+            color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} 
+            fill={isInWishlist(hotel.id) ? "#EF4444" : "none"}
+          />
         </TouchableOpacity>
         {hotel.offer && (
           <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-3 rounded-b-xl">

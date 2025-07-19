@@ -365,8 +365,17 @@ class ApiService {
       }
 
       if (method === 'DELETE') {
-        const itemId = url.split('/').pop();
-        const itemIndex = mockWishlistItems.findIndex(item => item.id === itemId);
+        // Handle both /wishlist/{itemId} and /wishlist/ with hotelId in body
+        let itemIndex = -1;
+        
+        if (url.includes('/wishlist/') && url.split('/').pop() !== 'wishlist') {
+          // URL format: /wishlist/{itemId}
+          const itemId = url.split('/').pop();
+          itemIndex = mockWishlistItems.findIndex(item => item.id === itemId);
+        } else if (config.data?.hotelId) {
+          // Body format: { hotelId: "..." }
+          itemIndex = mockWishlistItems.findIndex(item => item.hotelId === config.data.hotelId);
+        }
 
         if (itemIndex !== -1) {
           mockWishlistItems.splice(itemIndex, 1);

@@ -3,28 +3,17 @@ import React, { useLayoutEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { useWishlist } from '@/hooks/useWishlist';
+import { useWishlist } from '@/contexts/WishlistContext';
 import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { router } from 'expo-router';
+import { HeartIcon } from '@/components/ui/HeartIcon';
 
 // Add Circle Outline Icon
 const AddCircleOutlineIcon = ({ size = 24, color = "#6B7280" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm5 11h-4v4h-2v-4H7v-2h4V7h2v4h4v2z" fill={color} />
-  </Svg>
-);
-
-// Heart/Favorite Icon
-const FavoriteIcon = ({ size = 24, color = "#EF4444" }) => (
-  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <Path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" fill={color} />
-  </Svg>
-);
-
 const WishlistScreen = () => {
 
     const navigation = useNavigation()
-    const { items, loading, error, removeFromWishlist, refresh } = useWishlist()
+    const { items, loading, error, removeFromWishlistByHotelId, refresh } = useWishlist()
 
     useLayoutEffect(() => {
         navigation.setOptions({
@@ -36,9 +25,9 @@ const WishlistScreen = () => {
         });
       }, [navigation]);
 
-  const handleRemoveFromWishlist = async (itemId: string) => {
+  const handleRemoveFromWishlist = async (hotelId: string) => {
     try {
-      await removeFromWishlist(itemId);
+      await removeFromWishlistByHotelId(hotelId);
     } catch (error) {
       console.error('Failed to remove from wishlist:', error);
     }
@@ -142,12 +131,12 @@ const WishlistScreen = () => {
                 </View>
                 
                 <TouchableOpacity 
-                  className="p-2"
-                  onPress={() => handleRemoveFromWishlist(item.id)}
-                >
-                  <FavoriteIcon size={24} color="#EF4444" />
-                </TouchableOpacity>
-              </TouchableOpacity>
+              <HeartIcon
+                isInWishlist={true}
+                onPress={() => handleRemoveFromWishlist(item.hotelId)}
+                size={24}
+                className="p-2"
+              />
             ))
           )}
         </View>
