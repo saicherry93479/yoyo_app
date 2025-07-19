@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, RefreshControl } from 'react-native';
 import { useNavigation, router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Star, ListFilter as Filter } from 'lucide-react-native';
+import { Search, MapPin, Star, ListFilter as Filter, Heart } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
 import { apiService } from '@/services/api';
@@ -240,9 +240,11 @@ export default function SearchScreen() {
           className="absolute top-3 right-3 w-8 h-8 bg-white/80 rounded-full items-center justify-center"
           onPress={() => handleWishlistToggle(hotel)}
         >
-          <Text className={`text-lg ${isInWishlist(hotel.id) ? 'text-red-500' : 'text-gray-400'}`}>
-            {isInWishlist(hotel.id) ? '♥' : '♡'}
-          </Text>
+          <Heart 
+            size={18} 
+            color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} 
+            fill={isInWishlist(hotel.id) ? "#EF4444" : "none"}
+          />
         </TouchableOpacity>
       </View>
       
