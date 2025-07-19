@@ -8,6 +8,7 @@ import {
 import { router } from 'expo-router';
 import { apiService } from '@/services/api';
 import { Platform } from 'react-native';
+import { NotificationService } from '@/services/notificationService';
 
 export interface User {
   id: string;
@@ -85,6 +86,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     initializeAuth();
+    
+    // Setup notification listeners
+    const cleanup = NotificationService.setupNotificationListeners();
+    
+    return cleanup;
   }, []);
 
   const initializeAuth = async () => {
@@ -183,6 +189,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(userData);
         setConfirmation(null); // Clear confirmation after successful verification
 
+        // Register for push notifications after successful login
+        await NotificationService.registerDeviceToken();
+
         if (userData.hasOnboarded) {
           router.replace('/(tabs)');
         } else {
@@ -248,9 +257,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setIsLoading(true);
 
+      // Remove notification token from backend
+      await NotificationService.removeTokenFromBackend();
+      
+      // Clear local notification token
+      await NotificationService.clearLocalToken();
 
       await signOut(getAuth());
-
 
       // Clear local storage
       await clearAuthData();

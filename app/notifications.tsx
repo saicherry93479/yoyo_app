@@ -13,6 +13,7 @@ import { useNavigation } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { Bell, Calendar, Shield, Percent, MessageSquare } from 'lucide-react-native';
 import { apiService } from '@/services/api';
+import { NotificationService } from '@/services/notificationService';
 
 interface NotificationSetting {
   id: string;
@@ -79,7 +80,7 @@ export default function NotificationsScreen() {
     if (!setting) return;
 
     const newValue = !setting.enabled;
-    
+
     // Optimistically update UI
     setSettings(prev => 
       prev.map(s => 
@@ -91,14 +92,14 @@ export default function NotificationsScreen() {
 
     try {
       setIsLoading(true);
-      
+
       // Prepare request body with the specific notification setting
       const requestBody = {
         [setting.apiKey]: newValue,
       };
 
       const response = await apiService.put('/auth/profile', requestBody);
-      
+
       if (response.success) {
         // Update user context with response data
         if (user && response.data.user) {
@@ -109,7 +110,7 @@ export default function NotificationsScreen() {
           };
           setUser(updatedUser);
         }
-        
+
         // Show success message for important changes
         if (setting.id === 'security_alerts' && !newValue) {
           Alert.alert(
@@ -147,7 +148,7 @@ export default function NotificationsScreen() {
 
   const renderSettingItem = (setting: NotificationSetting) => {
     const IconComponent = setting.icon;
-    
+
     return (
       <View key={setting.id} className="flex-row items-center justify-between py-4">
         <View className="flex-row items-center flex-1">
@@ -176,12 +177,31 @@ export default function NotificationsScreen() {
     );
   };
 
-  const handleTestNotification = () => {
-    Alert.alert(
-      'Test Notification',
-      'This is how notifications will appear on your device when enabled.',
-      [{ text: 'OK' }]
-    );
+  const handleTestNotification = async () => {
+    try {
+      const hasPermission = await NotificationService.requestPermissions();
+      if (!hasPermission) {
+        Alert.alert(
+          'Permission Required',
+          'Please enable notifications in your device settings to receive test notifications.'
+        );
+        return;
+      }
+
+      // Send test notification to backend
+      const response = await apiService.post('/notifications/test', {
+        message: 'This is a test notification from your hotel booking app!'
+      });
+
+      if (response.success) {
+        Alert.alert('Success', 'Test notification sent successfully!');
+      } else {
+        Alert.alert('Error', 'Failed to send test notification');
+      }
+    } catch (error) {
+      console.log('Test notification error:', error);
+      Alert.alert('Error', 'Failed to send test notification');
+    }
   };
 
   return (
@@ -236,7 +256,7 @@ export default function NotificationsScreen() {
               Choose which notifications you want to receive
             </Text>
           </View>
-          
+
           <View className="bg-white rounded-xl border border-gray-100">
             {settings.map((setting, index) => (
               <View key={setting.id}>

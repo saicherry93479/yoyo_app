@@ -398,6 +398,56 @@ class ApiService {
       };
     }
 
+    if (url.includes('/notifications/register-token') && method === 'POST') {
+      return {
+        success: true,
+        data: {
+          message: 'Device token registered successfully'
+        } as T,
+        message: 'Device token registered successfully'
+      };
+    }
+
+    if (url.includes('/notifications/remove-token') && method === 'DELETE') {
+      return {
+        success: true,
+        data: {
+          message: 'Device token removed successfully'
+        } as T,
+        message: 'Device token removed successfully'
+      };
+    }
+
+    if (url.includes('/notifications/settings') && method === 'PUT') {
+      return {
+        success: true,
+        data: {
+          settings: config.data
+        } as T,
+        message: 'Notification settings updated successfully'
+      };
+    }
+
+    if (url.includes('/notifications/test') && method === 'POST') {
+      return {
+        success: true,
+        data: {
+          message: 'Test notification sent successfully'
+        } as T,
+        message: 'Test notification sent successfully'
+      };
+    }
+
+    if (url.includes('/user/notification-settings') && method === 'PUT') {
+      return {
+        success: true,
+        data: {
+          settings: config.data
+        } as T,
+        message: 'Notification settings updated successfully'
+      };
+    }
+
     if (url.includes('/reviews/') && method === 'GET') {
       const hotelId = url.split('/reviews/')[1];
       const hotel = getHotelById(hotelId);
