@@ -1,12 +1,10 @@
 import 'react-native-get-random-values';
-import 'react-native-get-random-values';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import 'react-native-reanimated/lib/reanimated2/NativeReanimated';
+import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -35,19 +33,32 @@ export default function RootLayout() {
     'PlusJakartaSans-ExtraBold': PlusJakartaSans_800ExtraBold,
   });
 
+  useEffect(() => {
+    // Register for push notifications and set up listeners
+    const initializeNotifications = async () => {
+      await NotificationService.registerDeviceToken();
+      
+      // Set up notification listeners
+      const cleanup = NotificationService.setupNotificationListeners();
+      
+      // Return cleanup function for useEffect
+      return cleanup;
+    };
+
+    initializeNotifications().then((cleanup) => {
+      // Store cleanup function if needed
+      return cleanup;
+    });
+  }, []);
+
   if (!loaded && !error) {
     return null;
   }
 
-  useEffect(() => {
-    NotificationService.registerForPushNotificationsAsync();
-  }, []);
-
   return (
     <AuthProvider>
-
       <SheetProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
+        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack initialRouteName='(tabs)'>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

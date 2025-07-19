@@ -50,7 +50,7 @@ export class NotificationService {
       }
 
       const token = await Notifications.getExpoPushTokenAsync({
-        projectId: process.env.EXPO_PUBLIC_PROJECT_ID || 'your-project-id', // Replace with your Expo project ID
+        projectId: 'd5ca329b-cd9c-4c98-999c-18911b43c1cb', // Replace with your Expo project ID
       });
 
       console.log('Expo push token:', token.data);
@@ -69,6 +69,7 @@ export class NotificationService {
       }
 
       const token = await this.getExpoPushToken();
+      console.log('token ',token)
       if (!token) {
         return null;
       }
