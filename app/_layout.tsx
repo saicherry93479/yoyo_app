@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { WishlistProvider } from '@/contexts/WishlistContext';
 import { NotificationService } from '@/services/notificationService';
 import {
   PlusJakartaSans_400Regular,
@@ -57,22 +58,24 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <SheetProvider>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-          <Stack initialRouteName='(tabs)'>
-            <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-            <Stack.Screen name="onboarding" options={{ headerShown: true }} />
-            <Stack.Screen name="hotels" options={{ headerShown: true }} />
-            <Stack.Screen name="checkout" options={{ headerShown: true }} />
-            <Stack.Screen name="contactus" options={{ headerShown: true }} />
-            <Stack.Screen name="personal-info" options={{ headerShown: true }} />
-            <Stack.Screen name="notifications" options={{ headerShown: true }} />
-            <Stack.Screen name="+not-found" />
-          </Stack>
-          <StatusBar style="dark" />
-        </ThemeProvider>
-      </SheetProvider>
+      <WishlistProvider>
+        <SheetProvider>
+          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <Stack initialRouteName='(tabs)'>
+              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="onboarding" options={{ headerShown: true }} />
+              <Stack.Screen name="hotels" options={{ headerShown: true }} />
+              <Stack.Screen name="checkout" options={{ headerShown: true }} />
+              <Stack.Screen name="contactus" options={{ headerShown: true }} />
+              <Stack.Screen name="personal-info" options={{ headerShown: true }} />
+              <Stack.Screen name="notifications" options={{ headerShown: true }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="dark" />
+          </ThemeProvider>
+        </SheetProvider>
+      </WishlistProvider>
     </AuthProvider>
   );
 }
