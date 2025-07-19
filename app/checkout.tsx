@@ -11,9 +11,10 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation, useLocalSearchParams } from 'expo-router';
-import { X, Bed, Clock } from 'lucide-react-native';
+import { X, Bed, Clock, Tag } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
+import { SheetManager } from 'react-native-actions-sheet';
 import Svg, { Path } from 'react-native-svg';
 
 // Define the RoomIcon component directly
@@ -25,6 +26,8 @@ const CheckoutScreen = () => {
     const navigation = useNavigation();
     const params = useLocalSearchParams();
     const [loading, setLoading] = useState(false);
+    const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
+    const [discountAmount, setDiscountAmount] = useState(0);
 
     // Extract booking data from params with safe parsing
     const bookingData = {
@@ -126,7 +129,28 @@ useLayoutEffect(() => {
     const nights = calculateNights();
     const subtotal = bookingData.totalAmount * nights;
     const taxes = 0; // As requested, keeping taxes as 0
-    const total = subtotal + taxes;
+    const total = subtotal + taxes - discountAmount;
+
+    const handleCouponApplied = (validationData: any) => {
+        setAppliedCoupon(validationData.coupon);
+        setDiscountAmount(validationData.discountAmount);
+    };
+
+    const handleRemoveCoupon = () => {
+        setAppliedCoupon(null);
+        setDiscountAmount(0);
+    };
+
+    const openCouponsSheet = () => {
+        SheetManager.show('coupons-sheet', {
+            payload: {
+                hotelId: bookingData.hotelId,
+                roomTypeId: bookingData.roomId,
+                orderAmount: subtotal,
+                onCouponApplied: handleCouponApplied,
+            },
+        });
+    };
 
     const VisaIcon = () => (
         <Svg width="48" height="32" viewBox="0 0 38 24">
@@ -242,6 +266,39 @@ useLayoutEffect(() => {
                                 ₹{taxes.toLocaleString()}
                             </Text>
                         </View>
+
+                        {/* Coupon Section */}
+                        {appliedCoupon ? (
+                            <View className="flex-row justify-between items-center mb-3">
+                                <View className="flex-row items-center">
+                                    <Tag size={16} color="#22C55E" />
+                                    <Text className="text-green-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                        {appliedCoupon.code}
+                                    </Text>
+                                    <TouchableOpacity onPress={handleRemoveCoupon} className="ml-2">
+                                        <X size={16} color="#EF4444" />
+                                    </TouchableOpacity>
+                                </View>
+                                <Text className="text-green-600" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                    -₹{discountAmount.toLocaleString()}
+                                </Text>
+                            </View>
+                        ) : (
+                            <TouchableOpacity 
+                                onPress={openCouponsSheet}
+                                className="flex-row justify-between items-center mb-3 p-3 rounded-lg border border-dashed border-red-300 bg-red-50"
+                            >
+                                <View className="flex-row items-center">
+                                    <Tag size={16} color="#DC2626" />
+                                    <Text className="text-red-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                        Apply Coupon
+                                    </Text>
+                                </View>
+                                <Text className="text-red-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                    Save more
+                                </Text>
+                            </TouchableOpacity>
+                        )}
 
                         <View className="border-t border-gray-200 pt-3">
                             <View className="flex-row justify-between items-center">
