@@ -463,6 +463,131 @@ class ApiService {
       };
     }
 
+    if (url.includes('/coupons/user/all') && method === 'GET') {
+      const mockCoupons = [
+        {
+          id: '1',
+          code: 'SAVE20',
+          description: 'Get 20% off on your booking',
+          discountType: 'percentage',
+          discountValue: 20,
+          maxDiscountAmount: 2000,
+          minOrderAmount: 5000,
+          validFrom: '2024-01-01',
+          validTo: '2024-12-31',
+          usageLimit: 100,
+          usedCount: 25,
+          status: 'active',
+          mappings: {
+            cities: [],
+            hotels: [],
+            roomTypes: []
+          }
+        },
+        {
+          id: '2',
+          code: 'FLAT500',
+          description: 'Flat ₹500 off on bookings above ₹10,000',
+          discountType: 'fixed',
+          discountValue: 500,
+          maxDiscountAmount: 500,
+          minOrderAmount: 10000,
+          validFrom: '2024-01-01',
+          validTo: '2024-12-31',
+          usageLimit: 50,
+          usedCount: 10,
+          status: 'active',
+          mappings: {
+            cities: [],
+            hotels: [],
+            roomTypes: []
+          }
+        },
+        {
+          id: '3',
+          code: 'FIRSTTIME',
+          description: 'Special offer for first time users - 15% off',
+          discountType: 'percentage',
+          discountValue: 15,
+          maxDiscountAmount: 1500,
+          minOrderAmount: 3000,
+          validFrom: '2024-01-01',
+          validTo: '2024-12-31',
+          usageLimit: 200,
+          usedCount: 150,
+          status: 'active',
+          mappings: {
+            cities: [],
+            hotels: [],
+            roomTypes: []
+          }
+        }
+      ];
+
+      return {
+        success: true,
+        data: {
+          coupons: mockCoupons,
+          total: mockCoupons.length,
+          page: 1,
+          limit: 10,
+          totalPages: 1
+        } as T,
+        message: 'Coupons fetched successfully'
+      };
+    }
+
+    if (url.includes('/coupons/validate') && method === 'POST') {
+      const { code, orderAmount } = config.data || {};
+      
+      // Mock validation logic
+      let discountAmount = 0;
+      let couponData = null;
+
+      if (code === 'SAVE20' && orderAmount >= 5000) {
+        discountAmount = Math.min(orderAmount * 0.2, 2000);
+        couponData = {
+          id: '1',
+          code: 'SAVE20',
+          discountType: 'percentage',
+          discountValue: 20
+        };
+      } else if (code === 'FLAT500' && orderAmount >= 10000) {
+        discountAmount = 500;
+        couponData = {
+          id: '2',
+          code: 'FLAT500',
+          discountType: 'fixed',
+          discountValue: 500
+        };
+      } else if (code === 'FIRSTTIME' && orderAmount >= 3000) {
+        discountAmount = Math.min(orderAmount * 0.15, 1500);
+        couponData = {
+          id: '3',
+          code: 'FIRSTTIME',
+          discountType: 'percentage',
+          discountValue: 15
+        };
+      }
+
+      if (couponData) {
+        return {
+          success: true,
+          data: {
+            coupon: couponData,
+            discountAmount,
+            finalAmount: orderAmount - discountAmount
+          } as T,
+          message: 'Coupon validated successfully'
+        };
+      } else {
+        return {
+          success: false,
+          error: 'Invalid coupon code or minimum order amount not met'
+        };
+      }
+    }
+
     // Default mock response
     return {
       success: true,
