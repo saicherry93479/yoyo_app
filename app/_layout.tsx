@@ -2,6 +2,15 @@ import 'react-native-get-random-values';
 import 'react-native-get-random-values';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
+import { Stack } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
+import 'react-native-reanimated/lib/reanimated2/NativeReanimated';
+
+import { useColorScheme } from '@/hooks/useColorScheme';
+import { AuthProvider } from '@/contexts/AuthContext';
+import { NotificationService } from '@/services/notificationService';
 import {
   PlusJakartaSans_400Regular,
   PlusJakartaSans_500Medium,
@@ -9,12 +18,8 @@ import {
   PlusJakartaSans_700Bold,
   PlusJakartaSans_800ExtraBold,
 } from '@expo-google-fonts/plus-jakarta-sans';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 import '../global.css';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { AuthProvider } from '@/contexts/AuthContext'
 import { useFrameworkReady } from '@/hooks/useFrameworkReady';
 import { SheetProvider } from 'react-native-actions-sheet';
 import './sheets';
@@ -34,9 +39,13 @@ export default function RootLayout() {
     return null;
   }
 
+  useEffect(() => {
+    NotificationService.registerForPushNotificationsAsync();
+  }, []);
+
   return (
     <AuthProvider>
-      
+
       <SheetProvider>
         <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
           <Stack initialRouteName='(tabs)'>
