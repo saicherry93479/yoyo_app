@@ -245,7 +245,7 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
       closable={true}
       closeOnTouchBackdrop={true}
     >
-      <View className="flex-col items-stretch rounded-t-2xl bg-white" style={{ maxHeight: '80%' }}>
+      <View className="flex-col items-stretch rounded-t-2xl bg-white h-screen" >
         {/* Handle */}
         <View className="flex h-5 w-full items-center justify-center pt-3">
           <View className="h-1.5 w-10 rounded-full bg-gray-200" />

@@ -8,10 +8,11 @@ import {
   Image,
   StatusBar,
   Alert,
+  TextInput,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation, useLocalSearchParams } from 'expo-router';
-import { X, Bed, Clock, Tag } from 'lucide-react-native';
+import { X, Bed, Clock, Tag, User, Mail, Phone } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { SheetManager } from 'react-native-actions-sheet';
@@ -28,6 +29,13 @@ const CheckoutScreen = () => {
     const [loading, setLoading] = useState(false);
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
+
+    // Guest information state
+    const [guestInfo, setGuestInfo] = useState({
+        name: '',
+        email: '',
+        phone: ''
+    });
 
     // Extract booking data from params with safe parsing
     const bookingData = {
@@ -58,6 +66,38 @@ useLayoutEffect(() => {
         });
       }, [navigation]);
 
+    // Validation function for guest information
+    const validateGuestInfo = () => {
+        if (!guestInfo.name.trim()) {
+            Alert.alert('Error', 'Please enter guest name');
+            return false;
+        }
+        if (!guestInfo.email.trim()) {
+            Alert.alert('Error', 'Please enter guest email');
+            return false;
+        }
+        if (!guestInfo.phone.trim()) {
+            Alert.alert('Error', 'Please enter guest phone number');
+            return false;
+        }
+        
+        // Basic email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(guestInfo.email)) {
+            Alert.alert('Error', 'Please enter a valid email address');
+            return false;
+        }
+
+        // Basic phone validation (at least 10 digits)
+        const phoneRegex = /^\d{10,}$/;
+        if (!phoneRegex.test(guestInfo.phone.replace(/\D/g, ''))) {
+            Alert.alert('Error', 'Please enter a valid phone number');
+            return false;
+        }
+
+        return true;
+    };
+
     // Handle booking creation
     const handleConfirmBooking = async () => {
       try {
@@ -70,20 +110,31 @@ useLayoutEffect(() => {
           return;
         }
 
+        // Validate guest information
+        if (!validateGuestInfo()) {
+            setLoading(false);
+            return;
+        }
+
         const bookingRequest = {
           hotelId: bookingData.hotelId,
           roomId: bookingData.roomId,
           checkIn: bookingData.checkIn,
           checkOut: bookingData.checkOut,
           guests: bookingData.guests,
-          specialRequests: '' // Can be added later if needed
+          guestName: guestInfo.name.trim(),
+          guestEmail: guestInfo.email.trim(),
+          guestPhone: guestInfo.phone.trim(),
+          totalAmount: total, // Final calculated amount after all discounts
+          specialRequests: '', // Can be added later if needed,
+          couponCode: appliedCoupon ? appliedCoupon.code : null, 
         }; 
 
-        console.log('booking request ',bookingRequest)
-
+        console.log('booking request ', bookingRequest);
 
         const response = await apiService.post('/bookings/', bookingRequest);
-        console.log('response in checkoutr ',response)
+        console.log('response in checkout ', response);
+        
         if (response.success) {
           Alert.alert(
             'Booking Confirmed!',
@@ -98,7 +149,7 @@ useLayoutEffect(() => {
             ]
           );
         } else {
-          Alert.alert('Booking Failed',  'Something went wrong. Please try again.');
+          Alert.alert('Booking Failed', 'Something went wrong. Please try again.');
         }
       } catch (error) {
         console.error('Booking error:', error);
@@ -170,9 +221,6 @@ useLayoutEffect(() => {
     return (
         <SafeAreaView className="flex-1 bg-white">
             <View className="flex-1 justify-between">
-                {/* Header */}
-
-
                 {/* Scrollable Content */}
                 <ScrollView className="flex-1 px-6 py-6">
                     {/* Room Card */}
@@ -214,6 +262,71 @@ useLayoutEffect(() => {
 
                     {/* Divider */}
                     <View className="h-px bg-gray-100 -mx-6 mb-6" />
+
+                    {/* Guest Information Section */}
+                    <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                        <Text className="text-[#161312] text-lg mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                            Guest Information
+                        </Text>
+
+                        {/* Guest Name */}
+                        <View className="mb-4">
+                            <Text className="text-gray-600 text-sm mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                                Full Name
+                            </Text>
+                            <View className="flex-row items-center bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                <User size={20} color="#6B7280" />
+                                <TextInput
+                                    className="flex-1 ml-3 text-[#161312] text-base"
+                                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                                    placeholder="Enter full name"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={guestInfo.name}
+                                    onChangeText={(text) => setGuestInfo({...guestInfo, name: text})}
+                                    autoCapitalize="words"
+                                />
+                            </View>
+                        </View>
+
+                        {/* Guest Email */}
+                        <View className="mb-4">
+                            <Text className="text-gray-600 text-sm mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                                Email Address
+                            </Text>
+                            <View className="flex-row items-center bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                <Mail size={20} color="#6B7280" />
+                                <TextInput
+                                    className="flex-1 ml-3 text-[#161312] text-base"
+                                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                                    placeholder="Enter email address"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={guestInfo.email}
+                                    onChangeText={(text) => setGuestInfo({...guestInfo, email: text})}
+                                    keyboardType="email-address"
+                                    autoCapitalize="none"
+                                />
+                            </View>
+                        </View>
+
+                        {/* Guest Phone */}
+                        <View className="mb-0">
+                            <Text className="text-gray-600 text-sm mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                                Phone Number
+                            </Text>
+                            <View className="flex-row items-center bg-gray-50 rounded-xl p-4 border border-gray-200">
+                                <Phone size={20} color="#6B7280" />
+                                <TextInput
+                                    className="flex-1 ml-3 text-[#161312] text-base"
+                                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                                    placeholder="Enter phone number"
+                                    placeholderTextColor="#9CA3AF"
+                                    value={guestInfo.phone}
+                                    onChangeText={(text) => setGuestInfo({...guestInfo, phone: text})}
+                                    keyboardType="phone-pad"
+                                />
+                            </View>
+                        </View>
+                    </View>
 
                     {/* Dates */}
                     <View className="flex-row bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
