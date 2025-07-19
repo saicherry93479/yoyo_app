@@ -575,8 +575,8 @@ export default function HotelBookingApp() {
         {/* Only show additional sections if we have hotels and not in loading/error state */}
         {(activeTab !== 'nearby' || location.hasPermission) && !currentData.loading && !currentData.error && currentData.hotels.length > 0 && (
           <>
-            {/* Deals & Coupons */}
-            <View className="px-4 flex-col gap-4 mt-4">
+         
+            {/* <View className="px-4 flex-col gap-4 mt-4">
               <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Deals & Coupons</Text>
               <View className="bg-white p-4 rounded-xl flex-row items-center justify-between gap-4 border border-gray-100">
                 <View className="flex-col gap-2 flex-1">
@@ -594,7 +594,7 @@ export default function HotelBookingApp() {
                   style={{ resizeMode: 'cover' }}
                 />
               </View>
-            </View>
+            </View> */}
 
             {/* Featured Hotels Section */}
             <View className="px-4 flex-col gap-4 mt-4">

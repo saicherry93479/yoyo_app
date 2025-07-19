@@ -198,10 +198,13 @@ export function useNearbyHotels(coordinates: { lat: number; lng: number } | null
 
       const params: any = { 
         limit: 10,
-        coordinates: coordinates
+        lat:coordinates.lat,
+        lng:coordinates.lng
       };
 
       const response = await apiService.get('/search/nearby', { params });
+
+      console.log('response in nearby  ',response)
 
       if (response.success) {
         const transformedHotels = response.data.hotels?.map(transformHotel) || [];
@@ -318,6 +321,8 @@ export function useOffersHotels() {
 
       if (response.success) {
         const transformedHotels = response.data.hotels?.map(transformHotel) || [];
+
+        console.log('transformedHotels offers  ',transformedHotels)
         setHotels(transformedHotels);
       } else {
         setError(response.error || 'Failed to fetch offers');
