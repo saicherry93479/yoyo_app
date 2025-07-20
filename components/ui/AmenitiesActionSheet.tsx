@@ -1,6 +1,6 @@
 import React from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
-import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, FlatList } from 'react-native';
 import { Wifi, Waves, Car, Tv, ChefHat, WashingMachine, Wind, Flame, Dumbbell, Microwave, Refrigerator, Coffee, Wine, Armchair, UtensilsCrossed, Shield, TriangleAlert as AlertTriangle, Plus, Sun, Lock, X } from 'lucide-react-native';
 
 interface Amenity {
@@ -107,63 +107,66 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
 
   return (
     <ActionSheet 
-      id={sheetId}
-      containerStyle={{
-        paddingHorizontal: 0,
-        paddingBottom: 0,
-      }}
-      gestureEnabled={true}
-      closable={true}
-      closeOnTouchBackdrop={true}
-      snapPoints={[80]} // Increased snap point
-    >
-      <View className="flex-1 rounded-t-2xl bg-white pt-3">
-        {/* Handle */}
-        <View className="flex h-5 w-full items-center justify-center">
-          <View className="h-1.5 w-10 rounded-full bg-gray-200" />
-        </View>
-
-        {/* Header */}
-        <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-          <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>What this place offers</Text>
-          <TouchableOpacity onPress={handleClose} className="p-2">
-            <X size={24} color="#6B7280" />
-          </TouchableOpacity>
-        </View>
-
-        {/* Amenities Grid - Fixed scrolling */}
-        <ScrollView 
-          className="flex-1 px-4"
-          showsVerticalScrollIndicator={false}
-          nestedScrollEnabled={true}
-          contentContainerStyle={{ 
-            paddingVertical: 16,
-            paddingBottom: 20,
-            flexGrow: 1
-          }}
-        >
-          <View className="flex-row flex-wrap justify-between">
-            {amenitiesToShow.map((amenity, index) => (
-              <View 
-                key={`${amenity.id}_${index}`} // Ensure unique keys
-                className="w-[48%] mb-4"
-              >
-                {renderAmenityItem(amenity)}
-              </View>
-            ))}
-          </View>
-        </ScrollView>
-
-        {/* Close Button - Fixed at bottom */}
-        <View className="border-t border-gray-200 bg-white px-4 py-4">
-          <TouchableOpacity 
-            onPress={handleClose}
-            className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
-          >
-            <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Close</Text>
-          </TouchableOpacity>
-        </View>
+    id={sheetId}
+    containerStyle={{
+      paddingHorizontal: 0,
+      paddingBottom: 0,
+    }}
+    // gestureEnabled={true}
+    closable={true}
+    closeOnTouchBackdrop={true}
+  >
+    <View className="rounded-t-2xl bg-white pt-3 ">
+      
+      {/* Handle */}
+      <View className="flex h-5 w-full items-center justify-center">
+        <View className="h-1.5 w-10 rounded-full bg-gray-200" />
       </View>
-    </ActionSheet>
+
+      {/* Header */}
+      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
+        <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+          What this place offers
+        </Text>
+        <TouchableOpacity onPress={handleClose} className="p-2">
+          <X size={24} color="#6B7280" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Amenities List using FlatList */}
+      <FlatList
+        data={amenitiesToShow}
+        keyExtractor={(item, index) => `${item.id}_${index}`}
+        numColumns={2}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={{
+          paddingVertical: 16,
+          paddingBottom: 20,
+          paddingHorizontal: 16,
+   
+        }}
+        renderItem={({ item }) => (
+          <View className="w-[48%] mb-4 mr-[4%]">
+            {renderAmenityItem(item)}
+          </View>
+        )}
+        columnWrapperStyle={{
+          justifyContent: 'space-between'
+        }}
+      />
+
+      {/* Close Button */}
+      {/* <View className="border-t border-gray-200 bg-white px-4 py-4 sticky botttom-0">
+        <TouchableOpacity 
+          onPress={handleClose}
+          className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
+        >
+          <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Close
+          </Text>
+        </TouchableOpacity>
+      </View> */}
+    </View>
+  </ActionSheet>
   );
 }

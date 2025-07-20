@@ -5,6 +5,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { AuthProvider } from '@/contexts/AuthContext';
@@ -57,25 +58,27 @@ export default function RootLayout() {
   }
 
   return (
-    <AuthProvider>
-      <WishlistProvider>
-        <SheetProvider>
-          <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-            <Stack initialRouteName='(tabs)'>
-              <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-              <Stack.Screen name="onboarding" options={{ headerShown: true }} />
-              <Stack.Screen name="hotels" options={{ headerShown: true }} />
-              <Stack.Screen name="checkout" options={{ headerShown: true }} />
-              <Stack.Screen name="contactus" options={{ headerShown: true }} />
-              <Stack.Screen name="personal-info" options={{ headerShown: true }} />
-              <Stack.Screen name="notifications" options={{ headerShown: true }} />
-              <Stack.Screen name="+not-found" />
-            </Stack>
-            <StatusBar style="dark" />
-          </ThemeProvider>
-        </SheetProvider>
-      </WishlistProvider>
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AuthProvider>
+        <WishlistProvider>
+          <SheetProvider>
+            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+              <Stack initialRouteName='(tabs)'>
+                <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                <Stack.Screen name="onboarding" options={{ headerShown: true }} />
+                <Stack.Screen name="hotels" options={{ headerShown: true }} />
+                <Stack.Screen name="checkout" options={{ headerShown: true }} />
+                <Stack.Screen name="contactus" options={{ headerShown: true }} />
+                <Stack.Screen name="personal-info" options={{ headerShown: true }} />
+                <Stack.Screen name="notifications" options={{ headerShown: true }} />
+                <Stack.Screen name="+not-found" />
+              </Stack>
+              <StatusBar style="dark" />
+            </ThemeProvider>
+          </SheetProvider>
+        </WishlistProvider>
+      </AuthProvider>
+    </GestureHandlerRootView>
   );
 }
