@@ -1,7 +1,7 @@
-import React, { useState, useLayoutEffect } from "react"
-import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView } from "react-native"
+import React, { useState, useLayoutEffect, useCallback } from "react"
+import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView, RefreshControl } from "react-native"
 import { Svg, Path } from "react-native-svg"
-import { useNavigation } from "@react-navigation/native"
+import { useNavigation, useFocusEffect } from "@react-navigation/native"
 import { router } from "expo-router"
 import { useBookings } from '@/hooks/useBookings'
 import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader'
@@ -15,9 +15,20 @@ const PlusIcon = ({ size = 24, color = "#FF5A5F" }) => (
 
 export default function MyTripsApp() {
   const [activeTab, setActiveTab] = useState('upcoming')
+  const [refreshing, setRefreshing] = useState(false)
   const navigation = useNavigation()
   
   const { bookings, loading, error, refresh, getUpcomingBookings, getPastBookings } = useBookings()
+  
+  // Refresh data when screen comes into focus (when user navigates back)
+  useFocusEffect(
+    useCallback(() => {
+      // Only refresh if data is empty or there's an error
+      if (!bookings || bookings.length === 0 || error) {
+        refresh()
+      }
+    }, [bookings, error, refresh])
+  )
   
   // Get filtered bookings based on active tab
   const getFilteredBookings = () => {
@@ -29,6 +40,18 @@ export default function MyTripsApp() {
   };
   
   const filteredBookings = getFilteredBookings();
+
+  // Handle pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true)
+    try {
+      await refresh()
+    } catch (error) {
+      console.error('Error refreshing:', error)
+    } finally {
+      setRefreshing(false)
+    }
+  }, [refresh])
 
   // Hide the default header
   useLayoutEffect(() => {
@@ -181,8 +204,18 @@ export default function MyTripsApp() {
       </View>
 
       {/* Main Content */}
-      <ScrollView className="flex-1 bg-gray-50 p-4">
-        {loading ? (
+      <ScrollView 
+        className="flex-1 bg-gray-50 p-4"
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={['#FF5A5F']} // Android
+            tintColor="#FF5A5F" // iOS
+          />
+        }
+      >
+        {loading && !refreshing ? (
           <View>
             {Array.from({ length: 3 }).map((_, index) => (
               <BookingCardSkeleton key={index} />

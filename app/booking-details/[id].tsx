@@ -20,6 +20,7 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import * as FileSystem from 'expo-file-system';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import { useBookings } from '@/hooks/useBookings';
 
 const BookingDetails = () => {
   const { id } = useLocalSearchParams();
@@ -28,6 +29,7 @@ const BookingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const { refresh: refreshBookings } = useBookings();
 
   useEffect(() => {
     fetchBookingDetails();
@@ -40,7 +42,7 @@ const BookingDetails = () => {
       const response = await apiService.get(`/bookings/${id}/details`);
 
       console.log('response in booking details  ', JSON.stringify(response))
-      
+
       if (response.success) {
         setBooking(response.data.booking);
       } else {
@@ -84,11 +86,13 @@ const BookingDetails = () => {
               setCancelling(true);
               const response = await apiService.put(`/bookings/${booking.id}/cancel`);
 
-              console.log('response inn cancelling ',response)
-              
+              console.log('response inn cancelling ', response)
+
               if (response.success) {
                 setBooking(prev => prev ? { ...prev, status: 'cancelled' } : null);
+
                 Alert.alert('Success', 'Your booking has been cancelled successfully.');
+
               } else {
                 Alert.alert('Error', response.message || 'Failed to cancel booking');
               }
@@ -155,15 +159,15 @@ const BookingDetails = () => {
           <div class="section-title">Trip Details</div>
           <div class="detail-row">
             <span>Check-in:</span>
-            <span>${new Date(booking.checkIn).toLocaleDateString('en-IN', { 
-              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
-            })}</span>
+            <span>${new Date(booking.checkIn).toLocaleDateString('en-IN', {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+    })}</span>
           </div>
           <div class="detail-row">
             <span>Check-out:</span>
-            <span>${new Date(booking.checkOut).toLocaleDateString('en-IN', { 
-              weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' 
-            })}</span>
+            <span>${new Date(booking.checkOut).toLocaleDateString('en-IN', {
+      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+    })}</span>
           </div>
           <div class="detail-row">
             <span>Guests:</span>
@@ -215,23 +219,23 @@ const BookingDetails = () => {
 
   const handleDownloadReceipt = async () => {
     if (!booking) return;
-    
+
     try {
       const html = generateReceiptHTML(booking);
       const { uri } = await Print.printToFileAsync({
         html,
         base64: false,
       });
-      
+
       const filename = `booking_receipt_${booking.bookingReference}.pdf`;
       const documentsDir = FileSystem.documentDirectory;
       const newPath = `${documentsDir}${filename}`;
-      
+
       await FileSystem.moveAsync({
         from: uri,
         to: newPath,
       });
-      
+
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(newPath);
       } else {
@@ -245,14 +249,14 @@ const BookingDetails = () => {
 
   const handleContactHotel = () => {
     const contactOptions = [];
-    
+
     if (booking?.hotelPhone) {
       contactOptions.push({
         title: 'Call Hotel',
         icon: 'phone',
         onPress: () => Linking.openURL(`tel:${booking.hotelPhone}`)
       });
-      
+
       contactOptions.push({
         title: 'WhatsApp',
         icon: 'whatsapp',
@@ -268,7 +272,7 @@ const BookingDetails = () => {
         }
       });
     }
-    
+
     if (booking?.hotelEmail) {
       contactOptions.push({
         title: 'Send Email',
@@ -302,7 +306,7 @@ const BookingDetails = () => {
         <Text className="text-lg text-gray-500 mb-4 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
           {error || 'Booking not found'}
         </Text>
-        <TouchableOpacity 
+        <TouchableOpacity
           className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
           onPress={() => router.back()}
         >
@@ -316,9 +320,9 @@ const BookingDetails = () => {
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', { 
+    return date.toLocaleDateString('en-IN', {
       weekday: 'long',
-      month: 'long', 
+      month: 'long',
       day: 'numeric',
       year: 'numeric'
     });
@@ -343,7 +347,7 @@ const BookingDetails = () => {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <StatusBar barStyle="dark-content" />
-      
+
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Hotel Image and Status */}
         <View className="relative">
@@ -391,7 +395,7 @@ const BookingDetails = () => {
           <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             Trip Details
           </Text>
-          
+
           <View className="gap-4">
             <View className="flex-row items-center">
               <Calendar size={20} color="#FF5A5F" />
@@ -404,7 +408,7 @@ const BookingDetails = () => {
                 </Text>
               </View>
             </View>
-            
+
             <View className="flex-row items-center">
               <Calendar size={20} color="#FF5A5F" />
               <View className="ml-3 flex-1">
@@ -416,7 +420,7 @@ const BookingDetails = () => {
                 </Text>
               </View>
             </View>
-            
+
             <View className="flex-row items-center">
               <Users size={20} color="#FF5A5F" />
               <View className="ml-3 flex-1">
@@ -436,7 +440,7 @@ const BookingDetails = () => {
           <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             Price Breakdown
           </Text>
-          
+
           <View className="gap-3">
             <View className="flex-row justify-between">
               <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -511,7 +515,7 @@ const BookingDetails = () => {
               Contact Hotel
             </Text>
           </TouchableOpacity>
-          
+
           <View className="flex-row gap-3">
             {canCancelBooking && (
               <TouchableOpacity
@@ -525,7 +529,7 @@ const BookingDetails = () => {
                 </Text>
               </TouchableOpacity>
             )}
-            
+
             <TouchableOpacity
               className={`${canCancelBooking ? 'flex-1' : 'w-full'} h-12 border border-gray-300 rounded-lg items-center justify-center flex-row`}
               onPress={handleDownloadReceipt}
