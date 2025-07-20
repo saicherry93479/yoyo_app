@@ -35,19 +35,11 @@ export default function MyTripsApp() {
     navigation.setOptions({
       headerShadowVisible: false,
       headerTitle: () => (
-        <View className="flex-row items-center justify-between p-4">
-          <View className="w-8"></View>
-          <Text className="text-xl text-center flex-1 text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>My Trips</Text>
-          <TouchableOpacity
-            className="flex items-center justify-center w-8 h-8 rounded-full"
-            onPress={() => router.push('/(tabs)/search')}
-          >
-            <PlusIcon size={24} color="#FF5A5F" />
-          </TouchableOpacity>
-        </View>
-      )
-    })
-  }, [navigation])
+        <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Bookings</Text>
+      ),
+      headerTitleAlign: 'center',
+    });
+  }, [navigation]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

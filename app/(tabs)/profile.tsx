@@ -6,14 +6,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
-  const {logout} = useAuth()
-  
-  // SVG Components based on your original HTML
-  const BackIcon = ({ size = 24, color = "#374151" }) => (
-    <Svg width={size} height={size} viewBox="0 0 256 256" fill={color}>
-      <Path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z" />
-    </Svg>
-  );
+  const { logout } = useAuth()
+
 
   const UserIcon = ({ size = 28, color = "#374151" }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
@@ -21,11 +15,25 @@ const ProfileScreen = () => {
     </Svg>
   );
 
-  const CreditCardIcon = ({ size = 28, color = "#374151" }) => (
+  const ShieldIcon = ({ size = 28, color = "#374151" }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
-      <Path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z" />
+      <Path d="M12,1L3,5V11C3,16.55 6.84,21.74 12,23C17.16,21.74 21,16.55 21,11V5L12,1M12,7C13.4,7 14.8,8.6 14.8,10V11.5C15.4,11.5 16,12.4 16,13V16C16,16.6 15.6,17 15,17H9C8.4,17 8,16.6 8,16V13C8,12.4 8.4,11.5 9,11.5V10C9,8.6 10.6,7 12,7M12,8.2C11.2,8.2 10.2,8.7 10.2,10V11.5H13.8V10C13.8,8.7 12.8,8.2 12,8.2Z" />
     </Svg>
   );
+  
+  const RefundIcon = ({ size = 28, color = "#374151" }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Path d="M12,1A11,11 0 0,0 1,12A11,11 0 0,0 12,23A11,11 0 0,0 23,12A11,11 0 0,0 12,1M12,3A9,9 0 0,1 21,12A9,9 0 0,1 12,21A9,9 0 0,1 3,12A9,9 0 0,1 12,3M7,12A5,5 0 0,1 12,7V10.5L16,6.5L12,2.5V6A6,6 0 0,0 6,12H7Z" />
+    </Svg>
+  );
+  
+  // Alternative RefundIcon option (money/dollar sign)
+  const RefundIcon2 = ({ size = 28, color = "#374151" }) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
+      <Path d="M7,15H9C9,16.08 10.37,17 12,17C13.63,17 15,16.08 15,15C15,13.9 13.96,13.5 11.76,12.97C9.64,12.44 7,11.78 7,9C7,7.21 8.47,5.69 10.5,5.18V3H13.5V5.18C15.53,5.69 17,7.21 17,9H15C15,7.92 13.63,7 12,7C10.37,7 9,7.92 9,9C9,10.1 10.04,10.5 12.24,11.03C14.36,11.56 17,12.22 17,15C17,16.79 15.53,18.31 13.5,18.82V21H10.5V18.82C8.47,18.31 7,16.79 7,15Z" />
+    </Svg>
+  );
+
 
   const BellIcon = ({ size = 28, color = "#374151" }) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill={color}>
@@ -61,23 +69,44 @@ const ProfileScreen = () => {
     {
       section: 'Account Settings',
       items: [
-        { icon: UserIcon, label: 'Personal information', onPress: () => {
-          router.push('/personal-info')
-        } },
-        { icon: CreditCardIcon, label: 'Payment methods', onPress: () => {} },
-        { icon: BellIcon, label: 'Notifications', onPress: () => {
-          router.push('/notifications')
-        } },
-        { icon: SettingsIcon, label: 'Settings', onPress: () => {} },
+        {
+          icon: UserIcon, label: 'Personal information', onPress: () => {
+            router.push('/personal-info')
+          }
+        },
+        // { icon: CreditCardIcon, label: 'Payment methods', onPress: () => {} },
+        {
+          icon: BellIcon, label: 'Notifications', onPress: () => {
+            router.push('/notifications')
+          }
+        },
+        { icon: SettingsIcon, label: 'Settings', onPress: () => { } },
       ]
     },
     {
       section: 'Support',
       items: [
-        { icon: HelpIcon, label: 'Help Center', onPress: () => {} },
-        { icon: MessageIcon, label: 'Contact us', onPress: () => {
-          router.push('/contactus')
-        } },
+        { icon: HelpIcon, label: 'Help Center', onPress: () => { } },
+        {
+          icon: MessageIcon, label: 'Contact us', onPress: () => {
+            router.push('/contactus')
+          }
+        },
+      ]
+    },
+    {
+      section: 'Policies',
+      items: [
+        {
+          icon: ShieldIcon, label: 'Privacy & Guest Policy', onPress: () => {
+            router.push('/PrivacyPolicy')
+          }
+        },
+        {
+          icon: RefundIcon2, label: 'Cancellation & Refund Policy', onPress: () => {
+            router.push('/CancellationPolicy')
+          }
+        },
       ]
     }
   ];
@@ -95,53 +124,59 @@ const ProfileScreen = () => {
   return (
     <View className="flex-1 bg-white">
       {/* Content */}
-      <ScrollView className="flex-1 px-4 py-6">
-        {/* Profile Section */}
-        <View className="flex-row items-center gap-4 mb-8">
-          <View className="relative">
-            <Image
-              source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEge7MQC0MLY28227eQEwx3A3dYhxnRrlXYFJZzZVy9K09XXZ1fu1Gw_Y6Y76uySWhIHGTa1BHnwUJd2hTvwqH5sL5bR-AXweZz8IdGWdYNV6KHcCRf0ShYDYi0fYZguUtd7bV8KuR7XOs9eNV9k0jq_FQYezxz-SNIRi2Z-cQKFNqajKaCOoBYI64w1LK4Vnm1B0AufLtX_Ngd-10fnErG_fs-1hRW7xp2l5Wl-YcUcCIuQGlw1ueeQpNUaR3Z6J9zEbRoj6ySg' }}
-              className="w-20 h-20 rounded-full"
-              style={{ aspectRatio: 1 }}
-            />
-          </View>
-          <View className="flex-col">
-            <Text className="text-gray-900 text-2xl" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Sophia Carter</Text>
-            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Guest</Text>
-          </View>
-        </View>
-
-        {/* Menu Sections */}
-        <View className="gap-8">
-          {menuItems.map((section, sectionIndex) => (
-            <View key={sectionIndex}>
-              <Text className="text-gray-900 text-xl pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
-              <View className="gap-1">
-                {section.items.map((item, itemIndex) => (
-                  <TouchableOpacity
-                    key={itemIndex}
-                    className="flex-row items-center justify-between px-4 py-4 hover:bg-gray-50 rounded-lg transition-colors"
-                    onPress={item.onPress}
-                  >
-                    <View className="flex-row items-center gap-4">
-                      <item.icon size={28} color="#374151" />
-                      <Text className="text-gray-800 text-base flex-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{item.label}</Text>
-                    </View>
-                    <View className="shrink-0">
-                      <ChevronRightIcon size={20} color="#9CA3AF" />
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+      <ScrollView 
+        className="flex-1" 
+        contentContainerStyle={{ flexGrow: 1, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="px-4 py-6">
+          {/* Profile Section */}
+          <View className="flex-row items-center gap-4 mb-8">
+            <View className="relative">
+              <Image
+                source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEge7MQC0MLY28227eQEwx3A3dYhxnRrlXYFJZzZVy9K09XXZ1fu1Gw_Y6Y76uySWhIHGTa1BHnwUJd2hTvwqH5sL5bR-AXweZz8IdGWdYNV6KHcCRf0ShYDYi0fYZguUtd7bV8KuR7XOs9eNV9k0jq_FQYezxz-SNIRi2Z-cQKFNqajKaCOoBYI64w1LK4Vnm1B0AufLtX_Ngd-10fnErG_fs-1hRW7xp2l5Wl-YcUcCIuQGlw1ueeQpNUaR3Z6J9zEbRoj6ySg' }}
+                className="w-20 h-20 rounded-full"
+                style={{ aspectRatio: 1 }}
+              />
             </View>
-          ))}
-        </View>
+            <View className="flex-col">
+              <Text className="text-gray-900 text-2xl" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Sophia Carter</Text>
+              <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Guest</Text>
+            </View>
+          </View>
 
-        {/* Logout Button */}
-        <View className="px-4 pt-4 border-t border-gray-100 mt-6">
-          <TouchableOpacity className="w-full py-3" onPress={async ()=>await logout()}>
-            <Text className="text-gray-700 text-left" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Log out</Text>
-          </TouchableOpacity>
+          {/* Menu Sections */}
+          <View className="gap-8 mb-8">
+            {menuItems.map((section, sectionIndex) => (
+              <View key={sectionIndex}>
+                <Text className="text-gray-900 text-xl pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
+                <View className="gap-1">
+                  {section.items.map((item, itemIndex) => (
+                    <TouchableOpacity
+                      key={itemIndex}
+                      className="flex-row items-center justify-between px-4 py-4 hover:bg-gray-50 rounded-lg transition-colors"
+                      onPress={item.onPress}
+                    >
+                      <View className="flex-row items-center gap-4">
+                        <item.icon size={28} color="#374151" />
+                        <Text className="text-gray-800 text-base flex-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{item.label}</Text>
+                      </View>
+                      <View className="shrink-0">
+                        <ChevronRightIcon size={20} color="#9CA3AF" />
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            ))}
+          </View>
+
+          {/* Logout Button */}
+          <View className="px-4 pt-6 border-t border-gray-100">
+            <TouchableOpacity className="w-full py-4" onPress={async () => await logout()}>
+              <Text className="text-gray-700 text-left" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Log out</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </ScrollView>
     </View>
