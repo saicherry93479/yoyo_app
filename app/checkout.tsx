@@ -30,6 +30,10 @@ const CheckoutScreen = () => {
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
 
+    // Parse selected addons from params
+    const selectedAddons = params.selectedAddons ? JSON.parse(params.selectedAddons as string) : [];
+    const addonTotal = parseFloat(String(params.addonTotal || '0')) || 0;
+
     // Guest information state
     const [guestInfo, setGuestInfo] = useState({
         name: '',
@@ -128,6 +132,7 @@ useLayoutEffect(() => {
           totalAmount: total, // Final calculated amount after all discounts
           specialRequests: '', // Can be added later if needed,
           couponCode: appliedCoupon ? appliedCoupon.code : null, 
+          selectedAddons: selectedAddons,
         }; 
 
         console.log('booking request ', bookingRequest);
@@ -179,8 +184,9 @@ useLayoutEffect(() => {
 
     const nights = calculateNights();
     const subtotal = bookingData.totalAmount * nights;
+    const totalAddonsForStay = addonTotal * nights;
     const taxes = 0; // As requested, keeping taxes as 0
-    const total = subtotal + taxes - discountAmount;
+    const total = subtotal + totalAddonsForStay + taxes - discountAmount;
 
     const handleCouponApplied = (validationData: any) => {
         setAppliedCoupon(validationData.coupon);
@@ -197,7 +203,7 @@ useLayoutEffect(() => {
             payload: {
                 hotelId: bookingData.hotelId,
                 roomTypeId: bookingData.roomId,
-                orderAmount: subtotal,
+                orderAmount: subtotal + totalAddonsForStay,
                 onCouponApplied: handleCouponApplied,
             },
         });
@@ -328,6 +334,43 @@ useLayoutEffect(() => {
                         </View>
                     </View>
 
+                    {/* Selected Add-ons */}
+                    {selectedAddons.length > 0 && (
+                        <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                            <Text className="text-[#161312] text-lg mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                Selected Add-ons
+                            </Text>
+                            
+                            <View className="gap-3">
+                                {selectedAddons.map((addon: any) => (
+                                    <View key={addon.id} className="flex-row items-center gap-3 p-3 bg-gray-50 rounded-lg">
+                                        <Image
+                                            source={{ uri: addon.image }}
+                                            className="w-12 h-12 rounded-lg"
+                                            style={{ resizeMode: 'cover' }}
+                                        />
+                                        <View className="flex-1">
+                                            <Text className="text-base text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                                {addon.name}
+                                            </Text>
+                                            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                                Quantity: {addon.quantity}
+                                            </Text>
+                                        </View>
+                                        <View className="items-end">
+                                            <Text className="text-base text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                                ₹{(addon.price * addon.quantity).toLocaleString()}
+                                            </Text>
+                                            <Text className="text-xs text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                                per night
+                                            </Text>
+                                        </View>
+                                    </View>
+                                ))}
+                            </View>
+                        </View>
+                    )}
+
                     {/* Dates */}
                     <View className="flex-row bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
                         <View className="flex-1">
@@ -371,6 +414,17 @@ useLayoutEffect(() => {
                             </Text>
                         </View>
 
+                        {totalAddonsForStay > 0 && (
+                            <View className="flex-row justify-between items-center mb-3">
+                                <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                    Add-ons x {nights} {nights === 1 ? 'night' : 'nights'}
+                                </Text>
+                                <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                    ₹{totalAddonsForStay.toLocaleString()}
+                                </Text>
+                            </View>
+                        )}
+
                         <View className="flex-row justify-between items-center mb-3">
                             <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                                 Taxes and fees
@@ -398,7 +452,7 @@ useLayoutEffect(() => {
                             </View>
                         ) : (
                             <TouchableOpacity 
-                                onPress={openCouponsSheet}
+                                onPress={() => openCouponsSheet()}
                                 className="flex-row justify-between items-center mb-3 p-3 rounded-lg border border-dashed border-red-300 bg-red-50"
                             >
                                 <View className="flex-row items-center">
