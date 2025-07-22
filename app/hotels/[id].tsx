@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation } from 'expo-router';
@@ -17,6 +18,20 @@ import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { HeartIcon } from '@/components/ui/HeartIcon';
+import { Plus, Minus, Check } from 'lucide-react-native';
+
+interface Addon {
+  id: string;
+  name: string;
+  description: string;
+  image: string;
+  price: number;
+  status: string;
+}
+
+interface SelectedAddon extends Addon {
+  quantity: number;
+}
 
 const HotelDetails = () => {
     const { id, guests, checkIn, checkOut } = useLocalSearchParams();
@@ -31,6 +46,7 @@ const HotelDetails = () => {
       checkOut: (checkOut as string) || new Date(Date.now() + 3*24*60*60*1000).toISOString()
     });
     const [selectedRoom, setSelectedRoom] = useState(null);
+    const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
     const { addToWishlist, removeFromWishlistByHotelId, isInWishlist } = useWishlist();
 
     // Wishlist handlers
@@ -169,8 +185,53 @@ const HotelDetails = () => {
     // Handler for room selection
     const handleRoomSelect = (room) => {
       setSelectedRoom(room);
+      // Clear selected addons when room changes
+      setSelectedAddons([]);
     };
 
+    // Handler for addon selection
+    const handleAddonToggle = (addon: Addon) => {
+      setSelectedAddons(prev => {
+        const existingIndex = prev.findIndex(item => item.id === addon.id);
+        
+        if (existingIndex >= 0) {
+          // Remove addon if already selected
+          return prev.filter(item => item.id !== addon.id);
+        } else {
+          // Add addon with quantity 1
+          return [...prev, { ...addon, quantity: 1 }];
+        }
+      });
+    };
+
+    // Handler for addon quantity change
+    const handleAddonQuantityChange = (addonId: string, increment: boolean) => {
+      setSelectedAddons(prev => 
+        prev.map(addon => {
+          if (addon.id === addonId) {
+            const newQuantity = increment ? addon.quantity + 1 : Math.max(1, addon.quantity - 1);
+            return { ...addon, quantity: newQuantity };
+          }
+          return addon;
+        })
+      );
+    };
+
+    // Check if addon is selected
+    const isAddonSelected = (addonId: string) => {
+      return selectedAddons.some(addon => addon.id === addonId);
+    };
+
+    // Get addon quantity
+    const getAddonQuantity = (addonId: string) => {
+      const addon = selectedAddons.find(addon => addon.id === addonId);
+      return addon?.quantity || 0;
+    };
+
+    // Calculate total addon price
+    const calculateAddonTotal = () => {
+      return selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
+    };
     // Get current room price
     const getCurrentRoomPrice = () => {
       if (selectedRoom) {
@@ -179,6 +240,10 @@ const HotelDetails = () => {
       return hotel?.pricing?.startingFrom || hotel?.price || 0;
     };
 
+    // Get total price including addons
+    const getTotalPrice = () => {
+      return getCurrentRoomPrice() + calculateAddonTotal();
+    };
     // Check if rooms are available
     const areRoomsAvailable = () => {
       return hotel?.roomUpgradeData?.currentRoom || 
@@ -198,6 +263,8 @@ const HotelDetails = () => {
         hotelName: hotel.name,
         roomName: selectedRoom?.name || hotel.roomUpgradeData?.currentRoom?.name || 'Standard Room',
         totalAmount: getCurrentRoomPrice(),
+        selectedAddons: selectedAddons,
+        addonTotal: calculateAddonTotal(),
         address: hotel.address,
         image: hotel.images?.[0] || 'https://via.placeholder.com/400x300'
       };
@@ -538,6 +605,127 @@ const HotelDetails = () => {
 
 
            
+        {/* Room Addons */}
+        {(selectedRoom?.addons || hotel?.roomUpgradeData?.currentRoom?.addons) && (
+          <View className="px-5 py-6 border-t border-stone-100">
+            <Text className="text-lg text-stone-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Room Add-ons
+            </Text>
+            
+            <View className="gap-4">
+              {(selectedRoom?.addons || hotel?.roomUpgradeData?.currentRoom?.addons || []).map((addon: Addon) => {
+                const isSelected = isAddonSelected(addon.id);
+                const quantity = getAddonQuantity(addon.id);
+                
+                return (
+                  <View key={addon.id} className="bg-white rounded-xl border border-stone-200 overflow-hidden">
+                    <View className="flex-row gap-4 p-4">
+                      <Image
+                        source={{ uri: addon.image }}
+                        className="w-20 h-20 rounded-lg"
+                        style={{ resizeMode: 'cover' }}
+                      />
+                      <View className="flex-1">
+                        <Text className="text-base text-stone-900 mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                          {addon.name}
+                        </Text>
+                        <Text className="text-sm text-stone-500 mb-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                          {addon.description}
+                        </Text>
+                        <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                          ₹{addon.price}
+                        </Text>
+                      </View>
+                    </View>
+                    
+                    <View className="px-4 pb-4">
+                      {!isSelected ? (
+                        <TouchableOpacity
+                          onPress={() => handleAddonToggle(addon)}
+                          className="flex-row items-center justify-center gap-2 bg-stone-100 rounded-lg py-3"
+                        >
+                          <Plus size={16} color="#57534e" />
+                          <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                            Add to booking
+                          </Text>
+                        </TouchableOpacity>
+                      ) : (
+                        <View className="flex-row items-center justify-between">
+                          <View className="flex-row items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
+                            <Check size={16} color="#059669" />
+                            <Text className="text-green-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                              Added
+                            </Text>
+                          </View>
+                          
+                          <View className="flex-row items-center gap-3">
+                            <TouchableOpacity
+                              onPress={() => handleAddonQuantityChange(addon.id, false)}
+                              className="w-8 h-8 rounded-full border border-stone-300 items-center justify-center"
+                              disabled={quantity <= 1}
+                            >
+                              <Minus size={16} color={quantity <= 1 ? "#d6d3d1" : "#57534e"} />
+                            </TouchableOpacity>
+                            
+                            <Text className="text-base text-stone-900 w-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                              {quantity}
+                            </Text>
+                            
+                            <TouchableOpacity
+                              onPress={() => handleAddonQuantityChange(addon.id, true)}
+                              className="w-8 h-8 rounded-full border border-stone-300 items-center justify-center"
+                            >
+                              <Plus size={16} color="#57534e" />
+                            </TouchableOpacity>
+                            
+                            <TouchableOpacity
+                              onPress={() => handleAddonToggle(addon)}
+                              className="ml-2 px-3 py-2 bg-red-100 rounded-lg"
+                            >
+                              <Text className="text-red-600 text-sm" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                Remove
+                              </Text>
+                            </TouchableOpacity>
+                          </View>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+            
+            {/* Selected Addons Summary */}
+            {selectedAddons.length > 0 && (
+              <View className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
+                <Text className="text-base text-blue-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Selected Add-ons
+                </Text>
+                {selectedAddons.map((addon) => (
+                  <View key={addon.id} className="flex-row justify-between items-center py-1">
+                    <Text className="text-sm text-blue-800" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                      {addon.name} × {addon.quantity}
+                    </Text>
+                    <Text className="text-sm text-blue-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                      ₹{(addon.price * addon.quantity).toLocaleString()}
+                    </Text>
+                  </View>
+                ))}
+                <View className="border-t border-blue-200 mt-2 pt-2">
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-base text-blue-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                      Add-ons Total
+                    </Text>
+                    <Text className="text-base text-blue-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                      ₹{calculateAddonTotal().toLocaleString()}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+            )}
+          </View>
+        )}
+
             
           </View>
         </View>
@@ -548,10 +736,22 @@ const HotelDetails = () => {
         {areRoomsAvailable() ? (
           <View className="flex-row items-center justify-between">
             <View>
+              <View className="flex-row items-baseline gap-1">
               <Text className="text-2xl text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                ₹{getCurrentRoomPrice().toLocaleString()}
+                  ₹{getCurrentRoomPrice().toLocaleString()}
               </Text>
+                {selectedAddons.length > 0 && (
+                  <Text className="text-lg text-stone-600" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                    +₹{calculateAddonTotal().toLocaleString()}
+                  </Text>
+                )}
+              </View>
               <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>/night</Text>
+              {selectedAddons.length > 0 && (
+                <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Total: ₹{getTotalPrice().toLocaleString()}/night
+                </Text>
+              )}
             </View>
             
             <TouchableOpacity onPress={handleBookNow} className="bg-red-600 px-6 py-3 rounded-full">
