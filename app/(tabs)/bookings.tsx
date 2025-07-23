@@ -1,3 +1,7 @@
+The user wants to update the color scheme of the booking app to use Uber's brand colors, specifically focusing on tab navigation text and border colors.
+```
+
+```text
 import React, { useState, useLayoutEffect, useCallback } from "react"
 import { View, Text, TouchableOpacity, Image, SafeAreaView, ScrollView, RefreshControl } from "react-native"
 import { Svg, Path } from "react-native-svg"
@@ -17,9 +21,9 @@ export default function MyTripsApp() {
   const [activeTab, setActiveTab] = useState('upcoming')
   const [refreshing, setRefreshing] = useState(false)
   const navigation = useNavigation()
-  
+
   const { bookings, loading, error, refresh, getUpcomingBookings, getPastBookings } = useBookings()
-  
+
   // Refresh data when screen comes into focus (when user navigates back)
   useFocusEffect(
     useCallback(() => {
@@ -29,7 +33,7 @@ export default function MyTripsApp() {
       }
     }, [bookings, error, refresh])
   )
-  
+
   // Get filtered bookings based on active tab
   const getFilteredBookings = () => {
     if (activeTab === 'upcoming') {
@@ -38,7 +42,7 @@ export default function MyTripsApp() {
       return getPastBookings();
     }
   };
-  
+
   const filteredBookings = getFilteredBookings();
 
   // Handle pull-to-refresh
@@ -100,7 +104,7 @@ export default function MyTripsApp() {
   const calculateDuration = (checkIn: string, checkOut: string, bookingType: string) => {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
-    
+
     if (bookingType === 'hourly') {
       const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
       const hours = Math.ceil(timeDiff / (1000 * 3600));
@@ -126,7 +130,7 @@ export default function MyTripsApp() {
   const renderBookingCard = (booking: any) => {
     const duration = calculateDuration(booking.checkInDate, booking.checkOutDate, booking.bookingType);
     const isHourly = booking.bookingType === 'hourly';
-    
+
     return (
       <TouchableOpacity
         key={booking.id}
@@ -239,19 +243,19 @@ export default function MyTripsApp() {
         {/* Tab Navigation */}
         <View className="flex-row border-b border-gray-200">
           <TouchableOpacity
-            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-[#FF5A5F]' : ''}`}
+            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-black dark:border-white' : ''}`}
             onPress={() => setActiveTab('upcoming')}
           >
-            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-[#FF5A5F]' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Upcoming
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-[#FF5A5F]' : ''}`}
+            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-black dark:border-white' : ''}`}
             onPress={() => setActiveTab('past')}
           >
-            <Text className={`text-center ${activeTab === 'past' ? 'text-[#FF5A5F]' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className={`text-center ${activeTab === 'past' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Past
             </Text>
           </TouchableOpacity>
@@ -330,3 +334,4 @@ export default function MyTripsApp() {
     </SafeAreaView>
   )
 }
+```Applying Uber brand colors to the booking app, focusing on text and background colors for improved UI consistency.

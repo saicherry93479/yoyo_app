@@ -80,10 +80,10 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
   }) => (
     <View className="flex-row items-center justify-between py-4">
       <View className="flex-1">
-        <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+        <Text className="text-base text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
           {title}
         </Text>
-        <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+        <Text className="text-sm text-gray-500 dark:text-gray-400" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
           {description}
         </Text>
       </View>
@@ -91,27 +91,27 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
         <TouchableOpacity
           className={`w-8 h-8 rounded-full border items-center justify-center ${
             count <= minValue 
-              ? 'border-gray-200 bg-gray-50' 
-              : 'border-gray-300 bg-white active:bg-gray-50'
+              ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800' 
+              : 'border-gray-300 bg-white active:bg-gray-50 dark:border-gray-600 dark:bg-gray-800'
           }`}
           onPress={onDecrement}
           disabled={count <= minValue}
         >
           <Minus 
             size={16} 
-            color={count <= minValue ? '#D1D5DB' : '#6B7280'} 
+            color={count <= minValue ? '#D1D5DB' : '#8A8A8A'} 
           />
         </TouchableOpacity>
         
-        <Text className="text-base text-gray-900 w-8 text-center" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+        <Text className="text-base text-black dark:text-white w-8 text-center" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
           {count}
         </Text>
         
         <TouchableOpacity
-          className="w-8 h-8 rounded-full border border-gray-300 bg-white items-center justify-center active:bg-gray-50"
+          className="w-8 h-8 rounded-full border border-gray-300 bg-white items-center justify-center active:bg-gray-50 dark:border-gray-600 dark:bg-gray-800"
           onPress={onIncrement}
         >
-          <Plus size={16} color="#6B7280" />
+          <Plus size={16} color="#8A8A8A" />
         </TouchableOpacity>
       </View>
     </View>
@@ -124,11 +124,11 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
         onPress={() => setIsModalVisible(true)}
       >
         <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
-          <Users size={20} color="#94A3B8" />
+          <Users size={20} color="#8A8A8A" />
         </View>
-        <View className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 justify-center">
+        <View className="w-full h-14 rounded-lg border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 justify-center dark:border-gray-700 dark:bg-gray-800">
           <Text 
-            className={`text-base ${getTotalGuests() > 0 ? 'text-slate-900' : 'text-slate-400'}`}
+            className={`text-base ${getTotalGuests() > 0 ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
             style={{ fontFamily: 'PlusJakartaSans-Regular' }}
           >
             {getDisplayText()}
@@ -142,19 +142,19 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-white dark:bg-black">
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
+          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
             <TouchableOpacity onPress={handleClear}>
-              <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Text className="text-base text-gray-600 dark:text-gray-400" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Clear
               </Text>
             </TouchableOpacity>
-            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <Text className="text-lg text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Who's coming?
             </Text>
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-              <X size={24} color="#6B7280" />
+              <X size={24} color="#8A8A8A" />
             </TouchableOpacity>
           </View>
 
@@ -191,12 +191,12 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
           </View>
 
           {/* Footer */}
-          <View className="px-4 py-4 border-t border-gray-200">
+          <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
             <TouchableOpacity
-              className="w-full h-12 rounded-lg bg-[#FF5A5F] items-center justify-center"
+              className="w-full h-12 rounded-lg bg-black dark:bg-white items-center justify-center"
               onPress={handleConfirm}
             >
-              <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              <Text className="text-base text-white dark:text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Confirm guests
               </Text>
             </TouchableOpacity>

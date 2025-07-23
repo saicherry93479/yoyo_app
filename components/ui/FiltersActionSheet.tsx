@@ -161,7 +161,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
       closeOnTouchBackdrop={true}
       snapPoints={[80]}
     >
-      <View className="rounded-t-2xl bg-white pt-3 " >
+      <View className="rounded-t-2xl bg-white dark:bg-black pt-3 " >
         {/* Handle */}
         <View>
           <View className="flex h-5 w-full items-center justify-center">
@@ -169,17 +169,17 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
           </View>
 
           {/* Header */}
-          <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100">
+          <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
             <TouchableOpacity onPress={handleClearFilters}>
-              <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Text className="text-base text-gray-600 dark:text-gray-400" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Clear all
               </Text>
             </TouchableOpacity>
-            <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <Text className="text-xl text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Filters
             </Text>
             <TouchableOpacity onPress={handleClose} className="p-2">
-              <X size={24} color="#6B7280" />
+              <X size={24} color="#8A8A8A" />
             </TouchableOpacity>
           </View>
         </View>
@@ -192,8 +192,8 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
             className="flex-1"
           >
 
-            <View className="px-6 py-4 border-b border-gray-100">
-              <Text className="text-lg text-gray-900 mb-3" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <View className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+              <Text className="text-lg text-black dark:text-white mb-3" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Sort by
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -201,13 +201,13 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                   <TouchableOpacity
                     key={option.id}
                     className={`px-4 py-2 rounded-full border ${filters.sortBy === option.id
-                      ? 'bg-[#FF5A5F] border-[#FF5A5F]'
-                      : 'bg-white border-gray-300'
+                      ? 'bg-black border-black dark:bg-white dark:border-white'
+                      : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'
                       }`}
                     onPress={() => setFilters(prev => ({ ...prev, sortBy: option.id }))}
                   >
                     <Text
-                      className={`text-sm ${filters.sortBy === option.id ? 'text-white' : 'text-gray-700'
+                      className={`text-sm ${filters.sortBy === option.id ? 'text-white dark:text-black' : 'text-gray-700 dark:text-gray-300'
                         }`}
                       style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                     >
@@ -348,12 +348,12 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
             </View> */}
           </ScrollView>
 
-          <View className="px-6 py-4 border-t border-gray-200 bg-white">
+          <View className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
             <TouchableOpacity
               onPress={handleApplyFilters}
-              className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
+              className="w-full h-12 bg-black dark:bg-white rounded-lg items-center justify-center"
             >
-              <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              <Text className="text-base text-white dark:text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Apply Filters
               </Text>
             </TouchableOpacity>

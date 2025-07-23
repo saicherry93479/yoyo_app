@@ -73,7 +73,7 @@ export default function SearchScreen() {
   const [filters, setFilters] = useState<SearchFilters>({
     sortBy: 'recommended'
   });
-  
+
   const navigation = useNavigation();
   const params = useLocalSearchParams();
   const { addToWishlist, removeFromWishlistByHotelId, isInWishlist } = useWishlist();
@@ -81,10 +81,10 @@ export default function SearchScreen() {
   // Format search display text
   const getSearchDisplayText = () => {
     if (!currentSearchData) return 'Search destinations, hotels...';
-    
+
     const location = currentSearchData.location?.name || '';
     const bookingType = currentSearchData.bookingType || 'daily';
-    
+
     if (bookingType === 'hourly') {
       const timeRange = currentSearchData.timeRange;
       if (timeRange?.startTime && timeRange?.endTime) {
@@ -135,7 +135,7 @@ export default function SearchScreen() {
   const handleWishlistToggle = async (hotel: Hotel) => {
     try {
       const isCurrentlyInWishlist = isInWishlist(hotel.id)
-      
+
       if (isCurrentlyInWishlist) {
         await removeFromWishlistByHotelId(hotel.id)
       } else {
@@ -264,8 +264,8 @@ export default function SearchScreen() {
           }
         }
         searchParams.append('bookingType',currentSearchData.bookingType)
-        
-        
+
+
         const queryString = searchParams.toString();
         const url = queryString ? `/hotels/${hotel.id}?${queryString}` : `/hotels/${hotel.id}`;
         router.push(url);
@@ -290,7 +290,7 @@ export default function SearchScreen() {
           size={18}
         />
       </View>
-      
+
       <View className="p-4">
         <View className="flex-row items-start justify-between mb-2">
           <View className="flex-1">
@@ -314,13 +314,13 @@ export default function SearchScreen() {
             </Text>
           </View>
         </View>
-        
+
         {hotel.distance && (
           <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
             {hotel.distance.toFixed(1)} km away
           </Text>
         )}
-        
+
         <View className="flex-row flex-wrap gap-2 mb-3">
           {hotel.amenities.slice(0, 3).map((amenity: string, index: number) => (
             <View key={index} className="bg-gray-100 px-2 py-1 rounded">
@@ -337,7 +337,7 @@ export default function SearchScreen() {
             </View>
           )}
         </View>
-        
+
         <View className="flex-row items-center justify-between">
           <View className="flex-row items-baseline">
             <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -377,20 +377,20 @@ export default function SearchScreen() {
         Search for your perfect destination and discover amazing hotels with great deals and reviews.
       </Text>
       <TouchableOpacity
-        className="bg-[#FF5A5F] px-8 py-4 rounded-xl shadow-lg"
-        onPress={() => SheetManager.show('search', {
-          payload: {
-            onSearch: handleSearchFromSheet
-          }
-        })}
-      >
-        <View className="flex-row items-center gap-2">
-          <Search size={20} color="white" />
-          <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            Search Hotels
-          </Text>
-        </View>
-      </TouchableOpacity>
+          className="bg-black dark:bg-white px-8 py-4 rounded-xl shadow-lg"
+          onPress={() => SheetManager.show('search', {
+            payload: {
+              onSearch: handleSearchFromSheet
+            }
+          })}
+        >
+          <View className="flex-row items-center gap-2">
+            <Search size={20} color="white" className="dark:color-black" />
+            <Text className="text-white dark:text-black text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Search Hotels
+            </Text>
+          </View>
+        </TouchableOpacity>
     </View>
   );
 
@@ -492,7 +492,7 @@ export default function SearchScreen() {
                   Filters
                 </Text>
               </TouchableOpacity>
-              
+
               {[
                 { id: 'price', label: 'Price' },
                 { id: 'rating', label: 'Rating' },

@@ -122,7 +122,7 @@ const ProfileScreen = () => {
   }, [navigation]);
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white dark:bg-black">
       {/* Content */}
       <ScrollView 
         className="flex-1" 
@@ -140,8 +140,8 @@ const ProfileScreen = () => {
               />
             </View>
             <View className="flex-col">
-              <Text className="text-gray-900 text-2xl" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Sophia Carter</Text>
-              <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Guest</Text>
+              <Text className="text-black dark:text-white text-2xl" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Sophia Carter</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Guest</Text>
             </View>
           </View>
 
@@ -149,7 +149,7 @@ const ProfileScreen = () => {
           <View className="gap-8 mb-8">
             {menuItems.map((section, sectionIndex) => (
               <View key={sectionIndex}>
-                <Text className="text-gray-900 text-xl pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
+                <Text className="text-black dark:text-white text-xl pb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>{section.section}</Text>
                 <View className="gap-1">
                   {section.items.map((item, itemIndex) => (
                     <TouchableOpacity
@@ -158,11 +158,11 @@ const ProfileScreen = () => {
                       onPress={item.onPress}
                     >
                       <View className="flex-row items-center gap-4">
-                        <item.icon size={28} color="#374151" />
-                        <Text className="text-gray-800 text-base flex-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{item.label}</Text>
+                        <item.icon size={28} color="#8A8A8A" />
+                        <Text className="text-black dark:text-white text-base flex-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{item.label}</Text>
                       </View>
                       <View className="shrink-0">
-                        <ChevronRightIcon size={20} color="#9CA3AF" />
+                        <ChevronRightIcon size={20} color="#8A8A8A" />
                       </View>
                     </TouchableOpacity>
                   ))}
@@ -172,9 +172,9 @@ const ProfileScreen = () => {
           </View>
 
           {/* Logout Button */}
-          <View className="px-4 pt-6 border-t border-gray-100">
+          <View className="px-4 pt-6 border-t border-gray-100 dark:border-gray-800">
             <TouchableOpacity className="w-full py-4" onPress={async () => await logout()}>
-              <Text className="text-gray-700 text-left" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Log out</Text>
+              <Text className="text-black dark:text-white text-left" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Log out</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -116,11 +116,11 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
         onPress={() => setIsModalVisible(true)}
       >
         <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
-          <CalendarIcon size={20} color="#94A3B8" />
+          <CalendarIcon size={20} color="#8A8A8A" />
         </View>
-        <View className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 justify-center">
+        <View className="w-full h-14 rounded-lg border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 justify-center dark:border-gray-700 dark:bg-gray-800">
           <Text 
-            className={`text-base ${selectedDates.startDate ? 'text-slate-900' : 'text-slate-400'}`}
+            className={`text-base ${selectedDates.startDate ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
             style={{ fontFamily: 'PlusJakartaSans-Regular' }}
           >
             {getDisplayText()}
@@ -134,19 +134,19 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-white dark:bg-black">
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
+          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
             <TouchableOpacity onPress={handleClear}>
-              <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Text className="text-base text-gray-600 dark:text-gray-400" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Clear
               </Text>
             </TouchableOpacity>
-            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <Text className="text-lg text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Select dates
             </Text>
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-              <X size={24} color="#6B7280" />
+              <X size={24} color="#8A8A8A" />
             </TouchableOpacity>
           </View>
 
@@ -171,19 +171,19 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
               theme={{
                 backgroundColor: '#ffffff',
                 calendarBackground: '#ffffff',
-                textSectionTitleColor: '#9CA3AF',
+                textSectionTitleColor: '#8A8A8A',
                 textSectionTitleDisabledColor: '#D1D5DB',
-                selectedDayBackgroundColor: '#FF5A5F',
+                selectedDayBackgroundColor: '#000000',
                 selectedDayTextColor: '#ffffff',
-                todayTextColor: '#FF5A5F',
-                dayTextColor: '#374151',
+                todayTextColor: '#000000',
+                dayTextColor: '#000000',
                 textDisabledColor: '#D1D5DB',
-                dotColor: '#FF5A5F',
+                dotColor: '#000000',
                 selectedDotColor: '#ffffff',
-                arrowColor: '#FF5A5F',
+                arrowColor: '#000000',
                 disabledArrowColor: '#D1D5DB',
-                monthTextColor: '#111827',
-                indicatorColor: '#FF5A5F',
+                monthTextColor: '#000000',
+                indicatorColor: '#000000',
                 textDayFontFamily: 'PlusJakartaSans-Regular',
                 textMonthFontFamily: 'PlusJakartaSans-SemiBold',
                 textDayHeaderFontFamily: 'PlusJakartaSans-Medium',
@@ -218,12 +218,12 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
           </View>
 
           {/* Footer */}
-          <View className="px-4 py-4 border-t border-gray-200">
+          <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
             <TouchableOpacity
               className={`w-full h-12 rounded-lg items-center justify-center ${
                 selectedDates.startDate && selectedDates.endDate 
-                  ? 'bg-[#FF5A5F]' 
-                  : 'bg-gray-200'
+                  ? 'bg-black dark:bg-white' 
+                  : 'bg-gray-200 dark:bg-gray-800'
               }`}
               onPress={handleConfirm}
               disabled={!selectedDates.startDate || !selectedDates.endDate}
@@ -231,7 +231,7 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
               <Text 
                 className={`text-base ${
                   selectedDates.startDate && selectedDates.endDate 
-                    ? 'text-white' 
+                    ? 'text-white dark:text-black' 
                     : 'text-gray-400'
                 }`}
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}

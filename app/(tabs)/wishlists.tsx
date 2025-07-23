@@ -46,7 +46,7 @@ const WishlistScreen = () => {
 
   return (
 
-      <ScrollView className="flex-1 bg-white">
+      <ScrollView className="flex-1 bg-white dark:bg-black">
         {/* Wishlist Items */}
         <View className="px-4 gap-4 ">
           {loading ? (
@@ -82,10 +82,10 @@ const WishlistScreen = () => {
                 Start exploring and save your favorite hotels to your wishlist
               </Text>
               <TouchableOpacity 
-                className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+                className="bg-black dark:bg-white px-6 py-3 rounded-lg"
                 onPress={() => router.push('/(tabs)/search')}
               >
-                <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                <Text className="text-white dark:text-black text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                   Explore Hotels
                 </Text>
               </TouchableOpacity>
@@ -94,7 +94,7 @@ const WishlistScreen = () => {
             items.map((item) => (
               <TouchableOpacity 
                 key={item.id} 
-                className="flex-row items-start bg-white p-3 rounded-xl shadow-sm border border-gray-100"
+                className="flex-row items-start bg-white dark:bg-gray-900 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800"
                 onPress={() => router.push(`/hotels/${item.hotelId}`)}
               >
                 <Image
@@ -105,13 +105,13 @@ const WishlistScreen = () => {
 
                 <View className="flex-1 ml-4 justify-center">
                   <Text 
-                    className="text-gray-900 text-lg leading-tight mb-1"
+                    className="text-black dark:text-white text-lg leading-tight mb-1"
                     style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                   >
                     {item.hotelName}
                   </Text>
                   <Text 
-                    className="text-gray-500 text-sm"
+                    className="text-gray-500 dark:text-gray-400 text-sm"
                     style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   >
                     {item.location}

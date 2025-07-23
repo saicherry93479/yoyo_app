@@ -99,8 +99,8 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
     
     return (
       <View key={amenity.id} className="flex-row items-center gap-4 py-3">
-        <IconComponent size={24} color="#1F2937" strokeWidth={2} />
-        <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
+        <IconComponent size={24} color="#8A8A8A" strokeWidth={2} />
+        <Text className="text-base text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
       </View>
     );
   };
@@ -116,7 +116,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
     closable={true}
     closeOnTouchBackdrop={true}
   >
-    <View className="rounded-t-2xl bg-white pt-3 ">
+    <View className="rounded-t-2xl bg-white dark:bg-black pt-3 ">
       
       {/* Handle */}
       <View className="flex h-5 w-full items-center justify-center">
@@ -124,12 +124,12 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
       </View>
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100">
-        <Text className="text-2xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800">
+        <Text className="text-2xl text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
           What this place offers
         </Text>
         <TouchableOpacity onPress={handleClose} className="p-2">
-          <X size={24} color="#6B7280" />
+          <X size={24} color="#8A8A8A" />
         </TouchableOpacity>
       </View>
 

@@ -288,12 +288,12 @@ const CheckoutScreen = () => {
     );
 
     return (
-        <SafeAreaView className="flex-1 bg-white">
+        <SafeAreaView className="flex-1 bg-white dark:bg-black">
             <View className="flex-1 justify-between">
                 {/* Scrollable Content */}
                 <ScrollView className="flex-1 px-6 py-6">
                     {/* Room Card */}
-                    <View className="flex-row items-center bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                    <View className="flex-row items-center bg-white dark:bg-gray-900 p-4 rounded-2xl border border-gray-100 dark:border-gray-800 shadow-sm mb-6">
                         <View className="w-24 h-24 rounded-xl overflow-hidden">
                             <Image
                                 source={{
@@ -304,10 +304,10 @@ const CheckoutScreen = () => {
                             />
                         </View>
                         <View className="flex-1 ml-4">
-                            <Text className="text-gray-500 text-xs uppercase tracking-wider" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                            <Text className="text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                                 {bookingData.hotelName}
                             </Text>
-                            <Text className="text-[#161312] text-lg  mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                            <Text className="text-black dark:text-white text-lg  mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                                 {bookingData.roomName}
                             </Text>
                             <View className="flex-row items-center mt-2">
@@ -581,14 +581,14 @@ const CheckoutScreen = () => {
                 {/* Confirm Button */}
                 <View className="px-6 py-4">
                     <TouchableOpacity
-                        className={`w-full p-4 rounded-2xl items-center ${loading ? 'bg-gray-400' : 'bg-[#FF5A5F]'}`}
+                        className={`w-full p-4 rounded-2xl items-center ${loading ? 'bg-gray-400' : 'bg-black dark:bg-white'}`}
                         onPress={handleConfirmBooking}
                         disabled={loading}
                     >
                         {loading ? (
                             <LoadingSpinner size="small" color="white" />
                         ) : (
-                            <Text className="text-white text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                            <Text className="text-white dark:text-black text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                                 Confirm {bookingData.bookingType === 'daily' ? 'Booking' : 'Hourly Booking'}
                             </Text>
                         )}
