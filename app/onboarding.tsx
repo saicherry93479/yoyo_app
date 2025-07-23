@@ -284,7 +284,7 @@ export default function OnboardingScreen() {
                   activeOpacity={0.7}
                 >
                   <Text
-                    className={`text-sm ${formData.gender === gender ? 'text-[#FF5A5F]' : 'text-gray-700'
+                    className={`text-sm ${formData.gender === gender ? 'text-black' : 'text-gray-700'
                       }`}
                     style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                   >

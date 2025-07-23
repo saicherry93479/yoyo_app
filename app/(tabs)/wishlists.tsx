@@ -82,7 +82,7 @@ const WishlistScreen = () => {
                 Start exploring and save your favorite hotels to your wishlist
               </Text>
               <TouchableOpacity 
-                className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+                className="bg-black px-6 py-3 rounded-lg"
                 onPress={() => router.push('/(tabs)/search')}
               >
                 <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

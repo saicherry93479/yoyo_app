@@ -307,7 +307,7 @@ const BookingDetails = () => {
           {error || 'Booking not found'}
         </Text>
         <TouchableOpacity
-          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          className="bg-black px-6 py-3 rounded-lg"
           onPress={() => router.back()}
         >
           <Text className="text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -508,7 +508,7 @@ const BookingDetails = () => {
         {/* Action Buttons */}
         <View className="px-6 py-6 border-t border-gray-100 gap-3">
           <TouchableOpacity
-            className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
+            className="w-full h-12 bg-black rounded-lg items-center justify-center"
             onPress={handleContactHotel}
           >
             <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -519,12 +519,12 @@ const BookingDetails = () => {
           <View className="flex-row gap-3">
             {canCancelBooking && (
               <TouchableOpacity
-                className="flex-1 h-12 bg-red-100 rounded-lg items-center justify-center flex-row"
+                className="flex-1 h-12 bg-gray-100 rounded-lg items-center justify-center flex-row"
                 onPress={handleCancelBooking}
                 disabled={cancelling}
               >
-                <X size={16} color="#DC2626" />
-                <Text className="text-red-600 text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                <X size={16} color="#000000" />
+                <Text className="text-black text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                   {cancelling ? 'Cancelling...' : 'Cancel Booking'}
                 </Text>
               </TouchableOpacity>

@@ -1,26 +1,45 @@
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Uber-inspired color scheme with black and white variations only
  */
 
-const tintColorLight = '#FF5A5F';
-const tintColorDark = '#fff';
+const primaryBlack = '#000000';
+const primaryWhite = '#FFFFFF';
+const lightGray = '#F6F6F6';
+const mediumGray = '#E5E5E5';
+const darkGray = '#8E8E93';
+const charcoal = '#1C1C1E';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: primaryBlack,
+    background: primaryWhite,
+    tint: primaryBlack,
+    icon: primaryBlack,
+    tabIconDefault: darkGray,
+    tabIconSelected: primaryBlack,
+    border: mediumGray,
+    card: primaryWhite,
+    surface: lightGray,
+    placeholder: darkGray,
+    disabled: mediumGray,
+    success: primaryBlack,
+    error: primaryBlack,
+    warning: primaryBlack,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: primaryWhite,
+    background: primaryBlack,
+    tint: primaryWhite,
+    icon: primaryWhite,
+    tabIconDefault: darkGray,
+    tabIconSelected: primaryWhite,
+    border: charcoal,
+    card: charcoal,
+    surface: '#1A1A1A',
+    placeholder: darkGray,
+    disabled: '#2C2C2E',
+    success: primaryWhite,
+    error: primaryWhite,
+    warning: primaryWhite,
   },
 };

@@ -168,8 +168,8 @@ export default function NotificationsScreen() {
           <Switch
             value={setting.enabled}
             onValueChange={() => toggleSetting(setting.id)}
-            trackColor={{ false: '#E5E7EB', true: '#FEE2E2' }}
-            thumbColor={setting.enabled ? '#FF5A5F' : '#F3F4F6'}
+            trackColor={{ false: '#E5E7EB', true: '#E5E7EB' }}
+            thumbColor={setting.enabled ? '#000000' : '#F3F4F6'}
             disabled={isLoading}
           />
         </View>

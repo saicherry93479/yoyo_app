@@ -193,7 +193,7 @@ export function GuestSelector({ value, onGuestCountChange, placeholder = "Add gu
           {/* Footer */}
           <View className="px-4 py-4 border-t border-gray-200">
             <TouchableOpacity
-              className="w-full h-12 rounded-lg bg-[#FF5A5F] items-center justify-center"
+              className="w-full h-12 rounded-lg bg-black items-center justify-center"
               onPress={handleConfirm}
             >
               <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

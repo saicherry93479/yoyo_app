@@ -521,7 +521,7 @@ const HotelDetails = () => {
                         {!isSelected ? (
                           <TouchableOpacity
                             onPress={() => handleAddonToggle(addon)}
-                            className="flex-row items-center justify-center gap-2 bg-blue-600 rounded-xl py-3.5"
+                            className="flex-row items-center justify-center gap-2 bg-black rounded-xl py-3.5"
                           >
                             <Plus size={18} color="white" />
                             <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
@@ -554,7 +554,7 @@ const HotelDetails = () => {
 
                               <TouchableOpacity
                                 onPress={() => handleAddonQuantityChange(addon.id, true)}
-                                className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center shadow-sm"
+                                className="w-10 h-10 rounded-full bg-black items-center justify-center shadow-sm"
                               >
                                 <Plus size={16} color="white" />
                               </TouchableOpacity>
@@ -744,7 +744,7 @@ const HotelDetails = () => {
             </Text>
             <TouchableOpacity
               onPress={handleEditSearch}
-              className="bg-[#171717] px-6 py-3 rounded-full"
+              className="bg-black px-6 py-3 rounded-full"
             >
               <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Change Dates/Guests
