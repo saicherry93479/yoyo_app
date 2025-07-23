@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { X, Search } from 'lucide-react-native';
@@ -51,26 +51,45 @@ interface SearchActionSheetProps {
   };
 }
 
+const defaultSearchData: SearchData = {
+  location: null,
+  dateRange: { startDate: null, endDate: null },
+  timeRange: { startTime: null, endTime: null },
+  guests: { adults: 1, children: 0, infants: 0 },
+  bookingType: 'hourly'
+};
+
 export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
-  // Note: Removed useNavigation hook as it's not available outside navigation context
-  // Navigation should be handled through the payload callbacks
-  const [searchData, setSearchData] = useState<SearchData>(payload?.initialData || {
-    location: null,
-    dateRange: { startDate: null, endDate: null },
-    timeRange: { startTime: null, endTime: null },
-    guests: { adults: 1, children: 0, infants: 0 },
-    bookingType: 'hourly'
-  });
+  // Initialize search data with memoized default values
+  const initialSearchData = useMemo(() => {
+    return payload?.initialData || defaultSearchData;
+  }, [payload?.initialData]);
+
+  const [searchData, setSearchData] = useState<SearchData>(initialSearchData);
   const [isSearching, setIsSearching] = useState(false);
 
-  const isSearchEnabled = searchData.location && 
-    (searchData.bookingType === 'daily' 
-      ? (searchData.dateRange.startDate && searchData.dateRange.endDate)
-      : (searchData.timeRange.startTime && searchData.timeRange.endTime)
-    );
+  // Memoize validation logic
+  const isSearchEnabled = useMemo(() => {
+    return searchData.location && 
+      (searchData.bookingType === 'daily' 
+        ? (searchData.dateRange.startDate && searchData.dateRange.endDate)
+        : (searchData.timeRange.startTime && searchData.timeRange.endTime)
+      );
+  }, [
+    searchData.location,
+    searchData.bookingType,
+    searchData.dateRange.startDate,
+    searchData.dateRange.endDate,
+    searchData.timeRange.startTime,
+    searchData.timeRange.endTime
+  ]);
 
   const handleClose = useCallback(() => {
-    SheetManager.hide(sheetId);
+    try {
+      SheetManager.hide(sheetId);
+    } catch (error) {
+      console.log('Error closing sheet:', error);
+    }
   }, [sheetId]);
 
   const handleSearch = useCallback(() => {
@@ -80,15 +99,19 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     
     // Simulate search API call
     setTimeout(() => {
-      // Pass the complete search data to the callback
-      if (payload?.onSearch) {
-        payload.onSearch(searchData);
+      try {
+        // Pass the complete search data to the callback
+        if (payload?.onSearch) {
+          payload.onSearch(searchData);
+        }
+        
+        // Close the sheet
+        handleClose();
+      } catch (error) {
+        console.log('Error during search:', error);
+      } finally {
+        setIsSearching(false);
       }
-      
-      // Close the sheet first
-      handleClose();
-      
-      setIsSearching(false);
     }, 1000);
   }, [isSearchEnabled, payload, searchData, handleClose]);
     
@@ -104,23 +127,152 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     setSearchData(prev => ({ ...prev, timeRange }));
   }, []);
 
+  // Fixed booking type change handler - removed navigation dependencies
   const handleBookingTypeChange = useCallback((bookingType: 'daily' | 'hourly') => {
     try {
-      setSearchData(prev => ({
-        ...prev, 
-        bookingType,
-        // Reset time/date ranges when switching types to avoid conflicts
-        dateRange: bookingType === 'daily' ? prev.dateRange : { startDate: null, endDate: null },
-        timeRange: bookingType === 'hourly' ? prev.timeRange : { startTime: null, endTime: null }
-      }));
+      console.log('booking type changed to:', bookingType);
+      
+      setSearchData(prev => {
+        const newData = {
+          ...prev, 
+          bookingType,
+          // Reset time/date ranges when switching types to avoid conflicts
+          dateRange: bookingType === 'daily' ? prev.dateRange : { startDate: null, endDate: null },
+          timeRange: bookingType === 'hourly' ? prev.timeRange : { startTime: null, endTime: null }
+        };
+        
+        console.log('new search data:', newData);
+        return newData;
+      });
     } catch (error) {
-      console.warn('Error changing booking type:', error);
+      console.log('Error changing booking type:', error);
     }
   }, []);
 
   const handleGuestCountChange = useCallback((guests: GuestCounts) => {
     setSearchData(prev => ({ ...prev, guests }));
   }, []);
+
+  // Memoize booking type tabs to prevent unnecessary re-renders
+  const BookingTypeTabs = useMemo(() => (
+    <View className="mb-6">
+      <View className="flex-row bg-gray-100 rounded-lg p-1">
+        <TouchableOpacity
+          className={`flex-1 py-2 rounded-md items-center ${
+            searchData.bookingType === 'daily' ? 'bg-white shadow-sm' : ''
+          }`}
+          onPress={() => handleBookingTypeChange('daily')}
+          activeOpacity={0.7}
+        >
+          <Text 
+            className={`text-sm ${searchData.bookingType === 'daily' ? 'text-gray-900' : 'text-gray-600'}`} 
+            style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+          >
+            Daily
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          className={`flex-1 py-2 rounded-md items-center ${
+            searchData.bookingType === 'hourly' ? 'bg-white shadow-sm' : ''
+          }`}
+          onPress={() => handleBookingTypeChange('hourly')}
+          activeOpacity={0.7}
+        >
+          <Text 
+            className={`text-sm ${searchData.bookingType === 'hourly' ? 'text-gray-900' : 'text-gray-600'}`} 
+            style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+          >
+            Hourly
+          </Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  ), [searchData.bookingType, handleBookingTypeChange]);
+
+  // Memoize form fields to prevent unnecessary re-renders
+  const FormFields = useMemo(() => (
+    <View className="px-4">
+      {/* Booking Type Tabs */}
+      {BookingTypeTabs}
+
+      {/* Where */}
+      <View className="mb-6">
+        <Text 
+          className="text-sm text-slate-900 mb-2" 
+          style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+        >
+          Where
+        </Text>
+        <LocationSearchInput
+          value={searchData.location?.name || ''}
+          googleApiKey='AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM'
+          onLocationSelect={handleLocationSelect}
+          placeholder="Search destinations"
+        />
+      </View>
+
+      {/* When - Date Range for Daily */}
+      {searchData.bookingType === 'daily' && (
+        <View className="mb-6">
+          <Text 
+            className="text-sm text-slate-900 mb-2" 
+            style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+          >
+            When
+          </Text>
+          <DateRangePicker
+            value={searchData.dateRange}
+            onDateRangeSelect={handleDateRangeSelect}
+            placeholder="Check-in - Check-out"
+          />
+        </View>
+      )}
+
+      {/* When - Time Range for Hourly */}
+      {searchData.bookingType === 'hourly' && (
+        <View className="mb-6">
+          <Text 
+            className="text-sm text-slate-900 mb-2" 
+            style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+          >
+            Time Range
+          </Text>
+          <TimeRangePicker
+            value={searchData.timeRange}
+            onTimeRangeSelect={handleTimeRangeSelect}
+            placeholder="Start time - End time"
+            maxHours={12}
+          />
+        </View>
+      )}
+
+      {/* Who */}
+      <View className="mb-6">
+        <Text 
+          className="text-sm text-slate-900 mb-2" 
+          style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+        >
+          Who
+        </Text>
+        <GuestSelector
+          value={searchData.guests}
+          onGuestCountChange={handleGuestCountChange}
+          placeholder="1 guest"
+        />
+      </View>
+    </View>
+  ), [
+    BookingTypeTabs,
+    searchData.location?.name,
+    searchData.bookingType,
+    searchData.dateRange,
+    searchData.timeRange,
+    searchData.guests,
+    handleLocationSelect,
+    handleDateRangeSelect,
+    handleTimeRangeSelect,
+    handleGuestCountChange
+  ]);
 
   return (
     <ActionSheet 
@@ -148,6 +300,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
               <TouchableOpacity 
                 onPress={handleClose} 
                 className="flex size-10 items-center justify-center rounded-full bg-slate-100"
+                activeOpacity={0.7}
               >
                 <X size={24} color="#1E293B" />
               </TouchableOpacity>
@@ -161,99 +314,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
             </View>
 
             {/* Form Fields */}
-            <View className="px-4">
-              {/* Booking Type Tabs */}
-              <View className="mb-6">
-                <View className="flex-row bg-gray-100 rounded-lg p-1">
-                  <TouchableOpacity
-                    className={`flex-1 py-2 rounded-md items-center ${
-                      searchData.bookingType === 'daily' ? 'bg-white shadow-sm' : ''
-                    }`}
-                    onPress={() => handleBookingTypeChange('daily')}
-                  >
-                    <Text className={`text-sm ${searchData.bookingType === 'daily' ? 'text-gray-900' : 'text-gray-600'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                      Daily
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    className={`flex-1 py-2 rounded-md items-center ${
-                      searchData.bookingType === 'hourly' ? 'bg-white shadow-sm' : ''
-                    }`}
-                    onPress={() => handleBookingTypeChange('hourly')}
-                  >
-                    <Text className={`text-sm ${searchData.bookingType === 'hourly' ? 'text-gray-900' : 'text-gray-600'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                      Hourly
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-
-              {/* Where */}
-              <View className="mb-6">
-                <Text 
-                  className="text-sm text-slate-900 mb-2" 
-                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                >
-                  Where
-                </Text>
-                <LocationSearchInput
-                  value={searchData.location?.name || ''}
-                  googleApiKey='AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM'
-                  onLocationSelect={handleLocationSelect}
-                  placeholder="Search destinations"
-                />
-              </View>
-
-              {/* When - Date Range for Daily */}
-              {searchData.bookingType === 'daily' && (
-                <View className="mb-6">
-                  <Text 
-                    className="text-sm text-slate-900 mb-2" 
-                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                  >
-                    When
-                  </Text>
-                  <DateRangePicker
-                    value={searchData.dateRange}
-                    onDateRangeSelect={handleDateRangeSelect}
-                    placeholder="Check-in - Check-out"
-                  />
-                </View>
-              )}
-
-              {/* When - Time Range for Hourly */}
-              {searchData.bookingType === 'hourly' && (
-                <View className="mb-6">
-                  <Text 
-                    className="text-sm text-slate-900 mb-2" 
-                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                  >
-                    Time Range
-                  </Text>
-                  <TimeRangePicker
-                    value={searchData.timeRange}
-                    onTimeRangeSelect={handleTimeRangeSelect}
-                    placeholder="Start time - End time"
-                    maxHours={12}
-                  />
-                </View>
-              )}
-
-              {/* Who */}
-              <View className="mb-6">
-                <Text 
-                  className="text-sm text-slate-900 mb-2" 
-                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                >
-                  Who
-                </Text>
-                <GuestSelector
-                  value={searchData.guests}
-                  onGuestCountChange={handleGuestCountChange}
-                  placeholder="1 guest"
-                />
-              </View>
-            </View>
+            {FormFields}
           </View>
 
           {/* Footer with Search Button */}
@@ -273,6 +334,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 elevation: 8,
               }}
               disabled={!isSearchEnabled || isSearching}
+              activeOpacity={0.8}
             >
               {isSearching ? (
                 <View className="flex-row items-center gap-2">
