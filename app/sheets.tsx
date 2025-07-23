@@ -36,4 +36,11 @@ export const SHEET_IDS = {
   ADDON_SELECTION: 'addon-selection'
 } as const;
 
+// export type SheetId = typeof SHEET_IDS[keyof typeof SHEET_IDS];
+
 export type SheetId = typeof SHEET_IDS[keyof typeof SHEET_IDS];
+
+// Default export required by expo-router
+// export default function Sheets() {
+//   return null;
+// }

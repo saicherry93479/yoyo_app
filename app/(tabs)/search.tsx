@@ -173,8 +173,8 @@ export default function SearchScreen() {
         city: searchData.location?.name || '',
         radius: 50,
         dateRange: {
-          startDate: searchData.dateRange?.startDate || new Date().toISOString(),
-          endDate: searchData.dateRange?.endDate || new Date().toISOString(),
+          startDate: searchData.dateRange?.startDate || searchData?.timeRange?.startDateTime || new Date().toISOString(),
+          endDate: searchData.dateRange?.endDate || searchData?.timeRange?.endDateTime || new Date().toISOString(),
         },
         guests: searchData.guests || { adults: 1, children: 0, infants: 0 },
         priceRange: searchFilters.priceRange || { min: 0, max: 999999 },
@@ -188,6 +188,8 @@ export default function SearchScreen() {
       console.log('Search request body:', JSON.stringify(requestBody, null, 2));
 
       const response = await apiService.post('/search/search', requestBody);
+
+      console.log('response ',response)
 
       console.log('Search response:', JSON.stringify(response, null, 2));
 
