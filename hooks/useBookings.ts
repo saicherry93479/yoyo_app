@@ -45,7 +45,7 @@ export function useBookings() {
 
       const response = await apiService.get(endpoint);
 
-      console.log('trips response ',response)
+      console.log('trips response ',JSON.stringify(response.data.bookings))
 
       if (response.success) {
         setBookings(response.data.bookings || []);

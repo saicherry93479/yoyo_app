@@ -240,17 +240,31 @@ export default function SearchScreen() {
       key={hotel.id}
       className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
       onPress={() => {
+
+        console.log('currentSearchData ',currentSearchData)
         const searchParams = new URLSearchParams();
         if (currentSearchData?.guests) {
           const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
           searchParams.append('guests', totalGuests.toString());
         }
-        if (currentSearchData?.dateRange?.startDate) {
-          searchParams.append('checkIn', currentSearchData.dateRange.startDate);
+        if(currentSearchData.bookingType==='hourly'){
+          if (currentSearchData.timeRange?.startDateTime) {
+            searchParams.append('checkIn', currentSearchData.timeRange?.startDateTime);
+          }
+          if (currentSearchData.timeRange?.endDateTime) {
+            searchParams.append('checkOut', currentSearchData.timeRange?.endDateTime);
+          }
+
+        }else{
+          if (currentSearchData?.dateRange?.startDate) {
+            searchParams.append('checkIn', currentSearchData.dateRange.startDate);
+          }
+          if (currentSearchData?.dateRange?.endDate) {
+            searchParams.append('checkOut', currentSearchData.dateRange.endDate);
+          }
         }
-        if (currentSearchData?.dateRange?.endDate) {
-          searchParams.append('checkOut', currentSearchData.dateRange.endDate);
-        }
+        searchParams.append('bookingType',currentSearchData.bookingType)
+        
         
         const queryString = searchParams.toString();
         const url = queryString ? `/hotels/${hotel.id}?${queryString}` : `/hotels/${hotel.id}`;

@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useNavigation, router } from 'expo-router';
 import { SheetManager } from 'react-native-actions-sheet';
-import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, X } from 'lucide-react-native';
+import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, X, Plus } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { MockBooking } from '@/services/mockData';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -108,6 +108,18 @@ const BookingDetails = () => {
   };
 
   const generateReceiptHTML = (booking: MockBooking) => {
+    const addonsHTML = booking.addons && booking.addons.length > 0 ? `
+      <div class="section">
+        <div class="section-title">Add-ons</div>
+        ${booking.addons.map(addon => `
+          <div class="detail-row">
+            <span>${addon.name} (x${addon.quantity}):</span>
+            <span>₹${addon.totalPrice.toLocaleString()}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
+
     return `
       <!DOCTYPE html>
       <html>
@@ -198,6 +210,8 @@ const BookingDetails = () => {
             <span>₹${booking.totalAmount.toLocaleString()}</span>
           </div>
         </div>
+        
+        ${addonsHTML}
         
         <div class="section">
           <div class="section-title">Amenities</div>
@@ -435,6 +449,42 @@ const BookingDetails = () => {
           </View>
         </View>
 
+        {/* Add-ons Section */}
+        {booking.addons && booking.addons.length > 0 && (
+          <View className="px-6 py-6 border-t border-gray-100">
+            <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Add-ons
+            </Text>
+            <View className="gap-4">
+              {booking.addons.map((addon, index) => (
+                <View key={addon.id} className="flex-row items-center bg-gray-50 p-4 rounded-lg">
+                  <Image
+                    source={{ uri: addon.image }}
+                    className="w-16 h-16 rounded-lg"
+                    style={{ resizeMode: 'cover' }}
+                  />
+                  <View className="ml-4 flex-1">
+                    <Text className="text-base text-gray-900 mb-1" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                      {addon.name}
+                    </Text>
+                    <Text className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                      {addon.description}
+                    </Text>
+                    <View className="flex-row items-center justify-between">
+                      <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                        Quantity: {addon.quantity}
+                      </Text>
+                      <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                        ₹{addon.totalPrice.toLocaleString()}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* Price Breakdown */}
         <View className="px-6 py-6 border-t border-gray-100">
           <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -450,6 +500,19 @@ const BookingDetails = () => {
                 ₹{booking.priceBreakdown.subtotal.toLocaleString()}
               </Text>
             </View>
+            
+            {/* Add-ons in price breakdown */}
+            {booking.addons && booking.addons.length > 0 && booking.addons.map((addon) => (
+              <View key={addon.id} className="flex-row justify-between">
+                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  {addon.name} (x{addon.quantity})
+                </Text>
+                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  ₹{addon.totalPrice.toLocaleString()}
+                </Text>
+              </View>
+            ))}
+            
             <View className="flex-row justify-between">
               <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 Taxes and fees

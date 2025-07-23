@@ -42,3 +42,5 @@ android/
 .vscode/
 .env
 package-lock.json
+
+.idea

@@ -73,6 +73,15 @@ export default function MyTripsApp() {
     });
   };
 
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -88,15 +97,35 @@ export default function MyTripsApp() {
     }
   };
 
-  const calculateNights = (checkIn: string, checkOut: string) => {
+  const calculateDuration = (checkIn: string, checkOut: string, bookingType: string) => {
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
-    const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    
+    if (bookingType === 'hourly') {
+      const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+      const hours = Math.ceil(timeDiff / (1000 * 3600));
+      return `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+    } else {
+      const timeDiff = checkOutDate.getTime() - checkInDate.getTime();
+      const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+      return `${nights} ${nights === 1 ? 'night' : 'nights'}`;
+    }
+  };
+
+  const getBookingTypeLabel = (bookingType: string) => {
+    switch (bookingType) {
+      case 'hourly':
+        return 'Hourly Booking';
+      case 'daily':
+      case 'overnight':
+      default:
+        return 'Overnight Stay';
+    }
   };
 
   const renderBookingCard = (booking: any) => {
-    const nights = calculateNights(booking.checkInDate, booking.checkOutDate);
+    const duration = calculateDuration(booking.checkInDate, booking.checkOutDate, booking.bookingType);
+    const isHourly = booking.bookingType === 'hourly';
     
     return (
       <TouchableOpacity
@@ -105,7 +134,6 @@ export default function MyTripsApp() {
         onPress={() => router.push(`/booking-details/${booking.id}`)}
       >
         <View className="relative">
-          {/* You'll need to get hotel image from hotel details API */}
           <Image
             source={{ 
               uri: "https://images.pexels.com/photos/338504/pexels-photo-338504.jpeg?auto=compress&cs=tinysrgb&w=800" 
@@ -118,43 +146,63 @@ export default function MyTripsApp() {
               {booking.status}
             </Text>
           </View>
+          {/* Booking Type Badge */}
+          <View className="absolute top-3 left-3 px-2 py-1 rounded-full bg-white/90">
+            <Text className="text-xs text-gray-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+              {getBookingTypeLabel(booking.bookingType)}
+            </Text>
+          </View>
         </View>
 
         <View className="p-4">
-          {/* You'll need to fetch hotel details to get name and location */}
+          {/* Hotel Name and Location */}
           <Text className="text-lg text-gray-900 mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            Hotel Booking #{booking.id.slice(-8)}
+            {booking.hotel?.name || `Hotel Booking #${booking.id.slice(-8)}`}
           </Text>
           <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            Hotel ID: {booking.hotelId}
+            {booking.hotel?.city || `Hotel ID: ${booking.hotelId}`}
+            {booking.room?.name && ` • ${booking.room.name}`}
           </Text>
 
+          {/* Date and Time Information */}
           <View className="flex-row items-center justify-between mb-3">
             <View>
               <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Check-in
+                {isHourly ? 'Start Time' : 'Check-in'}
               </Text>
               <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                 {formatDate(booking.checkInDate)}
               </Text>
+              {isHourly && (
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  {formatTime(booking.checkInDate)}
+                </Text>
+              )}
             </View>
             <View className="w-8 h-px bg-gray-300" />
             <View>
               <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Check-out
+                {isHourly ? 'End Time' : 'Check-out'}
               </Text>
               <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                 {formatDate(booking.checkOutDate)}
               </Text>
+              {isHourly && (
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  {formatTime(booking.checkOutDate)}
+                </Text>
+              )}
             </View>
-            <View>
-              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Guests
-              </Text>
-              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                {booking.guests}
-              </Text>
-            </View>
+            {booking.guests && (
+              <View>
+                <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Guests
+                </Text>
+                <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  {booking.guests}
+                </Text>
+              </View>
+            )}
           </View>
 
           <View className="flex-row items-center justify-between pt-3 border-t border-gray-100">
@@ -165,10 +213,17 @@ export default function MyTripsApp() {
               <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 ₹{booking.totalAmount.toLocaleString()}
               </Text>
+              {/* Payment Status */}
+              {booking.paymentStatus && (
+                <Text className={`text-xs mt-1 ${booking.paymentStatus === 'pending' ? 'text-orange-600' : 'text-green-600'}`} 
+                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Payment: {booking.paymentStatus}
+                </Text>
+              )}
             </View>
             <View className="bg-gray-50 px-3 py-1 rounded">
               <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                {nights} nights
+                {duration}
               </Text>
             </View>
           </View>

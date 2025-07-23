@@ -30,6 +30,7 @@ const CheckoutScreen = () => {
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
 
+
     // Safe parsing of selectedAddons
     const parseSelectedAddons = () => {
         try {
@@ -88,10 +89,10 @@ const CheckoutScreen = () => {
       totalAmount: parseFloat(String(params.totalAmount || '0')) || 0,
       address: String(params.address || ''),
       image: String(params.image || ''),
-      bookingType: String(params.bookingType || 'daily')
+      bookingType: String(params.bookingType || 'daily') as 'daily' | 'hourly'
     };
 
-useLayoutEffect(() => {
+    useLayoutEffect(() => {
         navigation.setOptions({
           headerShadowVisible: false,
           headerTitle: () => (
@@ -104,7 +105,7 @@ useLayoutEffect(() => {
             </TouchableOpacity>
           ),
         });
-      }, [navigation]);
+    }, [navigation]);
 
     // Validation function for guest information
     const validateGuestInfo = () => {
@@ -169,6 +170,7 @@ useLayoutEffect(() => {
           specialRequests: '', // Can be added later if needed,
           couponCode: appliedCoupon ? appliedCoupon.code : null, 
           selectedAddons: selectedAddons,
+          bookingType: bookingData.bookingType, // Include booking type in request
         }; 
 
         console.log('booking request ', bookingRequest);
@@ -179,7 +181,7 @@ useLayoutEffect(() => {
         if (response.success) {
           Alert.alert(
             'Booking Confirmed!',
-            'Your booking has been successfully created.',
+            `Your ${bookingData.bookingType} booking has been successfully created.`,
             [
               {
                 text: 'View Booking',
@@ -201,7 +203,7 @@ useLayoutEffect(() => {
     };
 
     // Helper function to format date
-    const formatDate = (dateString) => {
+    const formatDate = (dateString: string) => {
       const date = new Date(dateString);
       return date.toLocaleDateString('en-US', { 
         weekday: 'short', 
@@ -210,19 +212,50 @@ useLayoutEffect(() => {
       });
     };
 
-    // Calculate nights
-    const calculateNights = () => {
-      const checkIn = new Date(bookingData.checkIn);
-      const checkOut = new Date(bookingData.checkOut);
-      const timeDiff = checkOut.getTime() - checkIn.getTime();
-      return Math.ceil(timeDiff / (1000 * 3600 * 24));
+    // Helper function to format date and time for hourly bookings
+    const formatDateTime = (dateString: string) => {
+      const date = new Date(dateString);
+      return date.toLocaleString('en-US', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
     };
 
-    const nights = calculateNights();
-    const subtotal = bookingData.totalAmount * nights;
-    const totalAddonsForStay = addonTotal * nights;
+    // Calculate duration and pricing based on booking type
+    const calculateBookingMetrics = () => {
+      const checkIn = new Date(bookingData.checkIn);
+      const checkOut = new Date(bookingData.checkOut);
+      
+      if (bookingData.bookingType === 'daily') {
+        const timeDiff = checkOut.getTime() - checkIn.getTime();
+        const nights = Math.ceil(timeDiff / (1000 * 3600 * 24));
+        return {
+          duration: nights,
+          durationLabel: `${nights} ${nights === 1 ? 'night' : 'nights'}`,
+          subtotal: bookingData.totalAmount * nights,
+          addonTotalForBooking: addonTotal * nights
+        };
+      } else {
+        // Hourly booking
+        const timeDiff = checkOut.getTime() - checkIn.getTime();
+        const hours = Math.ceil(timeDiff / (1000 * 3600));
+        return {
+          duration: hours,
+          durationLabel: `${hours} ${hours === 1 ? 'hour' : 'hours'}`,
+          subtotal: bookingData.totalAmount * hours, // For hourly, totalAmount is already calculated
+          addonTotalForBooking: addonTotal // For hourly, don't multiply addons
+        };
+      }
+    };
+
+    const bookingMetrics = calculateBookingMetrics();
+    const { duration, durationLabel, subtotal, addonTotalForBooking } = bookingMetrics;
+    
     const taxes = 0; // As requested, keeping taxes as 0
-    const total = subtotal + totalAddonsForStay + taxes - discountAmount;
+    const total = subtotal + addonTotalForBooking + taxes - discountAmount;
 
     const handleCouponApplied = (validationData: any) => {
         setAppliedCoupon(validationData.coupon);
@@ -239,7 +272,7 @@ useLayoutEffect(() => {
             payload: {
                 hotelId: bookingData.hotelId,
                 roomTypeId: bookingData.roomId,
-                orderAmount: subtotal + totalAddonsForStay,
+                orderAmount: subtotal + addonTotalForBooking,
                 onCouponApplied: handleCouponApplied,
             },
         });
@@ -251,12 +284,6 @@ useLayoutEffect(() => {
             <Path d="M35 1c1.1 0 2 .9 2 2v18c0 1.1-.9 2-2 2H3c-1.1 0-2-.9-2-2V3c0-1.1.9-2 2-2h32" fill="#fff" />
             <Path d="M28.3 10.1H28c-.4 1-.7 1.5-1 3h1.9c-.3-1.5-.3-2.2-.6-3zm-5.5 7.5c.3-1.1.5-1.8.6-2.2l-2.8-5.3h2.2l1.2 2.8 1.1-2.8h2l-2.1 6.6c-.2.6-.4 1.1-.7 1.6l-1.9-1.6c.2-.5.4-.9.5-1.3zm-14.2-7.5h-2.2l-3.6 8.9c-.2.5-.3.7-.3.7h1.6l.5-1.4h2.5l.3 1.4h1.9l-2.1-8.9zm-2.2 5.6l1-2.5.8 2.5h-1.8z" fill="#01579B" />
             <Path d="M12.2 12.2c-.3-2.5-.9-4.8-2.8-4.8s-2.5 2.3-2.8 4.8c.2-2.3.8-4.1 2.3-4.1s2.1 1.8 2.3 4.1zm-3.9 5.3c.3.4.8.6 1.3.6s1-.2 1.3-.6c-.2.4-.6.7-1.3.7s-1.1-.3-1.3-.7z" fill="#F79E1B" />
-        </Svg>
-    );
-
-    const ChevronIcon = () => (
-        <Svg width="20" height="20" viewBox="0 0 256 256" fill="currentColor">
-            <Path d="M96,48H208a8,8,0,0,0,0-16H96a8,8,0,0,0,0,16Zm112,56H96a8,8,0,0,0,0,16H208a8,8,0,0,0,0-16Zm0,64H96a8,8,0,0,0,0,16H208a8,8,0,0,0,0-16ZM48,80a20,20,0,1,0-20-20A20,20,0,0,0,48,80Zm0,64a20,20,0,1,0-20-20A20,20,0,0,0,48,144Zm0,64a20,20,0,1,0-20-20A20,20,0,0,0,48,208Z" />
         </Svg>
     );
 
@@ -289,8 +316,8 @@ useLayoutEffect(() => {
                                 </View>
                                 <Text className="text-gray-500 text-sm ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                                     {bookingData.bookingType === 'daily' 
-                                      ? `${nights} ${nights === 1 ? 'night' : 'nights'}`
-                                      : 'Hourly booking'
+                                      ? durationLabel
+                                      : `${durationLabel} booking`
                                     }
                                 </Text>
                             </View>
@@ -401,7 +428,7 @@ useLayoutEffect(() => {
                                                 ₹{(addon.price * addon.quantity).toLocaleString()}
                                             </Text>
                                             <Text className="text-xs text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                                per night
+                                                {bookingData.bookingType === 'daily' ? 'per night' : 'per booking'}
                                             </Text>
                                         </View>
                                     </View>
@@ -410,42 +437,34 @@ useLayoutEffect(() => {
                         </View>
                     )}
 
-                    {/* Dates */}
+                    {/* Dates/Times */}
                     <View className="flex-row bg-white p-4 rounded-2xl border border-gray-100 shadow-sm mb-6">
                         <View className="flex-1">
-                            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-in</Text>
+                            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                                {bookingData.bookingType === 'daily' ? 'Check-in' : 'Start Time'}
+                            </Text>
                             <Text className="text-[#161312] text-lg mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                                 {bookingData.bookingType === 'daily' 
                                   ? formatDate(bookingData.checkIn)
-                                  : new Date(bookingData.checkIn).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })
+                                  : formatDateTime(bookingData.checkIn)
                                 }
                             </Text>
                             <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                {bookingData.bookingType === 'daily' ? 'After 2:00 PM' : 'Start time'}
+                                {bookingData.bookingType === 'daily' ? 'After 2:00 PM' : 'Start'}
                             </Text>
                         </View>
                         <View className="flex-1">
-                            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-out</Text>
+                            <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                                {bookingData.bookingType === 'daily' ? 'Check-out' : 'End Time'}
+                            </Text>
                             <Text className="text-[#161312] text-lg mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                                 {bookingData.bookingType === 'daily' 
                                   ? formatDate(bookingData.checkOut)
-                                  : new Date(bookingData.checkOut).toLocaleString('en-US', {
-                                      month: 'short',
-                                      day: 'numeric',
-                                      hour: '2-digit',
-                                      minute: '2-digit',
-                                      hour12: true
-                                    })
+                                  : formatDateTime(bookingData.checkOut)
                                 }
                             </Text>
                             <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                {bookingData.bookingType === 'daily' ? 'Before 12:00 PM' : 'End time'}
+                                {bookingData.bookingType === 'daily' ? 'Before 12:00 PM' : 'End'}
                             </Text>
                         </View>
                         <View className="items-center justify-center">
@@ -464,34 +483,26 @@ useLayoutEffect(() => {
 
                         <View className="flex-row justify-between items-center mb-3">
                             <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                ₹{bookingData.totalAmount.toLocaleString()} x {bookingData.bookingType === 'daily' 
-                                  ? `${nights} ${nights === 1 ? 'night' : 'nights'}`
-                                  : 'hourly rate'
+                                {bookingData.bookingType === 'daily' 
+                                  ? `₹${bookingData.totalAmount.toLocaleString()} x ${durationLabel}`
+                                  : `₹${bookingData.totalAmount.toLocaleString()} x (${durationLabel})`
                                 }
                             </Text>
                             <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                ₹{bookingData.bookingType === 'daily' ? subtotal.toLocaleString() : bookingData.totalAmount.toLocaleString()}
+                                ₹{subtotal.toLocaleString()}
                             </Text>
                         </View>
 
-                        {totalAddonsForStay > 0 && bookingData.bookingType === 'daily' && (
+                        {addonTotalForBooking > 0 && (
                             <View className="flex-row justify-between items-center mb-3">
                                 <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    Add-ons x {nights} {nights === 1 ? 'night' : 'nights'}
+                                    {bookingData.bookingType === 'daily' 
+                                      ? `Add-ons x ${durationLabel}`
+                                      : 'Add-ons'
+                                    }
                                 </Text>
                                 <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                    ₹{totalAddonsForStay.toLocaleString()}
-                                </Text>
-                            </View>
-                        )}
-
-                        {selectedAddons.length > 0 && bookingData.bookingType === 'hourly' && (
-                            <View className="flex-row justify-between items-center mb-3">
-                                <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    Add-ons (hourly rate)
-                                </Text>
-                                <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                    ₹{addonTotal.toLocaleString()}
+                                    ₹{addonTotalForBooking.toLocaleString()}
                                 </Text>
                             </View>
                         )}
@@ -556,11 +567,10 @@ useLayoutEffect(() => {
                             Cancellation Policy
                         </Text>
                         <Text className="text-gray-600 text-sm leading-relaxed" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                            Cancel before{' '}
-                            <Text className="font-semibold text-gray-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                Jul 10, 2024
-                            </Text>
-                            {' '}for a partial refund. After that, this reservation is non-refundable.{' '}
+                            {bookingData.bookingType === 'daily' 
+                              ? `Cancel before Jul 10, 2024 for a partial refund. After that, this reservation is non-refundable.`
+                              : `Hourly bookings can be cancelled up to 2 hours before the start time for a partial refund.`
+                            }{' '}
                             <Text className="text-black underline" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                                 Learn more
                             </Text>
@@ -579,7 +589,7 @@ useLayoutEffect(() => {
                             <LoadingSpinner size="small" color="white" />
                         ) : (
                             <Text className="text-white text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                Confirm Booking
+                                Confirm {bookingData.bookingType === 'daily' ? 'Booking' : 'Hourly Booking'}
                             </Text>
                         )}
                     </TouchableOpacity>

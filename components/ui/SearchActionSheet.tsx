@@ -55,14 +55,44 @@ interface SearchActionSheetProps {
 
 export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
   const activeTabRef = useRef(0);
-  const [searchData, setSearchData] = useState<SearchData>({
-    location: null,
-    dateRange: { startDate: null, endDate: null },
-    timeRange: { selectedDate: null, startDateTime: null, endDateTime: null, startTime: null, endTime: null },
-    guests: { adults: 1, children: 0, infants: 0 },
-    bookingType: 'daily'
-  });
+
+  // Create proper default values
+  const createDefaultSearchData = (): SearchData => {
+    const tomorrow = new Date(Date.now() + 24*60*60*1000);
+    const dayAfterTomorrow = new Date(Date.now() + 3*24*60*60*1000);
+    const tomorrowDateString = tomorrow.toISOString().split('T')[0];
+    
+    // Default time slots (9 AM to 5 PM tomorrow)
+    const defaultStartTime = new Date(tomorrow);
+    defaultStartTime.setHours(9, 0, 0, 0);
+    const defaultEndTime = new Date(tomorrow);
+    defaultEndTime.setHours(17, 0, 0, 0);
+
+    return {
+      location: null,
+      dateRange: { 
+        startDate: tomorrow.toISOString(), 
+        endDate: dayAfterTomorrow.toISOString() 
+      },
+      timeRange: { 
+        selectedDate: tomorrowDateString,
+        startDateTime: defaultStartTime.toISOString(),
+        endDateTime: defaultEndTime.toISOString(),
+        startTime: '09:00',
+        endTime: '17:00'
+      },
+      guests: { adults: 1, children: 0, infants: 0 },
+      bookingType: 'daily'
+    };
+  };
+
+  const [searchData, setSearchData] = useState<SearchData>(createDefaultSearchData);
   const [isSearching, setIsSearching] = useState(false);
+
+  // Initialize tab styles on mount
+  useEffect(() => {
+    setTimeout(() => updateTabStyles(0), 100);
+  }, []);
 
   const isSearchEnabled = searchData.location && 
     (activeTabRef.current === 0 
@@ -70,9 +100,9 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       : (searchData.timeRange.selectedDate && searchData.timeRange.startDateTime && searchData.timeRange.endDateTime)
     );
 
-    useEffect(()=>{
-      console.log('searchData ',searchData)
-    },[searchData])
+  useEffect(() => {
+    console.log('searchData ', searchData);
+  }, [searchData]);
 
   const updateTabStyles = (newTab: number) => {
     // Get references to the tab elements
@@ -157,7 +187,54 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     console.log('tab is ', tab);
     activeTabRef.current = tab;
     updateTabStyles(tab);
-    setSearchData(prev => ({ ...prev, bookingType: tab === 0 ? 'daily' : 'hourly' }));
+    
+    setSearchData(prev => {
+      const newBookingType = tab === 0 ? 'daily' : 'hourly';
+      
+      // If switching to hourly and timeRange is incomplete, set defaults
+      if (tab === 1) {
+        const tomorrow = new Date(Date.now() + 24*60*60*1000);
+        const tomorrowDateString = tomorrow.toISOString().split('T')[0];
+        
+        const defaultStartTime = new Date(tomorrow);
+        defaultStartTime.setHours(9, 0, 0, 0);
+        const defaultEndTime = new Date(tomorrow);
+        defaultEndTime.setHours(17, 0, 0, 0);
+
+        const updatedTimeRange = {
+          selectedDate: prev.timeRange.selectedDate || tomorrowDateString,
+          startDateTime: prev.timeRange.startDateTime || defaultStartTime.toISOString(),
+          endDateTime: prev.timeRange.endDateTime || defaultEndTime.toISOString(),
+          startTime: prev.timeRange.startTime || '09:00',
+          endTime: prev.timeRange.endTime || '17:00'
+        };
+
+        return { 
+          ...prev, 
+          bookingType: newBookingType,
+          timeRange: updatedTimeRange
+        };
+      }
+      
+      // If switching to daily, ensure dateRange has values
+      if (tab === 0) {
+        const tomorrow = new Date(Date.now() + 24*60*60*1000);
+        const dayAfterTomorrow = new Date(Date.now() + 3*24*60*60*1000);
+        
+        const updatedDateRange = {
+          startDate: prev.dateRange.startDate || tomorrow.toISOString(),
+          endDate: prev.dateRange.endDate || dayAfterTomorrow.toISOString()
+        };
+
+        return { 
+          ...prev, 
+          bookingType: newBookingType,
+          dateRange: updatedDateRange
+        };
+      }
+
+      return { ...prev, bookingType: newBookingType };
+    });
   };
 
   const handleClose = () => {
@@ -249,18 +326,11 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 <TouchableOpacity
                   ref={dailyTabRef}
                   onPress={() => handleTabPress(0)}
-                  className="flex-1 py-3 px-4 rounded-lg bg-white shadow-sm"
-                  style={{
-                    shadowColor: '#000',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 2,
-                    elevation: 2,
-                  }}
+                  className="flex-1 py-3 px-4 rounded-lg"
                 >
                   <Text
                     ref={dailyTextRef}
-                    className="text-center text-sm text-slate-900"
+                    className="text-center text-sm"
                     style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                   >
                     Daily
@@ -270,18 +340,11 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 <TouchableOpacity
                   ref={hourlyTabRef}
                   onPress={() => handleTabPress(1)}
-                  className="flex-1 py-3 px-4 rounded-lg bg-transparent"
-                  style={{
-                    shadowColor: 'transparent',
-                    shadowOffset: { width: 0, height: 1 },
-                    shadowOpacity: 0.1,
-                    shadowRadius: 2,
-                    elevation: 0,
-                  }}
+                  className="flex-1 py-3 px-4 rounded-lg"
                 >
                   <Text
                     ref={hourlyTextRef}
-                    className="text-center text-sm text-slate-600"
+                    className="text-center text-sm"
                     style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                   >
                     Hourly
@@ -290,12 +353,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
               </View>
             </View>
 
-            <TouchableOpacity onPress={()=>{
-              handleClose();
-              router.push('/(tabs)')
-              }} className="bg-[#171717] px-6 py-3 rounded-full">
-              <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book Now</Text>
-            </TouchableOpacity>
+       
 
             {/* Form Fields */}
             <View className="px-4">
