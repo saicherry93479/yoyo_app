@@ -298,7 +298,8 @@ const HotelDetails = () => {
       selectedAddons: JSON.stringify(selectedAddons),
       addonTotal: calculateAddonTotal(),
       address: hotel.address,
-      image: hotel.images?.[0] || 'https://via.placeholder.com/400x300'
+      image: hotel.images?.[0] || 'https://via.placeholder.com/400x300',
+      bookingType: searchParams.bookingType
     };
 
     console.log('bookingData ', bookingData);
