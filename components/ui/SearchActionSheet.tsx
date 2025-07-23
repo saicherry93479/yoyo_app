@@ -73,23 +73,23 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
 
   const handleSearch = useCallback(() => {
     if (!isSearchEnabled) return;
-    
+
     setIsSearching(true);
-    
+
     // Simulate search API call
     setTimeout(() => {
       // Pass the complete search data to the callback
       if (payload?.onSearch) {
         payload.onSearch(searchData);
       }
-      
+
       // Close the sheet first
       handleClose();
-      
+
       setIsSearching(false);
     }, 1000);
   }, [isSearchEnabled, payload, searchData, handleClose]);
-    
+
   const handleLocationSelect = useCallback((location: Location) => {
     setSearchData(prev => ({ ...prev, location }));
   }, []);
@@ -103,7 +103,17 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
   }, []);
 
   const handleBookingTypeChange = useCallback((bookingType: 'daily' | 'hourly') => {
-    setSearchData(prev => ({ ...prev, bookingType }));
+    try {
+      setSearchData(prev => ({ 
+        ...prev, 
+        bookingType,
+        // Reset time/date ranges when switching types to avoid conflicts
+        dateRange: bookingType === 'daily' ? prev.dateRange : { startDate: null, endDate: null },
+        timeRange: bookingType === 'hourly' ? prev.timeRange : { startTime: null, endTime: null }
+      }));
+    } catch (error) {
+      console.warn('Error changing booking type:', error);
+    }
   }, []);
 
   const handleGuestCountChange = useCallback((guests: GuestCounts) => {
