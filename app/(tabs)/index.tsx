@@ -299,6 +299,7 @@ export default function HotelBookingApp() {
       // For home screen, we'll use default values since there's no active search
       const searchParams = new URLSearchParams();
       searchParams.append('guests', '2'); // Default to 2 guests
+      searchParams.append('bookingType', 'daily'); // Default to daily
       
       // Default to next 2 nights
       const checkIn = new Date();

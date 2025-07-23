@@ -81,6 +81,9 @@ const transformHotel = (backendHotel: BackendHotel): MockHotel => {
     longitude: backendHotel.coordinates?.lng || 0,
     distance: backendHotel.distance ? `${backendHotel.distance.toFixed(1)} km away` : undefined,
     offer: backendHotel.offers && backendHotel.offers.length > 0 ? backendHotel.offers[0].title : undefined,
+    bookingType: backendHotel.pricing?.bookingType || 'daily',
+    perHour: backendHotel.pricing?.perHour || false,
+    perNight: backendHotel.pricing?.perNight || true,
     rooms: [], // Will be populated when needed
     reviews: [] // Will be populated when needed
   };

@@ -43,7 +43,8 @@ const HotelDetails = () => {
   const [searchParams, setSearchParams] = useState({
     guests: (guests as string) || '2',
     checkIn: (checkIn as string) || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-    checkOut: (checkOut as string) || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
+    checkOut: (checkOut as string) || new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+    bookingType: 'daily' // Default to daily, will be updated based on search params
   });
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedAddons, setSelectedAddons] = useState<SelectedAddon[]>([]);
@@ -167,16 +168,45 @@ const HotelDetails = () => {
             children: 0,
             infants: 0
           },
-          checkIn: searchParams.checkIn,
-          checkOut: searchParams.checkOut
+          dateRange: searchParams.bookingType === 'daily' ? {
+            startDate: searchParams.checkIn,
+            endDate: searchParams.checkOut
+          } : undefined,
+          timeRange: searchParams.bookingType === 'hourly' ? {
+            selectedDate: searchParams.checkIn.split('T')[0],
+            startDateTime: searchParams.checkIn,
+            endDateTime: searchParams.checkOut,
+            startTime: new Date(searchParams.checkIn).toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            }),
+            endTime: new Date(searchParams.checkOut).toLocaleTimeString('en-US', { 
+              hour: '2-digit', 
+              minute: '2-digit', 
+              hour12: true 
+            })
+          } : undefined,
+          bookingType: searchParams.bookingType
         },
         onSearch: (newSearchData) => {
           const totalGuests = newSearchData.guests.adults + newSearchData.guests.children;
-          setSearchParams({
-            guests: totalGuests.toString(),
-            checkIn: newSearchData.checkIn,
-            checkOut: newSearchData.checkOut
-          });
+          
+          if (newSearchData.bookingType === 'daily' && newSearchData.dateRange) {
+            setSearchParams({
+              guests: totalGuests.toString(),
+              checkIn: newSearchData.dateRange.startDate,
+              checkOut: newSearchData.dateRange.endDate,
+              bookingType: 'daily'
+            });
+          } else if (newSearchData.bookingType === 'hourly' && newSearchData.timeRange) {
+            setSearchParams({
+              guests: totalGuests.toString(),
+              checkIn: newSearchData.timeRange.startDateTime!,
+              checkOut: newSearchData.timeRange.endDateTime!,
+              bookingType: 'hourly'
+            });
+          }
         }
       }
     });
@@ -372,7 +402,7 @@ const HotelDetails = () => {
         <View className="border-t border-b border-stone-200 p-5">
           <View className="flex-row items-center justify-between mb-4">
             <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              Your stay
+              Your {searchParams.bookingType === 'daily' ? 'stay' : 'booking'}
             </Text>
             <TouchableOpacity
               onPress={handleEditSearch}
@@ -388,19 +418,37 @@ const HotelDetails = () => {
           <View className="flex-row items-center justify-between">
             <View>
               <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Check-in
+                {searchParams.bookingType === 'daily' ? 'Check-in' : 'Start time'}
               </Text>
               <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                {formatDate(searchParams.checkIn)}
+                {searchParams.bookingType === 'daily' 
+                  ? formatDate(searchParams.checkIn)
+                  : new Date(searchParams.checkIn).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })
+                }
               </Text>
             </View>
             <View className="w-8 h-px bg-stone-300" />
             <View>
               <Text className="text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Check-out
+                {searchParams.bookingType === 'daily' ? 'Check-out' : 'End time'}
               </Text>
               <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                {formatDate(searchParams.checkOut)}
+                {searchParams.bookingType === 'daily' 
+                  ? formatDate(searchParams.checkOut)
+                  : new Date(searchParams.checkOut).toLocaleString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      hour12: true
+                    })
+                }
               </Text>
             </View>
             <View>
@@ -450,10 +498,12 @@ const HotelDetails = () => {
                   <View className="flex-row items-center gap-3">
                     <View className="w-10 h-10 bg-stone-100 rounded-full items-center justify-center">
                       <Ionicons name="car" size={24} color="#57534e" />
-                    </View>
+            <Text className="text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              /{searchParams.bookingType === 'daily' ? 'night' : 'hour'}
+            </Text>
                     <Text className="text-stone-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Parking</Text>
                   </View>
-                </View>
+                Total: ₹{getTotalPrice().toLocaleString()}/{searchParams.bookingType === 'daily' ? 'night' : 'hour'}
               </>
             )}
           </View>
@@ -742,14 +792,14 @@ const HotelDetails = () => {
               No Rooms Available
             </Text>
             <Text className="text-sm text-stone-500 mb-4 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Try changing your check-in/check-out dates or number of guests for room availability
+              Try changing your {searchParams.bookingType === 'daily' ? 'check-in/check-out dates' : 'booking time'} or number of guests for room availability
             </Text>
             <TouchableOpacity
               onPress={handleEditSearch}
               className="bg-[#171717] px-6 py-3 rounded-full"
             >
               <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                Change Dates/Guests
+                Change {searchParams.bookingType === 'daily' ? 'Dates' : 'Time'}/Guests
               </Text>
             </TouchableOpacity>
           </View>
