@@ -57,7 +57,9 @@ export function TimeRangePicker({
     
     if (!selectedData.selectedDate) return slots;
     
-    const selectedDate = new Date(selectedData.selectedDate + 'T00:00:00');
+    // Create date in local timezone
+    const [year, month, day] = selectedData.selectedDate.split('-').map(Number);
+    const selectedDate = new Date(year, month - 1, day);
     
     // Generate 36 hours of slots (from 12:00 AM to next day 12:00 PM)
     for (let hour = 0; hour < 36; hour++) {
@@ -71,11 +73,18 @@ export function TimeRangePicker({
         const timeString = `${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
         const displayTime = formatTime(timeString, isNextDay);
         
+        // Use local datetime string instead of UTC
+        const localDateTime = slotDate.getFullYear() + '-' + 
+          String(slotDate.getMonth() + 1).padStart(2, '0') + '-' + 
+          String(slotDate.getDate()).padStart(2, '0') + 'T' + 
+          String(slotDate.getHours()).padStart(2, '0') + ':' + 
+          String(slotDate.getMinutes()).padStart(2, '0') + ':00';
+        
         slots.push({ 
           value: timeString,
           display: displayTime,
           actualHour: hour,
-          fullDateTime: slotDate.toISOString(),
+          fullDateTime: localDateTime,
           isNextDay
         });
       }
