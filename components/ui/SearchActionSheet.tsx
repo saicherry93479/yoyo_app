@@ -52,6 +52,8 @@ interface SearchActionSheetProps {
 }
 
 export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
+  // Note: Removed useNavigation hook as it's not available outside navigation context
+  // Navigation should be handled through the payload callbacks
   const [searchData, setSearchData] = useState<SearchData>(payload?.initialData || {
     location: null,
     dateRange: { startDate: null, endDate: null },
@@ -103,7 +105,17 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
   }, []);
 
   const handleBookingTypeChange = useCallback((bookingType: 'daily' | 'hourly') => {
-    setSearchData(prev => ({ ...prev, bookingType }));
+    try {
+      setSearchData(prev => ({
+        ...prev, 
+        bookingType,
+        // Reset time/date ranges when switching types to avoid conflicts
+        dateRange: bookingType === 'daily' ? prev.dateRange : { startDate: null, endDate: null },
+        timeRange: bookingType === 'hourly' ? prev.timeRange : { startTime: null, endTime: null }
+      }));
+    } catch (error) {
+      console.warn('Error changing booking type:', error);
+    }
   }, []);
 
   const handleGuestCountChange = useCallback((guests: GuestCounts) => {

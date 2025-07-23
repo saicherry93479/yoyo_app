@@ -1,5 +1,5 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, RefreshControl, Alert } from 'react-native';
 import { useNavigation, router, useLocalSearchParams } from 'expo-router';
 import { Search, MapPin, Star, ListFilter as Filter, Heart } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
@@ -337,6 +337,16 @@ export default function SearchScreen() {
     </TouchableOpacity>
   );
 
+  const handleSearchFromSheet = (searchData: any) => {
+    // Navigate to search tab with the search data
+    router.push({
+      pathname: '/(tabs)/search',
+      params: {
+        searchData: JSON.stringify(searchData)
+      }
+    });
+  };
+
   const renderEmptyState = () => (
     <View className="flex-1 items-center justify-center py-20 px-6">
       <Text className="text-6xl mb-6">🔍</Text>
@@ -350,15 +360,7 @@ export default function SearchScreen() {
         className="bg-[#FF5A5F] px-8 py-4 rounded-xl shadow-lg"
         onPress={() => SheetManager.show('search', {
           payload: {
-            onSearch: (searchData: any) => {
-              // Navigate to search tab with the search data
-              router.push({
-                pathname: '/(tabs)/search',
-                params: {
-                  searchData: JSON.stringify(searchData)
-                }
-              });
-            }
+            onSearch: handleSearchFromSheet
           }
         })}
       >
@@ -399,15 +401,7 @@ export default function SearchScreen() {
           className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
-              onSearch: (searchData: any) => {
-                // Navigate to search tab with the search data
-                router.push({
-                  pathname: '/(tabs)/search',
-                  params: {
-                    searchData: JSON.stringify(searchData)
-                  }
-                });
-              }
+              onSearch: handleSearchFromSheet,
             }
           })}
         >
@@ -447,7 +441,7 @@ export default function SearchScreen() {
           className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
           onPress={() => SheetManager.show('search', {
             payload: {
-              onSearch: handleSearch,
+              onSearch: handleSearchFromSheet,
               initialData: currentSearchData
             }
           })}

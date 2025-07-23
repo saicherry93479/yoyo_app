@@ -218,6 +218,16 @@ export default function HotelBookingApp() {
 
   // console.log('current data is ',currentData)
 
+  const handleSearchFromSheet = (searchData: any) => {
+    // Navigate to search tab with the search data
+    router.push({
+      pathname: '/(tabs)/search',
+      params: {
+        searchData: JSON.stringify(searchData)
+      }
+    });
+  };
+
   // Hide the default header
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -228,15 +238,7 @@ export default function HotelBookingApp() {
             className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
             onPress={() => SheetManager.show('search', {
               payload: {
-                onSearch: (searchData: any) => {
-                  // Navigate to search tab with the search data
-                  router.push({
-                    pathname: '/(tabs)/search',
-                    params: {
-                      searchData: JSON.stringify(searchData)
-                    }
-                  });
-                }
+                onSearch: handleSearchFromSheet
               }
             })}
           >
@@ -281,15 +283,7 @@ export default function HotelBookingApp() {
         className="px-6 py-3"
         onPress={() => SheetManager.show('search', {
           payload: {
-            onSearch: (searchData: any) => {
-              // Navigate to search tab with the search data
-              router.push({
-                pathname: '/(tabs)/search',
-                params: {
-                  searchData: JSON.stringify(searchData)
-                }
-              });
-            }
+            onSearch: handleSearchFromSheet
           }
         })}
       >
@@ -472,7 +466,11 @@ export default function HotelBookingApp() {
         </Text>
         <TouchableOpacity
           className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
-          onPress={() => SheetManager.show('search')}
+          onPress={() => SheetManager.show('search', {
+            payload: {
+              onSearch: handleSearchFromSheet
+            }
+          })}
         >
           <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             Search Hotels
