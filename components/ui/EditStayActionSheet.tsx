@@ -141,7 +141,7 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
           >
             <Text 
               className={`text-base ${
-                isApplyEnabled ? 'text-white' : 'text-gray-500'
+                isApplyEnabled ? 'bg-black' : 'bg-gray-300'
               }`}
               style={{ fontFamily: 'PlusJakartaSans-Bold' }}
             >

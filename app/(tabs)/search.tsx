@@ -354,7 +354,7 @@ export default function SearchScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          className="bg-black px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
               onSearch: handleSearch

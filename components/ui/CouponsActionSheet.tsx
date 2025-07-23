@@ -278,7 +278,7 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
             <TouchableOpacity
               onPress={() => manualCouponCode.trim() && validateCoupon(manualCouponCode.trim())}
               className={`px-6 py-3 rounded-lg ${
-                manualCouponCode.trim() ? 'bg-[#171717]' : 'bg-gray-300'
+                manualCouponCode.trim() ? 'bg-black' : 'bg-gray-300'
               }`}
               disabled={!manualCouponCode.trim() || validatingCoupon === manualCouponCode.trim()}
             >

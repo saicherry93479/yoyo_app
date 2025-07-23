@@ -189,11 +189,11 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
               onPress={handleSearch}
               className={`flex h-14 w-full items-center justify-center rounded-xl shadow-lg ${
                 isSearchEnabled && !isSearching 
-                  ? 'bg-[#FF5A5F]' 
+                  ? 'bg-black' 
                   : 'bg-gray-300'
               }`}
               style={{
-                shadowColor: isSearchEnabled ? '#FF5A5F' : '#000',
+                shadowColor: isSearchEnabled ? '#000000' : '#000',
                 shadowOffset: { width: 0, height: 4 },
                 shadowOpacity: isSearchEnabled ? 0.3 : 0.1,
                 shadowRadius: 8,

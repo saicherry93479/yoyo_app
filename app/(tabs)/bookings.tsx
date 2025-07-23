@@ -184,19 +184,19 @@ export default function MyTripsApp() {
         {/* Tab Navigation */}
         <View className="flex-row border-b border-gray-200">
           <TouchableOpacity
-            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-[#FF5A5F]' : ''}`}
+            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-black' : ''}`}
             onPress={() => setActiveTab('upcoming')}
           >
-            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-[#FF5A5F]' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Upcoming
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-[#FF5A5F]' : ''}`}
+            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-black' : ''}`}
             onPress={() => setActiveTab('past')}
           >
-            <Text className={`text-center ${activeTab === 'past' ? 'text-[#FF5A5F]' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className={`text-center ${activeTab === 'past' ? 'text-black' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Past
             </Text>
           </TouchableOpacity>

@@ -214,7 +214,7 @@ export function AddonSelectionSheet({ sheetId, payload }: AddonSelectionSheetPro
         <View className="px-6 py-4 border-t border-gray-200">
           <TouchableOpacity 
             onPress={handleApply}
-            className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
+            className="w-full h-12 bg-black rounded-lg items-center justify-center"
           >
             <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Apply Changes
