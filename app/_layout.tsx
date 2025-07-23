@@ -74,7 +74,7 @@ export default function RootLayout() {
                 <Stack.Screen name="notifications" options={{ headerShown: true }} />
                 <Stack.Screen name="+not-found" />
               </Stack>
-              <StatusBar style="dark" />
+              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
             </ThemeProvider>
           </SheetProvider>
         </WishlistProvider>

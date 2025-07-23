@@ -1,48 +1,27 @@
 import React from 'react';
-import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { ThemedText } from '@/components/ThemedText';
-import { ThemedView } from '@/components/ThemedView';
+import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import { useThemeColor } from '@/hooks/useThemeColor';
 
 interface LoadingSpinnerProps {
   size?: 'small' | 'large';
   color?: string;
-  text?: string;
-  fullScreen?: boolean;
+  style?: any;
 }
 
-export function LoadingSpinner({ 
-  size = 'large', 
-  color = '#FF5A5F', 
-  text,
-  fullScreen = false 
-}: LoadingSpinnerProps) {
-  const Container = fullScreen ? ThemedView : View;
-  const containerStyle = fullScreen ? styles.fullScreenContainer : styles.container;
+export function LoadingSpinner({ size = 'large', color, style }: LoadingSpinnerProps) {
+  const defaultColor = useThemeColor({}, 'primary');
 
   return (
-    <Container style={containerStyle}>
-      <ActivityIndicator size={size} color={color} />
-      {text && (
-        <ThemedText style={styles.text}>{text}</ThemedText>
-      )}
-    </Container>
+    <View style={[styles.container, style]}>
+      <ActivityIndicator size={size} color={color || defaultColor} />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    alignItems: 'center',
     justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
-  },
-  fullScreenContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  text: {
-    marginTop: 12,
-    fontSize: 16,
-    textAlign: 'center',
   },
 });
