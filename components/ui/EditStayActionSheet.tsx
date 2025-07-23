@@ -133,12 +133,12 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
       // Reset text colors
       dailyText.setNativeProps({
         style: {
-          color: '#64748B' // text-slate-600
+          color: Colors[colorScheme ?? 'light'].icon
         }
       });
       hourlyText.setNativeProps({
         style: {
-          color: '#64748B' // text-slate-600
+          color: Colors[colorScheme ?? 'light'].icon
         }
       });
 

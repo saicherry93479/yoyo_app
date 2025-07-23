@@ -21,7 +21,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tabIconSelected,
+        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
         headerShown: true,
         // tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -31,7 +32,8 @@ export default function TabLayout() {
             position: 'absolute',
           },
           default: {
-            
+            backgroundColor: Colors[colorScheme ?? 'light'].card,
+            borderTopColor: Colors[colorScheme ?? 'light'].border,
           },
         }),
       }}>
