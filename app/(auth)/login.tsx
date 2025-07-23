@@ -179,7 +179,7 @@ export default function LoginSignupScreen() {
             </View>
 
             {/* Divider */}
-            <View className="relative flex items-center justify-center my-8">
+            <View className="relative flex items-center justify-center my-8 hidden">
               <View className="absolute inset-0 flex items-center">
                 <View className="w-full border-t border-gray-300" />
               </View>
@@ -194,7 +194,7 @@ export default function LoginSignupScreen() {
             </View>
 
             {/* Social Login Buttons */}
-            <View className="gap-4">
+            <View className="gap-4 hidden">
               {/* Google Button */}
               <TouchableOpacity
                 className="w-full flex-row items-center justify-center rounded-xl border border-gray-300 bg-white py-4 shadow-sm active:bg-gray-50"
