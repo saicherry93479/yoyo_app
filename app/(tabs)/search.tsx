@@ -350,8 +350,15 @@ export default function SearchScreen() {
         className="bg-[#FF5A5F] px-8 py-4 rounded-xl shadow-lg"
         onPress={() => SheetManager.show('search', {
           payload: {
-            onSearch: handleSearch,
-            initialData: currentSearchData
+            onSearch: (searchData: any) => {
+              // Navigate to search tab with the search data
+              router.push({
+                pathname: '/(tabs)/search',
+                params: {
+                  searchData: JSON.stringify(searchData)
+                }
+              });
+            }
           }
         })}
       >
@@ -392,8 +399,15 @@ export default function SearchScreen() {
           className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
-              onSearch: handleSearch,
-              initialData: currentSearchData
+              onSearch: (searchData: any) => {
+                // Navigate to search tab with the search data
+                router.push({
+                  pathname: '/(tabs)/search',
+                  params: {
+                    searchData: JSON.stringify(searchData)
+                  }
+                });
+              }
             }
           })}
         >

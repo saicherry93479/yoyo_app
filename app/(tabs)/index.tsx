@@ -226,7 +226,6 @@ export default function HotelBookingApp() {
         <View className="bg-white flex-row items-center w-full px-4 py-3 ">
           <TouchableOpacity
             className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
-            onPress={() => SheetManager.show('search')}
             onPress={() => SheetManager.show('search', {
               payload: {
                 onSearch: (searchData: any) => {
@@ -280,7 +279,19 @@ export default function HotelBookingApp() {
       </TouchableOpacity>
       <TouchableOpacity
         className="px-6 py-3"
-        onPress={() => SheetManager.show('search')}
+        onPress={() => SheetManager.show('search', {
+          payload: {
+            onSearch: (searchData: any) => {
+              // Navigate to search tab with the search data
+              router.push({
+                pathname: '/(tabs)/search',
+                params: {
+                  searchData: JSON.stringify(searchData)
+                }
+              });
+            }
+          }
+        })}
       >
         <Text className="text-gray-600 text-base" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
           Search Manually Instead

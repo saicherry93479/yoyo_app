@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, Modal, ScrollView } from 'react-native';
+import { View, Text, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
 import { Clock, X } from 'lucide-react-native';
 
 interface TimeRange {
@@ -14,20 +14,6 @@ interface TimeRangePickerProps {
   maxHours?: number;
 }
 
-const timeSlots = [
-  '12:00', '01:00', '02:00', '03:00', '04:00', '05:00',
-  '06:00', '07:00', '08:00', '09:00', '10:00', '11:00',
-  '12:00', '13:00', '14:00', '15:00', '16:00', '17:00',
-  '18:00', '19:00', '20:00', '21:00', '22:00', '23:00'
-];
-
-const formatTime = (time: string) => {
-  const hour = parseInt(time.split(':')[0]);
-  const period = hour >= 12 ? 'PM' : 'AM';
-  const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-  return `${displayHour}:00 ${period}`;
-};
-
 export function TimeRangePicker({ 
   value, 
   onTimeRangeSelect, 
@@ -37,73 +23,84 @@ export function TimeRangePicker({
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedTimes, setSelectedTimes] = useState<TimeRange>(value);
 
+  // Generate time slots (24-hour format)
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let hour = 0; hour < 24; hour++) {
+      for (let minute = 0; minute < 60; minute += 30) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
+        const displayTime = formatTime(timeString);
+        slots.push({ value: timeString, display: displayTime });
+      }
+    }
+    return slots;
+  };
+
+  const formatTime = (timeString: string) => {
+    const [hour, minute] = timeString.split(':');
+    const hourNum = parseInt(hour);
+    const period = hourNum >= 12 ? 'PM' : 'AM';
+    const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
+    return `${displayHour}:${minute} ${period}`;
+  };
+
   const getDisplayText = () => {
     if (selectedTimes.startTime && selectedTimes.endTime) {
       return `${formatTime(selectedTimes.startTime)} - ${formatTime(selectedTimes.endTime)}`;
     } else if (selectedTimes.startTime) {
-      return `${formatTime(selectedTimes.startTime)} - Select end time`;
+      return `${formatTime(selectedTimes.startTime)} - End time`;
     }
     return placeholder;
   };
 
-  const onTimePress = (time: string) => {
-    if (!selectedTimes.startTime || (selectedTimes.startTime && selectedTimes.endTime)) {
-      // Start new selection
-      setSelectedTimes({ startTime: time, endTime: null });
-    } else if (selectedTimes.startTime && !selectedTimes.endTime) {
-      const startHour = parseInt(selectedTimes.startTime.split(':')[0]);
-      const endHour = parseInt(time.split(':')[0]);
-      
-      // Calculate hours difference
-      let hoursDiff = endHour - startHour;
-      if (hoursDiff <= 0) {
-        hoursDiff += 24; // Handle next day scenarios
-      }
-      
-      if (hoursDiff > maxHours) {
-        // If exceeds max hours, start new selection
-        setSelectedTimes({ startTime: time, endTime: null });
-      } else if (endHour <= startHour) {
-        // If selected time is before start time, make it the new start time
-        setSelectedTimes({ startTime: time, endTime: null });
-      } else {
-        // Set as end time
-        setSelectedTimes({ ...selectedTimes, endTime: time });
-      }
-    }
-  };
-
-  const getTimeSlotStyle = (time: string) => {
-    const isStartTime = selectedTimes.startTime === time;
-    const isEndTime = selectedTimes.endTime === time;
-    const isInRange = selectedTimes.startTime && selectedTimes.endTime && 
-      isTimeInRange(time, selectedTimes.startTime, selectedTimes.endTime);
-
-    if (isStartTime || isEndTime) {
-      return 'bg-[#FF5A5F] border-[#FF5A5F] text-white';
-    } else if (isInRange) {
-      return 'bg-red-50 border-red-200 text-[#FF5A5F]';
-    } else {
-      return 'bg-white border-gray-300 text-gray-700';
-    }
-  };
-
-  const isTimeInRange = (time: string, startTime: string, endTime: string) => {
-    const timeHour = parseInt(time.split(':')[0]);
-    const startHour = parseInt(startTime.split(':')[0]);
-    const endHour = parseInt(endTime.split(':')[0]);
+  const calculateHoursDifference = (startTime: string, endTime: string) => {
+    const [startHour, startMinute] = startTime.split(':').map(Number);
+    const [endHour, endMinute] = endTime.split(':').map(Number);
     
-    if (endHour > startHour) {
-      return timeHour > startHour && timeHour < endHour;
+    const startTotalMinutes = startHour * 60 + startMinute;
+    let endTotalMinutes = endHour * 60 + endMinute;
+    
+    // Handle next day scenario
+    if (endTotalMinutes <= startTotalMinutes) {
+      endTotalMinutes += 24 * 60;
+    }
+    
+    return (endTotalMinutes - startTotalMinutes) / 60;
+  };
+
+  const handleTimeSelect = (timeValue: string, type: 'start' | 'end') => {
+    if (type === 'start') {
+      const newSelectedTimes = { ...selectedTimes, startTime: timeValue };
+      
+      // Reset end time if it's before start time
+      if (selectedTimes.endTime && timeValue >= selectedTimes.endTime) {
+        newSelectedTimes.endTime = null;
+      }
+      
+      setSelectedTimes(newSelectedTimes);
     } else {
-      // Handle overnight range
-      return timeHour > startHour || timeHour < endHour;
+      // Validate max hours constraint
+      if (selectedTimes.startTime) {
+        const hoursDiff = calculateHoursDifference(selectedTimes.startTime, timeValue);
+        if (hoursDiff > maxHours) {
+          Alert.alert(
+            'Invalid Time Range',
+            `Maximum booking duration is ${maxHours} hours.`,
+            [{ text: 'OK' }]
+          );
+          return;
+        }
+      }
+      
+      setSelectedTimes({ ...selectedTimes, endTime: timeValue });
     }
   };
 
   const handleConfirm = () => {
-    onTimeRangeSelect(selectedTimes);
-    setIsModalVisible(false);
+    if (selectedTimes.startTime && selectedTimes.endTime) {
+      onTimeRangeSelect(selectedTimes);
+      setIsModalVisible(false);
+    }
   };
 
   const handleClear = () => {
@@ -112,7 +109,7 @@ export function TimeRangePicker({
     onTimeRangeSelect(clearedTimes);
   };
 
-  const isConfirmEnabled = selectedTimes.startTime && selectedTimes.endTime;
+  const timeSlots = generateTimeSlots();
 
   return (
     <>
@@ -155,45 +152,118 @@ export function TimeRangePicker({
             </TouchableOpacity>
           </View>
 
-          {/* Instructions */}
-          <View className="px-4 py-3 bg-blue-50 border-b border-blue-100">
-            <Text className="text-sm text-blue-800" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-              Select start and end time (maximum {maxHours} hours)
-            </Text>
-          </View>
-
-          {/* Time Grid */}
-          <ScrollView className="flex-1 px-4 py-4">
-            <View className="flex-row flex-wrap gap-3">
-              {timeSlots.map((time, index) => (
-                <TouchableOpacity
-                  key={`${time}-${index}`}
-                  className={`px-4 py-3 rounded-lg border min-w-[80px] items-center ${getTimeSlotStyle(time)}`}
-                  onPress={() => onTimePress(time)}
-                >
-                  <Text 
-                    className={`text-sm ${getTimeSlotStyle(time).includes('text-white') ? 'text-white' : 
-                      getTimeSlotStyle(time).includes('text-[#FF5A5F]') ? 'text-[#FF5A5F]' : 'text-gray-700'}`}
-                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                  >
-                    {formatTime(time)}
+          {/* Time Selection */}
+          <View className="flex-1 px-4 py-4">
+            <View className="flex-row mb-4">
+              {/* Start Time */}
+              <View className="flex-1 mr-2">
+                <Text className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Start Time
+                </Text>
+                <View className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 justify-center">
+                  <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {selectedTimes.startTime ? formatTime(selectedTimes.startTime) : 'Select'}
                   </Text>
-                </TouchableOpacity>
-              ))}
+                </View>
+              </View>
+
+              {/* End Time */}
+              <View className="flex-1 ml-2">
+                <Text className="text-sm text-gray-600 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  End Time
+                </Text>
+                <View className="h-12 rounded-lg border border-gray-200 bg-gray-50 px-3 justify-center">
+                  <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {selectedTimes.endTime ? formatTime(selectedTimes.endTime) : 'Select'}
+                  </Text>
+                </View>
+              </View>
             </View>
-          </ScrollView>
+
+            {/* Time Slots Grid */}
+            <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+              <View className="mb-4">
+                <Text className="text-lg text-gray-900 mb-3" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Available Times
+                </Text>
+                
+                <View className="flex-row flex-wrap justify-between">
+                  {timeSlots.map((slot) => {
+                    const isStartSelected = selectedTimes.startTime === slot.value;
+                    const isEndSelected = selectedTimes.endTime === slot.value;
+                    const isDisabled = selectedTimes.startTime && slot.value <= selectedTimes.startTime && !isStartSelected;
+                    
+                    return (
+                      <TouchableOpacity
+                        key={slot.value}
+                        className={`w-[48%] mb-2 py-3 px-4 rounded-lg border ${
+                          isStartSelected || isEndSelected
+                            ? 'bg-[#FF5A5F] border-[#FF5A5F]'
+                            : isDisabled
+                            ? 'bg-gray-100 border-gray-200'
+                            : 'bg-white border-gray-200'
+                        }`}
+                        onPress={() => {
+                          if (isDisabled) return;
+                          
+                          if (!selectedTimes.startTime || isStartSelected) {
+                            handleTimeSelect(slot.value, 'start');
+                          } else if (!selectedTimes.endTime || isEndSelected) {
+                            handleTimeSelect(slot.value, 'end');
+                          } else {
+                            // Reset and start new selection
+                            handleTimeSelect(slot.value, 'start');
+                          }
+                        }}
+                        disabled={isDisabled}
+                      >
+                        <Text 
+                          className={`text-center text-sm ${
+                            isStartSelected || isEndSelected
+                              ? 'text-white'
+                              : isDisabled
+                              ? 'text-gray-400'
+                              : 'text-gray-900'
+                          }`}
+                          style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+                        >
+                          {slot.display}
+                        </Text>
+                        {isStartSelected && (
+                          <Text className="text-center text-xs text-white mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                            Start
+                          </Text>
+                        )}
+                        {isEndSelected && (
+                          <Text className="text-center text-xs text-white mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                            End
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            </ScrollView>
+          </View>
 
           {/* Footer */}
           <View className="px-4 py-4 border-t border-gray-200">
             <TouchableOpacity
               className={`w-full h-12 rounded-lg items-center justify-center ${
-                isConfirmEnabled ? 'bg-[#FF5A5F]' : 'bg-gray-200'
+                selectedTimes.startTime && selectedTimes.endTime 
+                  ? 'bg-[#FF5A5F]' 
+                  : 'bg-gray-200'
               }`}
               onPress={handleConfirm}
-              disabled={!isConfirmEnabled}
+              disabled={!selectedTimes.startTime || !selectedTimes.endTime}
             >
               <Text 
-                className={`text-base ${isConfirmEnabled ? 'text-white' : 'text-gray-400'}`}
+                className={`text-base ${
+                  selectedTimes.startTime && selectedTimes.endTime 
+                    ? 'text-white' 
+                    : 'text-gray-400'
+                }`}
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}
               >
                 Confirm time range

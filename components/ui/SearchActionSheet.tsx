@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { X, Search } from 'lucide-react-native';
@@ -6,7 +6,6 @@ import { LocationSearchInput } from './LocationSearchInput';
 import { DateRangePicker } from './DateRangePicker';
 import { TimeRangePicker } from './TimeRangePicker';
 import { GuestSelector } from './GuestSelector';
-import { router } from 'expo-router';
 
 interface Location {
   id: string;
@@ -47,6 +46,7 @@ interface SearchActionSheetProps {
   sheetId: string;
   payload?: {
     onSearch?: (searchData: SearchData) => void;
+    onNavigateToSearch?: (searchData: SearchData) => void;
     initialData?: SearchData;
   };
 }
@@ -56,8 +56,8 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     location: null,
     dateRange: { startDate: null, endDate: null },
     timeRange: { startTime: null, endTime: null },
-    guests: { adults: 1, children: 0, infants: 0 }
-    bookingType: 'daily'
+    guests: { adults: 1, children: 0, infants: 0 },
+    bookingType: 'hourly'
   });
   const [isSearching, setIsSearching] = useState(false);
 
@@ -67,56 +67,48 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       : (searchData.timeRange.startTime && searchData.timeRange.endTime)
     );
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     SheetManager.hide(sheetId);
-  };
+  }, [sheetId]);
 
-  const handleSearch = () => {
+  const handleSearch = useCallback(() => {
     if (!isSearchEnabled) return;
     
     setIsSearching(true);
     
     // Simulate search API call
     setTimeout(() => {
-      // Pass the complete search data to the search screen
+      // Pass the complete search data to the callback
       if (payload?.onSearch) {
         payload.onSearch(searchData);
       }
       
-      // Navigate to explore tab with search results
-      router.push({
-        pathname: '/(tabs)/search',
-        params: {
-          searchData: JSON.stringify(searchData)
-        }
-      });
-      
-      // Close the sheet
+      // Close the sheet first
       handleClose();
       
       setIsSearching(false);
     }, 1000);
-  };
+  }, [isSearchEnabled, payload, searchData, handleClose]);
     
-  const handleLocationSelect = (location: Location) => {
+  const handleLocationSelect = useCallback((location: Location) => {
     setSearchData(prev => ({ ...prev, location }));
-  };
+  }, []);
 
-  const handleDateRangeSelect = (dateRange: DateRange) => {
+  const handleDateRangeSelect = useCallback((dateRange: DateRange) => {
     setSearchData(prev => ({ ...prev, dateRange }));
-  };
+  }, []);
 
-  const handleTimeRangeSelect = (timeRange: TimeRange) => {
+  const handleTimeRangeSelect = useCallback((timeRange: TimeRange) => {
     setSearchData(prev => ({ ...prev, timeRange }));
-  };
+  }, []);
 
-  const handleBookingTypeChange = (bookingType: 'daily' | 'hourly') => {
+  const handleBookingTypeChange = useCallback((bookingType: 'daily' | 'hourly') => {
     setSearchData(prev => ({ ...prev, bookingType }));
-  };
+  }, []);
 
-  const handleGuestCountChange = (guests: GuestCounts) => {
+  const handleGuestCountChange = useCallback((guests: GuestCounts) => {
     setSearchData(prev => ({ ...prev, guests }));
-  };
+  }, []);
 
   return (
     <ActionSheet 
@@ -219,20 +211,20 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
 
               {/* When - Time Range for Hourly */}
               {searchData.bookingType === 'hourly' && (
-              <View className="mb-6">
-                <Text 
-                  className="text-sm text-slate-900 mb-2" 
-                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                >
-                  Time Range
-                </Text>
-                <TimeRangePicker
-                  value={searchData.timeRange}
-                  onTimeRangeSelect={handleTimeRangeSelect}
-                  placeholder="Start time - End time"
-                  maxHours={12}
-                />
-              </View>
+                <View className="mb-6">
+                  <Text 
+                    className="text-sm text-slate-900 mb-2" 
+                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                  >
+                    Time Range
+                  </Text>
+                  <TimeRangePicker
+                    value={searchData.timeRange}
+                    onTimeRangeSelect={handleTimeRangeSelect}
+                    placeholder="Start time - End time"
+                    maxHours={12}
+                  />
+                </View>
               )}
 
               {/* Who */}
