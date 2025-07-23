@@ -21,8 +21,8 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tabIconSelected,
-        tabBarInactiveTintColor: Colors[colorScheme ?? 'light'].tabIconDefault,
+        tabBarActiveTintColor: Colors.light.tabIconSelected,
+        tabBarInactiveTintColor: Colors.light.tabIconDefault,
         headerShown: true,
         // tabBarButton: HapticTab,
         tabBarBackground: TabBarBackground,
@@ -32,8 +32,8 @@ export default function TabLayout() {
             position: 'absolute',
           },
           default: {
-            backgroundColor: Colors[colorScheme ?? 'light'].card,
-            borderTopColor: Colors[colorScheme ?? 'light'].border,
+            backgroundColor: Colors.light.card,
+            borderTopColor: Colors.light.border,
           },
         }),
       }}>
@@ -61,7 +61,7 @@ export default function TabLayout() {
       <Tabs.Screen
         name="bookings"
         options={{
-          title: 'Trips',
+          title: 'Bookings',
           tabBarIcon: ({ color, size }) => <TripsIcon size={size} color={color} />,
         }}
       />

@@ -281,7 +281,7 @@ export function TimeRangePicker({
                           key={date.value}
                           className={`w-full py-4 px-4 rounded-lg border ${
                             isSelected
-                              ? 'bg-[#FF5A5F] border-[#FF5A5F]'
+                              ? 'bg-black border-[#000000]'
                               : 'bg-white border-gray-200'
                           }`}
                           onPress={() => handleDateSelect(date.value)}
@@ -298,7 +298,7 @@ export function TimeRangePicker({
                             {date.isToday && (
                               <Text 
                                 className={`text-sm ${
-                                  isSelected ? 'text-white' : 'text-[#FF5A5F]'
+                                  isSelected ? 'text-white' : 'text-[#000000]'
                                 }`}
                                 style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                               >
@@ -352,7 +352,7 @@ export function TimeRangePicker({
                     </Text>
                     {selectedData.startTime && (
                       <TouchableOpacity onPress={handleEditStartTime}>
-                        <Text className="text-xs text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                        <Text className="text-xs text-[#000000]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                           Change
                         </Text>
                       </TouchableOpacity>
@@ -360,7 +360,7 @@ export function TimeRangePicker({
                   </View>
                   <TouchableOpacity 
                     className={`h-12 rounded-lg border px-3 justify-center ${
-                      timeSelectionMode === 'start' ? 'border-[#FF5A5F] bg-red-50' : 'border-gray-200 bg-gray-50'
+                      timeSelectionMode === 'start' ? 'border-[#000000] bg-gray-50' : 'border-gray-200 bg-gray-50'
                     }`}
                     onPress={handleEditStartTime}
                   >
@@ -377,7 +377,7 @@ export function TimeRangePicker({
                     </Text>
                     {selectedData.endTime && (
                       <TouchableOpacity onPress={handleEditEndTime}>
-                        <Text className="text-xs text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                        <Text className="text-xs text-[#000000]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                           Change
                         </Text>
                       </TouchableOpacity>
@@ -385,7 +385,7 @@ export function TimeRangePicker({
                   </View>
                   <TouchableOpacity 
                     className={`h-12 rounded-lg border px-3 justify-center ${
-                      timeSelectionMode === 'end' ? 'border-[#FF5A5F] bg-red-50' : 'border-gray-200 bg-gray-50'
+                      timeSelectionMode === 'end' ? 'border-[#000000] bg-gray-50' : 'border-gray-200 bg-gray-50'
                     }`}
                     onPress={handleEditEndTime}
                   >
@@ -430,7 +430,7 @@ export function TimeRangePicker({
                           key={slot.fullDateTime}
                           className={`w-[48%] mb-2 py-3 px-4 rounded-lg border ${
                             isStartSelected || isEndSelected
-                              ? 'bg-[#FF5A5F] border-[#FF5A5F]'
+                              ? 'bg-black border-[#000000]'
                               : isDisabled
                               ? 'bg-gray-100 border-gray-200'
                               : 'bg-white border-gray-200'
@@ -478,7 +478,7 @@ export function TimeRangePicker({
               <TouchableOpacity
                 className={`w-full h-12 rounded-lg items-center justify-center ${
                   selectedData.selectedDate 
-                    ? 'bg-[#FF5A5F]' 
+                    ? 'bg-black' 
                     : 'bg-gray-200'
                 }`}
                 onPress={() => selectedData.selectedDate && setCurrentStep('time')}
@@ -499,7 +499,7 @@ export function TimeRangePicker({
               <TouchableOpacity
                 className={`w-full h-12 rounded-lg items-center justify-center ${
                   selectedData.selectedDate && selectedData.startDateTime && selectedData.endDateTime 
-                    ? 'bg-[#FF5A5F]' 
+                    ? 'bg-black' 
                     : 'bg-gray-200'
                 }`}
                 onPress={handleConfirm}

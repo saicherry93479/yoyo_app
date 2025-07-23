@@ -100,7 +100,7 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
       <Text className="text-sm text-gray-700 w-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{rating}</Text>
       <View className="flex-1 h-2 rounded-full bg-gray-200">
         <View 
-          className="h-full rounded-full bg-[#FF5A5F]" 
+          className="h-full rounded-full bg-black" 
           style={{ width: `${percentage}%` }}
         />
       </View>
@@ -201,7 +201,7 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
                   onPress={() => setSelectedSort(option.id)}
                   className={`flex h-9 items-center justify-center rounded-full px-4 ${
                     selectedSort === option.id 
-                      ? 'bg-[#FF5A5F]' 
+                      ? 'bg-black' 
                       : 'bg-gray-100'
                   }`}
                 >
@@ -231,7 +231,7 @@ export function ReviewsActionSheet({ sheetId, reviewsData = mockReviewsData }: R
         <View className="border-t border-gray-200 bg-white px-6 py-4">
           <TouchableOpacity 
             onPress={handleClose}
-            className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
+            className="flex h-12 w-full items-center justify-center rounded-full bg-black"
           >
             <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Close</Text>
           </TouchableOpacity>

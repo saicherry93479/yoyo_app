@@ -117,7 +117,7 @@ export default function OTPScreen() {
                 ref={(ref) => {
                   if (ref) inputRefs.current[index] = ref;
                 }}
-                className="w-12 h-14 border-2 border-gray-200 rounded-lg text-center text-xl text-gray-900 focus:border-[#FF5A5F]"
+                className="w-12 h-14 border-2 border-gray-200 rounded-lg text-center text-xl text-gray-900 focus:border-[#000000]"
                 style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
@@ -136,7 +136,7 @@ export default function OTPScreen() {
             </Text>
             <TouchableOpacity onPress={handleResendOTP} disabled={!canResend}>
               <Text
-                className={`${canResend ? 'text-[#FF5A5F]' : 'text-gray-400'}`}
+                className={`${canResend ? 'text-[#000000]' : 'text-gray-400'}`}
                 style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
               >
                 {canResend ? 'Resend' : `Resend in ${resendTimer}s`}
@@ -146,7 +146,7 @@ export default function OTPScreen() {
 
           {/* Verify Button */}
           <TouchableOpacity
-            className={`w-full h-12 rounded-lg items-center justify-center ${otp.join('').length === 6 && !isLoading ? 'bg-[#FF5A5F]' : 'bg-gray-200'
+            className={`w-full h-12 rounded-lg items-center justify-center ${otp.join('').length === 6 && !isLoading ? 'bg-black' : 'bg-gray-200'
               }`}
             onPress={handleVerifyOTP}
             disabled={otp.join('').length !== 6 || isLoading}

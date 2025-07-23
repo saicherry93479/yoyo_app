@@ -278,7 +278,7 @@ export default function SearchScreen() {
           style={{ resizeMode: 'cover' }}
         />
         {hotel.offers && hotel.offers.length > 0 && (
-          <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
+          <View className="absolute top-3 left-3 bg-gray-500 px-2 py-1 rounded">
             <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               {hotel.offers[0].title}
             </Text>
@@ -377,7 +377,7 @@ export default function SearchScreen() {
         Search for your perfect destination and discover amazing hotels with great deals and reviews.
       </Text>
       <TouchableOpacity
-          className="bg-black dark:bg-white px-8 py-4 rounded-xl shadow-lg"
+          className="bg-black  px-8 py-4 rounded-xl shadow-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
               onSearch: handleSearchFromSheet
@@ -385,8 +385,8 @@ export default function SearchScreen() {
           })}
         >
           <View className="flex-row items-center gap-2">
-            <Search size={20} color="white" className="dark:color-black" />
-            <Text className="text-white dark:text-black text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <Search size={20} color="white" className="" />
+            <Text className="text-white  text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Search Hotels
             </Text>
           </View>
@@ -418,7 +418,7 @@ export default function SearchScreen() {
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          className="bg-black px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
               onSearch: handleSearchFromSheet,
@@ -443,7 +443,7 @@ export default function SearchScreen() {
         {/* {error} */}
       </Text>
       <TouchableOpacity
-        className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+        className="bg-black px-6 py-3 rounded-lg"
         onPress={handleRefresh}
       >
         <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -527,8 +527,8 @@ export default function SearchScreen() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={handleRefresh}
-            colors={['#FF5A5F']}
-            tintColor="#FF5A5F"
+            colors={['#000000']}
+            tintColor="#000000"
           />
         }
       >

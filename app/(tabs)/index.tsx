@@ -271,7 +271,7 @@ export default function HotelBookingApp() {
         Please allow location access to see nearby hotels in your area
       </Text>
       <TouchableOpacity
-        className="bg-[#FF5A5F] px-6 py-3 rounded-lg mb-3"
+        className="bg-black px-6 py-3 rounded-lg mb-3"
         onPress={requestLocationPermission}
         disabled={location.loading}
       >
@@ -319,7 +319,7 @@ export default function HotelBookingApp() {
           style={{ resizeMode: 'cover' }}
         />
         {hotel.offer && (
-          <View className="absolute top-3 left-3 bg-red-500 px-2 py-1 rounded">
+          <View className="absolute top-3 left-3 bg-gray-500 px-2 py-1 rounded">
             <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               {hotel.offer}
             </Text>
@@ -466,7 +466,7 @@ export default function HotelBookingApp() {
           {content.subtitle}
         </Text>
         <TouchableOpacity
-          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          className="bg-black px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
               onSearch: handleSearchFromSheet
@@ -491,7 +491,7 @@ export default function HotelBookingApp() {
         {currentData.error}
       </Text>
       <TouchableOpacity
-        className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+        className="bg-black px-6 py-3 rounded-lg"
         onPress={handleRefresh}
       >
         <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -507,25 +507,25 @@ export default function HotelBookingApp() {
       <View className="px-4 pt-3 bg-white">
         <View className="flex-row justify-between border-b border-gray-200">
           <TouchableOpacity
-            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'nearby' ? 'border-red-500' : 'border-transparent'} py-3`}
+            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'nearby' ? 'border-gray-500' : 'border-transparent'} py-3`}
             onPress={() => setActiveTab('nearby')}
           >
-            <LocationIcon size={18} color={activeTab === 'nearby' ? '#EF4444' : '#6B7280'} />
-            <Text className={`text-sm ${activeTab === 'nearby' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Nearby</Text>
+            <LocationIcon size={18} color={activeTab === 'nearby' ? '#000000' : '#6B7280'} />
+            <Text className={`text-sm ${activeTab === 'nearby' ? 'text-gray-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Nearby</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'latest' ? 'border-red-500' : 'border-transparent'} py-3`}
+            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'latest' ? 'border-gray-500' : 'border-transparent'} py-3`}
             onPress={() => setActiveTab('latest')}
           >
-            <ArrowUpDownIcon size={18} color={activeTab === 'latest' ? '#EF4444' : '#6B7280'} />
-            <Text className={`text-sm ${activeTab === 'latest' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Latest</Text>
+            <ArrowUpDownIcon size={18} color={activeTab === 'latest' ? '#000000' : '#6B7280'} />
+            <Text className={`text-sm ${activeTab === 'latest' ? 'text-gray-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Latest</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'offers' ? 'border-red-500' : 'border-transparent'} py-3`}
+            className={`flex-1 flex-row items-center justify-center gap-2 border-b-2 ${activeTab === 'offers' ? 'border-gray-500' : 'border-transparent'} py-3`}
             onPress={() => setActiveTab('offers')}
           >
-            <OffersIcon size={18} color={activeTab === 'offers' ? '#EF4444' : '#6B7280'} />
-            <Text className={`text-sm ${activeTab === 'offers' ? 'text-red-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Offers</Text>
+            <OffersIcon size={18} color={activeTab === 'offers' ? '#000000' : '#6B7280'} />
+            <Text className={`text-sm ${activeTab === 'offers' ? 'text-gray-500' : 'text-gray-500'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>Offers</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -537,8 +537,8 @@ export default function HotelBookingApp() {
           <RefreshControl
             refreshing={activeTab === 'nearby' ? location.loading || currentData.refreshing : currentData.refreshing}
             onRefresh={handleRefresh}
-            colors={['#FF5A5F']}
-            tintColor="#FF5A5F"
+            colors={['#000000']}
+            tintColor="#000000"
           />
         }
       >
@@ -587,7 +587,7 @@ export default function HotelBookingApp() {
                 <View className="flex-col gap-2 flex-1">
                   <Text className="text-gray-900 text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Last Minute Deals</Text>
                   <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Up to 30% off on select hotels</Text>
-                  <TouchableOpacity className="bg-red-500 rounded-lg h-10 px-4 justify-center items-center mt-2 self-start">
+                  <TouchableOpacity className="bg-gray-500 rounded-lg h-10 px-4 justify-center items-center mt-2 self-start">
                     <Text className="text-white text-sm" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>View Deals</Text>
                   </TouchableOpacity>
                 </View>

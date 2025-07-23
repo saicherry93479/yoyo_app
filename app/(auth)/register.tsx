@@ -141,7 +141,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.name && (
-                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.name}</Text>
+                <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.name}</Text>
               )}
             </View>
 
@@ -161,7 +161,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.email && (
-                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.email}</Text>
+                <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.email}</Text>
               )}
             </View>
 
@@ -185,7 +185,7 @@ export default function RegisterScreen() {
                 </View>
               </View>
               {errors.phone && (
-                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.phone}</Text>
+                <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.phone}</Text>
               )}
             </View>
 
@@ -204,7 +204,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.password && (
-                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.password}</Text>
+                <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.password}</Text>
               )}
             </View>
 
@@ -223,7 +223,7 @@ export default function RegisterScreen() {
                 />
               </View>
               {errors.confirmPassword && (
-                <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.confirmPassword}</Text>
+                <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{errors.confirmPassword}</Text>
               )}
             </View>
           </View>

@@ -165,7 +165,7 @@ export default function PersonalInfoScreen() {
         />
       </View>
       {errors[field] && (
-        <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+        <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
           {errors[field]}
         </Text>
       )}

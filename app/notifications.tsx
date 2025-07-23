@@ -169,7 +169,7 @@ export default function NotificationsScreen() {
             value={setting.enabled}
             onValueChange={() => toggleSetting(setting.id)}
             trackColor={{ false: '#E5E7EB', true: '#FEE2E2' }}
-            thumbColor={setting.enabled ? '#FF5A5F' : '#F3F4F6'}
+            thumbColor={setting.enabled ? '#000000' : '#F3F4F6'}
             disabled={isLoading}
           />
         </View>
@@ -273,7 +273,7 @@ export default function NotificationsScreen() {
         {isLoading && (
           <View className="bg-white rounded-xl border border-gray-100 p-4 mb-6">
             <View className="flex-row items-center justify-center">
-              <ActivityIndicator size="small" color="#FF5A5F" />
+              <ActivityIndicator size="small" color="#000000" />
               <Text className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 Updating notification settings...
               </Text>

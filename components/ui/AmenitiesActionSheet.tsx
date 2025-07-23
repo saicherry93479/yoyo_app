@@ -100,7 +100,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
     return (
       <View key={amenity.id} className="flex-row items-center gap-4 py-3">
         <IconComponent size={24} color="#8A8A8A" strokeWidth={2} />
-        <Text className="text-base text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
+        <Text className="text-base text-black " style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
       </View>
     );
   };
@@ -116,7 +116,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
     closable={true}
     closeOnTouchBackdrop={true}
   >
-    <View className="rounded-t-2xl bg-white dark:bg-black pt-3 ">
+    <View className="rounded-t-2xl bg-white  pt-3 ">
       
       {/* Handle */}
       <View className="flex h-5 w-full items-center justify-center">
@@ -124,8 +124,8 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
       </View>
 
       {/* Header */}
-      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100 dark:border-gray-800">
-        <Text className="text-2xl text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+      <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-100 ">
+        <Text className="text-2xl text-black " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
           What this place offers
         </Text>
         <TouchableOpacity onPress={handleClose} className="p-2">
@@ -159,7 +159,7 @@ export function AmenitiesActionSheet({ sheetId, payload }: AmenitiesActionSheetP
       {/* <View className="border-t border-gray-200 bg-white px-4 py-4 sticky botttom-0">
         <TouchableOpacity 
           onPress={handleClose}
-          className="flex h-12 w-full items-center justify-center rounded-full bg-[#FF5A5F]"
+          className="flex h-12 w-full items-center justify-center rounded-full bg-black"
         >
           <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             Close

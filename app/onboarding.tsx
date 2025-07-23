@@ -60,7 +60,7 @@ export default function OnboardingScreen() {
           {steps.map((_, index) => (
             <View
               key={index}
-              className={`w-2 h-2 rounded-full ${index <= currentStep ? 'bg-[#FF5A5F]' : 'bg-gray-200'
+              className={`w-2 h-2 rounded-full ${index <= currentStep ? 'bg-black' : 'bg-gray-200'
                 }`}
             />
           ))}
@@ -80,7 +80,7 @@ export default function OnboardingScreen() {
       headerRight: () => (
         currentStep === 1 ? (
           <TouchableOpacity onPress={handleSkip} className="mr-4">
-            <Text className="text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className="text-[#000000]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Skip
             </Text>
           </TouchableOpacity>
@@ -177,7 +177,7 @@ export default function OnboardingScreen() {
                 <User size={32} color="#9CA3AF" />
               )}
             </View>
-            <TouchableOpacity className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#FF5A5F] rounded-full items-center justify-center">
+            <TouchableOpacity className="absolute -bottom-2 -right-2 w-8 h-8 bg-black rounded-full items-center justify-center">
               <Camera size={16} color="white" />
             </TouchableOpacity>
           </View>
@@ -208,7 +208,7 @@ export default function OnboardingScreen() {
               />
             </View>
             {errors.name && (
-              <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 {errors.name}
               </Text>
             )}
@@ -235,7 +235,7 @@ export default function OnboardingScreen() {
               />
             </View>
             {errors.email && (
-              <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 {errors.email}
               </Text>
             )}
@@ -261,7 +261,7 @@ export default function OnboardingScreen() {
               />
             </View> */}
           {/* {errors.dob && (
-              <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 {errors.dob}
               </Text>
             )}
@@ -277,14 +277,14 @@ export default function OnboardingScreen() {
                 <TouchableOpacity
                   key={gender}
                   className={`flex-1 py-3 rounded-lg border items-center ${formData.gender === gender
-                    ? 'border-[#FF5A5F] bg-red-50'
+                    ? 'border-[#000000] bg-gray-50'
                     : 'border-gray-300 bg-white'
                     }`}
                   onPress={() => updateFormData('gender', gender)}
                   activeOpacity={0.7}
                 >
                   <Text
-                    className={`text-sm ${formData.gender === gender ? 'text-[#FF5A5F]' : 'text-gray-700'
+                    className={`text-sm ${formData.gender === gender ? 'text-[#000000]' : 'text-gray-700'
                       }`}
                     style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                   >
@@ -294,7 +294,7 @@ export default function OnboardingScreen() {
               ))}
             </View>
             {errors.gender && (
-              <Text className="text-sm text-red-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+              <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 {errors.gender}
               </Text>
             )}

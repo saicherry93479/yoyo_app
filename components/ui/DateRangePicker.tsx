@@ -64,7 +64,7 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
     if (selectedDates.startDate) {
       marked[selectedDates.startDate] = {
         startingDay: true,
-        color: '#FF5A5F',
+        color: '#000000',
         textColor: 'white',
       };
     }
@@ -72,7 +72,7 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
     if (selectedDates.endDate) {
       marked[selectedDates.endDate] = {
         endingDay: true,
-        color: '#FF5A5F',
+        color: '#000000',
         textColor: 'white',
       };
     }
@@ -87,7 +87,7 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
         if (dateString !== selectedDates.startDate && dateString !== selectedDates.endDate) {
           marked[dateString] = {
             color: '#FFE5E6',
-            textColor: '#FF5A5F',
+            textColor: '#000000',
           };
         }
       }
@@ -118,9 +118,9 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
         <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
           <CalendarIcon size={20} color="#8A8A8A" />
         </View>
-        <View className="w-full h-14 rounded-lg border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 justify-center dark:border-gray-700 dark:bg-gray-800">
+        <View className="w-full h-14 rounded-lg border border-gray-200 bg-gray-50 pl-12 pr-4 py-3 justify-center  ">
           <Text 
-            className={`text-base ${selectedDates.startDate ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`}
+            className={`text-base ${selectedDates.startDate ? 'text-black ' : 'text-gray-500 '}`}
             style={{ fontFamily: 'PlusJakartaSans-Regular' }}
           >
             {getDisplayText()}
@@ -134,15 +134,15 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View className="flex-1 bg-white dark:bg-black">
+        <View className="flex-1 bg-white ">
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700">
+          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200 ">
             <TouchableOpacity onPress={handleClear}>
-              <Text className="text-base text-gray-600 dark:text-gray-400" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Text className="text-base text-gray-600 " style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Clear
               </Text>
             </TouchableOpacity>
-            <Text className="text-lg text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <Text className="text-lg text-black " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Select dates
             </Text>
             <TouchableOpacity onPress={() => setIsModalVisible(false)}>
@@ -218,12 +218,12 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
           </View>
 
           {/* Footer */}
-          <View className="px-4 py-4 border-t border-gray-200 dark:border-gray-700">
+          <View className="px-4 py-4 border-t border-gray-200 ">
             <TouchableOpacity
               className={`w-full h-12 rounded-lg items-center justify-center ${
                 selectedDates.startDate && selectedDates.endDate 
-                  ? 'bg-black dark:bg-white' 
-                  : 'bg-gray-200 dark:bg-gray-800'
+                  ? 'bg-black ' 
+                  : 'bg-gray-200 '
               }`}
               onPress={handleConfirm}
               disabled={!selectedDates.startDate || !selectedDates.endDate}
@@ -231,7 +231,7 @@ export function DateRangePicker({ value, onDateRangeSelect, placeholder = "When'
               <Text 
                 className={`text-base ${
                   selectedDates.startDate && selectedDates.endDate 
-                    ? 'text-white dark:text-black' 
+                    ? 'text-white ' 
                     : 'text-gray-400'
                 }`}
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}

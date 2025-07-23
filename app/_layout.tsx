@@ -1,5 +1,5 @@
 import 'react-native-get-random-values';
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider} from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -62,7 +62,7 @@ export default function RootLayout() {
       <AuthProvider>
         <WishlistProvider>
           <SheetProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
+            <ThemeProvider value={DefaultTheme}>
               <Stack initialRouteName='(tabs)'>
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
@@ -74,7 +74,7 @@ export default function RootLayout() {
                 <Stack.Screen name="notifications" options={{ headerShown: true }} />
                 <Stack.Screen name="+not-found" />
               </Stack>
-              <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
+              <StatusBar style="dark" />
             </ThemeProvider>
           </SheetProvider>
         </WishlistProvider>

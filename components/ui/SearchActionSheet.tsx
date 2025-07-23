@@ -321,12 +321,12 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
             <View className="flex-row items-center justify-between px-4 py-4 pb-2">
               <TouchableOpacity
                 onPress={handleClose}
-                className="flex size-10 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800"
+                className="flex size-10 items-center justify-center rounded-full bg-gray-100 "
               >
-                <X size={24} color="#000000" className="dark:color-white" />
+                <X size={24} color="#000000"  />
               </TouchableOpacity>
               <Text
-                className="text-lg text-black dark:text-white"
+                className="text-lg text-black "
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}
               >
                 Search
@@ -336,7 +336,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
 
             {/* Tabs */}
             <View className="px-4 mb-4">
-              <View className="flex-row bg-gray-100 dark:bg-gray-800 rounded-xl p-1">
+              <View className="flex-row bg-gray-100  rounded-xl p-1">
                 <TouchableOpacity
                   ref={dailyTabRef}
                   onPress={() => handleTabPress(0)}
@@ -344,7 +344,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 >
                   <Text
                     ref={dailyTextRef}
-                    className="text-center text-sm text-gray-600 dark:text-gray-400"
+                    className="text-center text-sm text-gray-600 "
                     style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                   >
                     Daily
@@ -358,7 +358,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 >
                   <Text
                     ref={hourlyTextRef}
-                    className="text-center text-sm text-gray-600 dark:text-gray-400"
+                    className="text-center text-sm text-gray-600 "
                     style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                   >
                     Hourly
@@ -374,7 +374,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
               {/* Where */}
               <View className="mb-6">
                 <Text
-                  className="text-sm text-black dark:text-white mb-2"
+                  className="text-sm text-black  mb-2"
                   style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 >
                   Where
@@ -390,7 +390,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
               {/* When - Show DateRangePicker for Daily, TimeRangePicker for Hourly */}
               <View className="mb-6">
                 <Text
-                  className="text-sm text-black dark:text-white mb-2"
+                  className="text-sm text-black  mb-2"
                   style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 >
                   When
@@ -413,7 +413,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
               {/* Who */}
               <View className="mb-6">
                 <Text
-                  className="text-sm text-black dark:text-white mb-2"
+                  className="text-sm text-black  mb-2"
                   style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 >
                   Who
@@ -432,8 +432,8 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
             <TouchableOpacity
               onPress={handleSearch}
               className={`flex h-14 w-full items-center justify-center rounded-xl shadow-lg ${isSearchEnabled && !isSearching
-                  ? 'bg-black dark:bg-white'
-                  : 'bg-gray-300 dark:bg-gray-600'
+                  ? 'bg-black '
+                  : 'bg-gray-300 '
                 }`}
               style={{
                 shadowColor: isSearchEnabled ? '#000000' : '#000',
@@ -448,7 +448,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 <View className="flex-row items-center gap-2">
                   <ActivityIndicator size="small" color="white" />
                   <Text
-                    className="text-base text-white dark:text-black tracking-wide"
+                    className="text-base text-white  tracking-wide"
                     style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                   >
                     Searching...
@@ -456,9 +456,9 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 </View>
               ) : (
                 <View className="flex-row items-center gap-2">
-                  <Search size={20} color={isSearchEnabled ? "white" : "#8A8A8A"} className="dark:color-black" />
+                  <Search size={20} color={isSearchEnabled ? "white" : "#8A8A8A"} className="" />
                   <Text
-                    className={`text-base tracking-wide ${isSearchEnabled ? 'text-white dark:text-black' : 'text-gray-500'
+                    className={`text-base tracking-wide ${isSearchEnabled ? 'text-white ' : 'text-gray-500'
                       }`}
                     style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                   >

@@ -321,7 +321,7 @@ const BookingDetails = () => {
           {error || 'Booking not found'}
         </Text>
         <TouchableOpacity
-          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          className="bg-black px-6 py-3 rounded-lg"
           onPress={() => router.back()}
         >
           <Text className="text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -350,7 +350,7 @@ const BookingDetails = () => {
       case 'completed':
         return 'text-blue-800 bg-blue-100 border-blue-300';
       case 'cancelled':
-        return 'text-red-800 bg-red-100 border-red-300';
+        return 'text-gray-800 bg-gray-100 border-gray-300';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
     }
@@ -412,7 +412,7 @@ const BookingDetails = () => {
 
           <View className="gap-4">
             <View className="flex-row items-center">
-              <Calendar size={20} color="#FF5A5F" />
+              <Calendar size={20} color="#000000" />
               <View className="ml-3 flex-1">
                 <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                   Check-in
@@ -424,7 +424,7 @@ const BookingDetails = () => {
             </View>
 
             <View className="flex-row items-center">
-              <Calendar size={20} color="#FF5A5F" />
+              <Calendar size={20} color="#000000" />
               <View className="ml-3 flex-1">
                 <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                   Check-out
@@ -436,7 +436,7 @@ const BookingDetails = () => {
             </View>
 
             <View className="flex-row items-center">
-              <Users size={20} color="#FF5A5F" />
+              <Users size={20} color="#000000" />
               <View className="ml-3 flex-1">
                 <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                   Guests
@@ -582,12 +582,12 @@ const BookingDetails = () => {
           <View className="flex-row gap-3">
             {canCancelBooking && (
               <TouchableOpacity
-                className="flex-1 h-12 bg-red-100 rounded-lg items-center justify-center flex-row"
+                className="flex-1 h-12 bg-gray-100 rounded-lg items-center justify-center flex-row"
                 onPress={handleCancelBooking}
                 disabled={cancelling}
               >
                 <X size={16} color="#DC2626" />
-                <Text className="text-red-600 text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                <Text className="text-gray-600 text-base ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                   {cancelling ? 'Cancelling...' : 'Cancel Booking'}
                 </Text>
               </TouchableOpacity>

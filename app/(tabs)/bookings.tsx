@@ -8,7 +8,7 @@ import { useBookings } from '@/hooks/useBookings'
 import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader'
 
 // Plus Icon Component
-const PlusIcon = ({ size = 24, color = "#FF5A5F" }) => (
+const PlusIcon = ({ size = 24, color = "#000000" }) => (
   <Svg width={size} height={size} viewBox="0 0 256 256" fill={color}>
     <Path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
   </Svg>
@@ -90,7 +90,7 @@ export default function MyTripsApp() {
       case 'completed':
         return 'text-blue-600 bg-blue-50';
       case 'cancelled':
-        return 'text-red-600 bg-red-50';
+        return 'text-gray-600 bg-gray-50';
       case 'pending':
         return 'text-yellow-600 bg-yellow-50';
       default:
@@ -240,19 +240,19 @@ export default function MyTripsApp() {
         {/* Tab Navigation */}
         <View className="flex-row border-b border-gray-200">
           <TouchableOpacity
-            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-black dark:border-white' : ''}`}
+            className={`flex-1 text-center py-3 ${activeTab === 'upcoming' ? 'border-b-2 border-black ' : ''}`}
             onPress={() => setActiveTab('upcoming')}
           >
-            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className={`text-center ${activeTab === 'upcoming' ? 'text-black ' : 'text-gray-500 '}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Upcoming
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-black dark:border-white' : ''}`}
+            className={`flex-1 text-center py-3 ${activeTab === 'past' ? 'border-b-2 border-black ' : ''}`}
             onPress={() => setActiveTab('past')}
           >
-            <Text className={`text-center ${activeTab === 'past' ? 'text-black dark:text-white' : 'text-gray-500 dark:text-gray-400'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className={`text-center ${activeTab === 'past' ? 'text-black ' : 'text-gray-500 '}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Past
             </Text>
           </TouchableOpacity>
@@ -266,8 +266,8 @@ export default function MyTripsApp() {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            colors={['#FF5A5F']} // Android
-            tintColor="#FF5A5F" // iOS
+            colors={['#000000']} // Android
+            tintColor="#000000" // iOS
           />
         }
       >
@@ -278,12 +278,12 @@ export default function MyTripsApp() {
             ))}
           </View>
         ) : error ? (
-          <View className="p-4 bg-red-50 rounded-lg">
-            <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+          <View className="p-4 bg-gray-50 rounded-lg">
+            <Text className="text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
               {error}
             </Text>
             <TouchableOpacity onPress={refresh} className="mt-2">
-              <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              <Text className="text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Try Again
               </Text>
             </TouchableOpacity>
@@ -316,7 +316,7 @@ export default function MyTripsApp() {
 
             {/* CTA Button */}
             <TouchableOpacity
-              className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-[#FF5A5F] shadow-lg"
+              className="w-full max-w-xs items-center justify-center overflow-hidden rounded-xl h-12 px-6 bg-black shadow-lg"
               onPress={() => router.push('/(tabs)/search')}
             >
               <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

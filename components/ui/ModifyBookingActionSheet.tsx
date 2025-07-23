@@ -138,10 +138,10 @@ export function ModifyBookingActionSheet({ sheetId, payload }: ModifyBookingActi
 
           {canCancel && (
             <TouchableOpacity
-              className="flex-row items-center p-4 bg-red-50 border border-red-200 rounded-xl"
+              className="flex-row items-center p-4 bg-gray-50 border border-gray-200 rounded-xl"
               onPress={handleCancelBooking}
             >
-              <View className="w-12 h-12 bg-red-100 rounded-full items-center justify-center mr-4">
+              <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mr-4">
                 <XCircle size={24} color="#DC2626" />
               </View>
               <View className="flex-1">

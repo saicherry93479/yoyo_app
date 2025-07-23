@@ -325,7 +325,7 @@ const HotelDetails = () => {
           {error || 'Hotel not found'}
         </Text>
         <TouchableOpacity
-          className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+          className="bg-black px-6 py-3 rounded-lg"
           onPress={() => router.back()}
         >
           <Text className="text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -413,7 +413,7 @@ const HotelDetails = () => {
               onPress={handleEditSearch}
               className="flex-row items-center gap-1"
             >
-              <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Edit
               </Text>
               <Ionicons name="create-outline" size={18} color="#dc2626" />
@@ -519,7 +519,7 @@ const HotelDetails = () => {
               }
             })}
           >
-            <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+            <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
               View All Amenities
             </Text>
             <Ionicons name="chevron-forward" size={20} color="#dc2626" />
@@ -668,7 +668,7 @@ const HotelDetails = () => {
                   style={{ resizeMode: 'cover' }}
                 />
                 <View className="flex-1">
-                  <Text className="text-sm text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                     Upgrade Available
                   </Text>
                   <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -742,7 +742,7 @@ const HotelDetails = () => {
               </View>
 
               <TouchableOpacity onPress={() => SheetManager.show('reviews')} className="mt-5 flex-row items-center justify-between">
-                <Text className="text-base text-red-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                   View All Reviews
                 </Text>
                 <Ionicons name="chevron-forward" size={20} color="#dc2626" />

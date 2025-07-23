@@ -103,7 +103,7 @@ export function RoomUpgradeActionSheet({
       <View className="flex-1">
         <View className="flex-row items-center justify-between mb-1">
           <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>{room.name}</Text>
-          <Text className="text-lg text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+          <Text className="text-lg text-[#000000]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             +${room.pricePerNight}
             <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>/night</Text>
           </Text>
@@ -111,7 +111,7 @@ export function RoomUpgradeActionSheet({
         <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{room.features}</Text>
         <TouchableOpacity
           onPress={() => handleRoomSelect(room)}
-          className="w-full h-10 rounded-full bg-[#FF5A5F] items-center justify-center"
+          className="w-full h-10 rounded-full bg-black items-center justify-center"
         >
           <Text className="text-sm text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Select</Text>
         </TouchableOpacity>

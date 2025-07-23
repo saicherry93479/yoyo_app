@@ -161,7 +161,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
       closeOnTouchBackdrop={true}
       snapPoints={[80]}
     >
-      <View className="rounded-t-2xl bg-white dark:bg-black pt-3 " >
+      <View className="rounded-t-2xl bg-white  pt-3 " >
         {/* Handle */}
         <View>
           <View className="flex h-5 w-full items-center justify-center">
@@ -169,13 +169,13 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
           </View>
 
           {/* Header */}
-          <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100 dark:border-gray-800">
+          <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-100 ">
             <TouchableOpacity onPress={handleClearFilters}>
-              <Text className="text-base text-gray-600 dark:text-gray-400" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Text className="text-base text-gray-600 " style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Clear all
               </Text>
             </TouchableOpacity>
-            <Text className="text-xl text-black dark:text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <Text className="text-xl text-black " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               Filters
             </Text>
             <TouchableOpacity onPress={handleClose} className="p-2">
@@ -192,8 +192,8 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
             className="flex-1"
           >
 
-            <View className="px-6 py-4 border-b border-gray-100 dark:border-gray-800">
-              <Text className="text-lg text-black dark:text-white mb-3" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            <View className="px-6 py-4 border-b border-gray-100 ">
+              <Text className="text-lg text-black  mb-3" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Sort by
               </Text>
               <View className="flex-row flex-wrap gap-2">
@@ -201,13 +201,13 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                   <TouchableOpacity
                     key={option.id}
                     className={`px-4 py-2 rounded-full border ${filters.sortBy === option.id
-                      ? 'bg-black border-black dark:bg-white dark:border-white'
-                      : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600'
+                      ? 'bg-black border-black  '
+                      : 'bg-white border-gray-300  '
                       }`}
                     onPress={() => setFilters(prev => ({ ...prev, sortBy: option.id }))}
                   >
                     <Text
-                      className={`text-sm ${filters.sortBy === option.id ? 'text-white dark:text-black' : 'text-gray-700 dark:text-gray-300'
+                      className={`text-sm ${filters.sortBy === option.id ? 'text-white ' : 'text-gray-700 '
                         }`}
                       style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                     >
@@ -234,14 +234,14 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                     <TouchableOpacity
                       key={index}
                       className={`p-3 rounded-lg border ${isSelected
-                        ? 'bg-red-50 border-red-200'
+                        ? 'bg-gray-50 border-gray-200'
                         : 'bg-white border-gray-200'
                         }`}
                       onPress={() => selectPriceRange(range.min, range.max)}
                     >
                       <Text
                         className={`text-base ${isSelected
-                          ? 'text-red-700'
+                          ? 'text-gray-700'
                           : 'text-gray-700'
                           }`}
                         style={{ fontFamily: 'PlusJakartaSans-Medium' }}
@@ -264,7 +264,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                   <TouchableOpacity
                     key={rating}
                     className={`flex-row items-center p-3 rounded-lg border ${filters.rating === rating
-                      ? 'bg-red-50 border-red-200'
+                      ? 'bg-gray-50 border-gray-200'
                       : 'bg-white border-gray-200'
                       }`}
                     onPress={() => selectRating(rating)}
@@ -273,7 +273,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                       {renderStars(5, rating)}
                     </View>
                     <Text
-                      className={`text-base ${filters.rating === rating ? 'text-red-700' : 'text-gray-700'
+                      className={`text-base ${filters.rating === rating ? 'text-gray-700' : 'text-gray-700'
                         }`}
                       style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                     >
@@ -298,7 +298,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                     <TouchableOpacity
                       key={amenity.id}
                       className={`flex-row items-center px-3 py-2 rounded-full border ${isSelected
-                        ? 'bg-[#FF5A5F] border-[#FF5A5F]'
+                        ? 'bg-black border-[#000000]'
                         : 'bg-white border-gray-300'
                         }`}
                       onPress={() => toggleAmenity(amenity.id)}
@@ -330,7 +330,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
                   <TouchableOpacity
                     key={type}
                     className={`px-4 py-2 rounded-full border ${filters.propertyType.includes(type)
-                      ? 'bg-[#FF5A5F] border-[#FF5A5F]'
+                      ? 'bg-black border-[#000000]'
                       : 'bg-white border-gray-300'
                       }`}
                     onPress={() => togglePropertyType(type)}
@@ -348,12 +348,12 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
             </View> */}
           </ScrollView>
 
-          <View className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-black">
+          <View className="px-6 py-4 border-t border-gray-200  bg-white ">
             <TouchableOpacity
               onPress={handleApplyFilters}
-              className="w-full h-12 bg-black dark:bg-white rounded-lg items-center justify-center"
+              className="w-full h-12 bg-black  rounded-lg items-center justify-center"
             >
-              <Text className="text-base text-white dark:text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              <Text className="text-base text-white " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Apply Filters
               </Text>
             </TouchableOpacity>

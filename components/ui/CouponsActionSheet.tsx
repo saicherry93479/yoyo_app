@@ -161,7 +161,7 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
         <View className="flex-row items-start justify-between">
           <View className="flex-1">
             <View className="flex-row items-center mb-2">
-              <View className="bg-red-100 p-2 rounded-lg mr-3">
+              <View className="bg-gray-100 p-2 rounded-lg mr-3">
                 <Tag size={16} color="#DC2626" />
               </View>
               <View>
@@ -172,7 +172,7 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
                   {coupon.code}
                 </Text>
                 <Text 
-                  className="text-sm text-red-600" 
+                  className="text-sm text-gray-600" 
                   style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 >
                   {getDiscountText(coupon)}

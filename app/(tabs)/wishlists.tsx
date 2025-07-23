@@ -46,7 +46,7 @@ const WishlistScreen = () => {
 
   return (
 
-      <ScrollView className="flex-1 bg-white dark:bg-black">
+      <ScrollView className="flex-1 bg-white ">
         {/* Wishlist Items */}
         <View className="px-4 gap-4 ">
           {loading ? (
@@ -54,12 +54,12 @@ const WishlistScreen = () => {
               <BookingCardSkeleton key={index} />
             ))
           ) : error ? (
-            <View className="p-4 bg-red-50 rounded-lg">
-              <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+            <View className="p-4 bg-gray-50 rounded-lg">
+              <Text className="text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 {error}
               </Text>
               <TouchableOpacity onPress={refresh} className="mt-2">
-                <Text className="text-red-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                <Text className="text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                   Try Again
                 </Text>
               </TouchableOpacity>
@@ -82,10 +82,10 @@ const WishlistScreen = () => {
                 Start exploring and save your favorite hotels to your wishlist
               </Text>
               <TouchableOpacity 
-                className="bg-black dark:bg-white px-6 py-3 rounded-lg"
+                className="bg-black  px-6 py-3 rounded-lg"
                 onPress={() => router.push('/(tabs)/search')}
               >
-                <Text className="text-white dark:text-black text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                <Text className="text-white  text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                   Explore Hotels
                 </Text>
               </TouchableOpacity>
@@ -94,7 +94,7 @@ const WishlistScreen = () => {
             items.map((item) => (
               <TouchableOpacity 
                 key={item.id} 
-                className="flex-row items-start bg-white dark:bg-gray-900 p-3 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800"
+                className="flex-row items-start bg-white  p-3 rounded-xl shadow-sm border border-gray-100 "
                 onPress={() => router.push(`/hotels/${item.hotelId}`)}
               >
                 <Image
@@ -105,13 +105,13 @@ const WishlistScreen = () => {
 
                 <View className="flex-1 ml-4 justify-center">
                   <Text 
-                    className="text-black dark:text-white text-lg leading-tight mb-1"
+                    className="text-black  text-lg leading-tight mb-1"
                     style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                   >
                     {item.hotelName}
                   </Text>
                   <Text 
-                    className="text-gray-500 dark:text-gray-400 text-sm"
+                    className="text-gray-500  text-sm"
                     style={{ fontFamily: 'PlusJakartaSans-Regular' }}
                   >
                     {item.location}

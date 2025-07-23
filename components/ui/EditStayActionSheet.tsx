@@ -5,6 +5,7 @@ import { X } from 'lucide-react-native';
 import { DateRangePicker } from './DateRangePicker';
 import { TimeRangePicker } from './TimeRangePicker';
 import { GuestSelector } from './GuestSelector';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 interface DateRange {
   startDate: string | null;
@@ -133,12 +134,12 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
       // Reset text colors
       dailyText.setNativeProps({
         style: {
-          color: Colors[colorScheme ?? 'light'].icon
+          color: Colors['light'].icon
         }
       });
       hourlyText.setNativeProps({
         style: {
-          color: Colors[colorScheme ?? 'light'].icon
+          color: Colors['light'].icon
         }
       });
 
@@ -371,7 +372,7 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
           <TouchableOpacity 
             onPress={handleApply}
             className={`flex h-12 w-full items-center justify-center rounded-lg ${
-              isApplyEnabled ? 'bg-red-600' : 'bg-gray-300'
+              isApplyEnabled ? 'bg-black' : 'bg-gray-300'
             }`}
             disabled={!isApplyEnabled}
           >
