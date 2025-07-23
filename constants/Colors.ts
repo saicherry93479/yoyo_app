@@ -1,26 +1,48 @@
+
 /**
- * Below are the colors that are used in the app. The colors are defined in the light and dark mode.
- * There are many other ways to style your app. For example, [Nativewind](https://www.nativewind.dev/), [Tamagui](https://tamagui.dev/), [unistyles](https://reactnativeunistyles.vercel.app), etc.
+ * Uber color scheme for the app with light and dark mode support
  */
 
-const tintColorLight = '#FF5A5F';
-const tintColorDark = '#fff';
+const uberBlack = '#000000';
+const uberWhite = '#FFFFFF';
+const uberGreen = '#09B83E';
+const uberLightGray = '#F6F6F6';
+const uberDarkGray = '#1A1A1A';
+const uberMediumGray = '#8A8A8A';
+const uberRed = '#E11900';
+const uberBlue = '#276EF1';
 
 export const Colors = {
   light: {
-    text: '#11181C',
-    background: '#fff',
-    tint: tintColorLight,
-    icon: '#687076',
-    tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    text: uberBlack,
+    background: uberWhite,
+    tint: uberBlack,
+    icon: uberMediumGray,
+    tabIconDefault: uberMediumGray,
+    tabIconSelected: uberBlack,
+    primary: uberBlack,
+    secondary: uberLightGray,
+    accent: uberGreen,
+    danger: uberRed,
+    info: uberBlue,
+    border: '#E5E5E5',
+    card: uberWhite,
+    surface: uberLightGray,
   },
   dark: {
-    text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
-    icon: '#9BA1A6',
-    tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    text: uberWhite,
+    background: uberBlack,
+    tint: uberWhite,
+    icon: uberMediumGray,
+    tabIconDefault: uberMediumGray,
+    tabIconSelected: uberWhite,
+    primary: uberWhite,
+    secondary: uberDarkGray,
+    accent: uberGreen,
+    danger: uberRed,
+    info: uberBlue,
+    border: '#333333',
+    card: uberDarkGray,
+    surface: '#2A2A2A',
   },
 };
