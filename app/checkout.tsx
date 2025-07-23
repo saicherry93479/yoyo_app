@@ -30,6 +30,7 @@ const CheckoutScreen = () => {
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
 
+    console.log('select params ',JSON.stringify(params.selectedAddons))
     // Parse selected addons from params
     const selectedAddons = params.selectedAddons ? JSON.parse(params.selectedAddons as string) : [];
     const addonTotal = parseFloat(String(params.addonTotal || '0')) || 0;

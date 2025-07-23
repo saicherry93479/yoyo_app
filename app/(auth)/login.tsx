@@ -155,7 +155,7 @@ export default function LoginSignupScreen() {
             {/* Continue Button */}
             <View className="mb-8">
               <TouchableOpacity
-                className="w-full rounded-xl bg-red-500 py-4 shadow-sm active:bg-red-600 flex-row justify-center items-center"
+                className="w-full rounded-xl bg-red-500 py-4 shadow-sm active:bg-[#171717] flex-row justify-center items-center"
                 onPress={handleContinue}
                 disabled={loading}
               >

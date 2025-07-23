@@ -214,7 +214,7 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
               <TouchableOpacity
                 onPress={() => isValid ? validateCoupon(coupon.code) : null}
                 className={`px-4 py-2 rounded-lg ${
-                  isValid ? 'bg-red-600' : 'bg-gray-300'
+                  isValid ? 'bg-[#171717]' : 'bg-gray-300'
                 }`}
                 disabled={!isValid}
               >
@@ -278,7 +278,7 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
             <TouchableOpacity
               onPress={() => manualCouponCode.trim() && validateCoupon(manualCouponCode.trim())}
               className={`px-6 py-3 rounded-lg ${
-                manualCouponCode.trim() ? 'bg-red-600' : 'bg-gray-300'
+                manualCouponCode.trim() ? 'bg-[#171717]' : 'bg-gray-300'
               }`}
               disabled={!manualCouponCode.trim() || validatingCoupon === manualCouponCode.trim()}
             >

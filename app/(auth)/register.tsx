@@ -231,7 +231,7 @@ export default function RegisterScreen() {
           {/* Register Button */}
           <View className="mt-8">
             <TouchableOpacity
-              className="w-full rounded-lg bg-[#FF5A5F] py-3.5 shadow-sm active:bg-red-600 disabled:opacity-50"
+              className="w-full rounded-lg bg-[#FF5A5F] py-3.5 shadow-sm active:bg-[#171717] disabled:opacity-50"
               onPress={handleRegister}
               disabled={isLoading}
             >

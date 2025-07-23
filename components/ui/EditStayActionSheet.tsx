@@ -135,7 +135,7 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
           <TouchableOpacity 
             onPress={handleApply}
             className={`flex h-12 w-full items-center justify-center rounded-lg ${
-              isApplyEnabled ? 'bg-red-600' : 'bg-gray-300'
+              isApplyEnabled ? 'bg-[#171717]' : 'bg-gray-300'
             }`}
             disabled={!isApplyEnabled}
           >
