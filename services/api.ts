@@ -196,17 +196,25 @@ class ApiService {
     if (url.includes('/hotels/search')) {
       const searchQuery = params.query || '';
       const location = params.location || '';
+      const bookingType = params.bookingType || 'daily';
       const filteredHotels = searchHotels(searchQuery).filter(hotel => 
         !location || hotel.location.toLowerCase().includes(location.toLowerCase())
       );
 
+      // For hourly bookings, you might want to filter hotels that support hourly bookings
+      // This is just a placeholder - you'll need to implement actual hourly booking logic
+      const finalHotels = bookingType === 'hourly' 
+        ? filteredHotels.filter(hotel => hotel.amenities.includes('Hourly Booking')) // Add this amenity to some hotels
+        : filteredHotels;
+
       return {
         success: true,
         data: {
-          hotels: filteredHotels,
-          total: filteredHotels.length,
+          hotels: finalHotels,
+          total: finalHotels.length,
           page: params.page || 1,
-          limit: params.limit || 20
+          limit: params.limit || 20,
+          bookingType
         } as T,
         message: 'Search results fetched successfully'
       };

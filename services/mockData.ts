@@ -90,6 +90,7 @@ export const mockHotels: MockHotel[] = [
       'https://images.pexels.com/photos/261102/pexels-photo-261102.jpeg?auto=compress&cs=tinysrgb&w=800'
     ],
     amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym', 'Business Center', 'Room Service', 'Concierge'],
+    amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym', 'Business Center', 'Room Service', 'Concierge', 'Hourly Booking'],
     description: 'Experience luxury at its finest at The Oberoi Mumbai, located in the heart of the business district with stunning views of the Arabian Sea.',
     latitude: 18.9220,
     longitude: 72.8347,
@@ -165,6 +166,7 @@ export const mockHotels: MockHotel[] = [
       'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800'
     ],
     amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym', 'Concierge', 'Heritage Tours', 'Butler Service'],
+    amenities: ['Free WiFi', 'Pool', 'Spa', 'Restaurant', 'Gym', 'Concierge', 'Heritage Tours', 'Butler Service', 'Hourly Booking'],
     description: 'An iconic heritage hotel offering unparalleled luxury and service in the heart of Mumbai, overlooking the Gateway of India.',
     latitude: 18.9217,
     longitude: 72.8331,
@@ -211,6 +213,7 @@ export const mockHotels: MockHotel[] = [
       'https://images.pexels.com/photos/271624/pexels-photo-271624.jpeg?auto=compress&cs=tinysrgb&w=800'
     ],
     amenities: ['Free WiFi', 'Pool', 'Business Center', 'Restaurant', 'Gym', 'Spa'],
+    amenities: ['Free WiFi', 'Pool', 'Business Center', 'Restaurant', 'Gym', 'Spa', 'Hourly Booking'],
     description: 'A contemporary luxury hotel perfect for business and leisure travelers, featuring world-class amenities.',
     latitude: 19.0144,
     longitude: 72.8397,

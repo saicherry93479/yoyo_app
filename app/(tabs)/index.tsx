@@ -227,6 +227,19 @@ export default function HotelBookingApp() {
           <TouchableOpacity
             className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
             onPress={() => SheetManager.show('search')}
+            onPress={() => SheetManager.show('search', {
+              payload: {
+                onSearch: (searchData: any) => {
+                  // Navigate to search tab with the search data
+                  router.push({
+                    pathname: '/(tabs)/search',
+                    params: {
+                      searchData: JSON.stringify(searchData)
+                    }
+                  });
+                }
+              }
+            })}
           >
             <Search size={20} color="#6B7280" />
             <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>

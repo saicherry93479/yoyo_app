@@ -4,11 +4,17 @@ import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity } from 'react-native';
 import { X } from 'lucide-react-native';
 import { DateRangePicker } from './DateRangePicker';
+import { TimeRangePicker } from './TimeRangePicker';
 import { GuestSelector } from './GuestSelector';
 
 interface DateRange {
   startDate: string | null;
   endDate: string | null;
+}
+
+interface TimeRange {
+  startTime: string | null;
+  endTime: string | null;
 }
 
 interface GuestCounts {
@@ -21,6 +27,8 @@ interface EditStayData {
   guests: GuestCounts;
   checkIn: string;
   checkOut: string;
+  timeRange: TimeRange;
+  bookingType: 'daily' | 'hourly';
 }
 
 interface EditStayActionSheetProps {
@@ -35,7 +43,9 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
   const initialData = payload?.searchData || {
     guests: { adults: 2, children: 0, infants: 0 },
     checkIn: new Date(Date.now() + 24*60*60*1000).toISOString(),
-    checkOut: new Date(Date.now() + 3*24*60*60*1000).toISOString()
+    checkOut: new Date(Date.now() + 3*24*60*60*1000).toISOString(),
+    timeRange: { startTime: null, endTime: null },
+    bookingType: 'daily'
   };
 
   const [searchData, setSearchData] = useState<EditStayData>(initialData);
@@ -61,11 +71,21 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
     }
   };
 
+  const handleTimeRangeSelect = (timeRange: TimeRange) => {
+    setSearchData(prev => ({ ...prev, timeRange }));
+  };
+
+  const handleBookingTypeChange = (bookingType: 'daily' | 'hourly') => {
+    setSearchData(prev => ({ ...prev, bookingType }));
+  };
+
   const handleGuestCountChange = (guests: GuestCounts) => {
     setSearchData(prev => ({ ...prev, guests }));
   };
 
-  const isApplyEnabled = searchData.checkIn && searchData.checkOut;
+  const isApplyEnabled = searchData.bookingType === 'daily' 
+    ? (searchData.checkIn && searchData.checkOut)
+    : (searchData.timeRange.startTime && searchData.timeRange.endTime);
 
   return (
     <ActionSheet 
@@ -96,7 +116,34 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
 
         {/* Form Fields */}
         <View className="px-6 pb-6">
-          {/* When */}
+          {/* Booking Type Tabs */}
+          <View className="mb-6">
+            <View className="flex-row bg-gray-100 rounded-lg p-1">
+              <TouchableOpacity
+                className={`flex-1 py-2 rounded-md items-center ${
+                  searchData.bookingType === 'daily' ? 'bg-white shadow-sm' : ''
+                }`}
+                onPress={() => handleBookingTypeChange('daily')}
+              >
+                <Text className={`text-sm ${searchData.bookingType === 'daily' ? 'text-gray-900' : 'text-gray-600'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Daily
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                className={`flex-1 py-2 rounded-md items-center ${
+                  searchData.bookingType === 'hourly' ? 'bg-white shadow-sm' : ''
+                }`}
+                onPress={() => handleBookingTypeChange('hourly')}
+              >
+                <Text className={`text-sm ${searchData.bookingType === 'hourly' ? 'text-gray-900' : 'text-gray-600'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Hourly
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* When - Date Range for Daily */}
+          {searchData.bookingType === 'daily' && (
           <View className="mb-6">
             <Text 
               className="text-sm text-gray-900 mb-3" 
@@ -113,6 +160,25 @@ export function EditStayActionSheet({ sheetId, payload }: EditStayActionSheetPro
               placeholder="Check-in - Check-out"
             />
           </View>
+          )}
+
+          {/* When - Time Range for Hourly */}
+          {searchData.bookingType === 'hourly' && (
+            <View className="mb-6">
+              <Text 
+                className="text-sm text-gray-900 mb-3" 
+                style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+              >
+                Time Range
+              </Text>
+              <TimeRangePicker
+                value={searchData.timeRange}
+                onTimeRangeSelect={handleTimeRangeSelect}
+                placeholder="Start time - End time"
+                maxHours={12}
+              />
+            </View>
+          )}
 
           {/* Who */}
           <View className="mb-6">
