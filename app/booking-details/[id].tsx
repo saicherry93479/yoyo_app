@@ -346,11 +346,11 @@ const BookingDetails = () => {
     switch (status) {
       case 'confirmed':
       case 'upcoming':
-        return 'text-green-600 bg-green-50 border-green-200';
+        return 'text-green-800 bg-green-100 border-green-300';
       case 'completed':
-        return 'text-blue-600 bg-blue-50 border-blue-200';
+        return 'text-blue-800 bg-blue-100 border-blue-300';
       case 'cancelled':
-        return 'text-red-600 bg-red-50 border-red-200';
+        return 'text-red-800 bg-red-100 border-red-300';
       default:
         return 'text-gray-600 bg-gray-50 border-gray-200';
     }
@@ -571,7 +571,7 @@ const BookingDetails = () => {
         {/* Action Buttons */}
         <View className="px-6 py-6 border-t border-gray-100 gap-3">
           <TouchableOpacity
-            className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
+            className="w-full h-12 bg-black rounded-lg items-center justify-center"
             onPress={handleContactHotel}
           >
             <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
