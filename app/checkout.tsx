@@ -30,10 +30,44 @@ const CheckoutScreen = () => {
     const [appliedCoupon, setAppliedCoupon] = useState<any>(null);
     const [discountAmount, setDiscountAmount] = useState(0);
 
-    console.log('select params ',JSON.stringify(params.selectedAddons))
-    // Parse selected addons from params
-    const selectedAddons = params.selectedAddons ? JSON.parse(params.selectedAddons as string) : [];
+    // Safe parsing of selectedAddons
+    const parseSelectedAddons = () => {
+        try {
+            if (!params.selectedAddons) {
+                return [];
+            }
+            
+            // If it's already an array, return it
+            if (Array.isArray(params.selectedAddons)) {
+                return params.selectedAddons;
+            }
+            
+            // If it's a string, try to parse it
+            if (typeof params.selectedAddons === 'string') {
+                // Check if it looks like JSON
+                if (params.selectedAddons.startsWith('[') || params.selectedAddons.startsWith('{')) {
+                    return JSON.parse(params.selectedAddons);
+                }
+                // If it's "[object Object]" or similar, return empty array
+                if (params.selectedAddons.includes('[object')) {
+                    console.warn('selectedAddons contains [object Object], returning empty array');
+                    return [];
+                }
+            }
+            
+            return [];
+        } catch (error) {
+            console.error('Error parsing selectedAddons:', error);
+            console.log('selectedAddons value:', params.selectedAddons);
+            return [];
+        }
+    };
+
+    const selectedAddons = parseSelectedAddons();
     const addonTotal = parseFloat(String(params.addonTotal || '0')) || 0;
+
+    console.log('selectedAddons parsed:', selectedAddons);
+    console.log('addonTotal:', addonTotal);
 
     // Guest information state
     const [guestInfo, setGuestInfo] = useState({
@@ -439,30 +473,30 @@ useLayoutEffect(() => {
                         {appliedCoupon ? (
                             <View className="flex-row justify-between items-center mb-3">
                                 <View className="flex-row items-center">
-                                    <Tag size={16} color="#22C55E" />
-                                    <Text className="text-green-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                    <Tag size={16} color="#000000" />
+                                    <Text className="text-black ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                                         {appliedCoupon.code}
                                     </Text>
                                     <TouchableOpacity onPress={handleRemoveCoupon} className="ml-2">
-                                        <X size={16} color="#EF4444" />
+                                        <X size={16} color="#000000" />
                                     </TouchableOpacity>
                                 </View>
-                                <Text className="text-green-600" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                <Text className="text-black" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                                     -₹{discountAmount.toLocaleString()}
                                 </Text>
                             </View>
                         ) : (
                             <TouchableOpacity 
                                 onPress={() => openCouponsSheet()}
-                                className="flex-row justify-between items-center mb-3 p-3 rounded-lg border border-dashed border-red-300 bg-red-50"
+                                className="flex-row justify-between items-center mb-3 p-3 rounded-lg border border-dashed border-gray-300 bg-gray-50"
                             >
                                 <View className="flex-row items-center">
-                                    <Tag size={16} color="#DC2626" />
-                                    <Text className="text-red-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                    <Tag size={16} color="#000000" />
+                                    <Text className="text-black ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                                         Apply Coupon
                                     </Text>
                                 </View>
-                                <Text className="text-red-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                <Text className="text-black" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                                     Save more
                                 </Text>
                             </TouchableOpacity>
@@ -491,7 +525,7 @@ useLayoutEffect(() => {
                                 Jul 10, 2024
                             </Text>
                             {' '}for a partial refund. After that, this reservation is non-refundable.{' '}
-                            <Text className="text-[#e1a9a1] " style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                            <Text className="text-black underline" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                                 Learn more
                             </Text>
                         </Text>

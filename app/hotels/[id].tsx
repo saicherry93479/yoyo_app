@@ -250,6 +250,7 @@ const HotelDetails = () => {
       (hotel?.roomUpgradeData?.upgradeOptions && hotel.roomUpgradeData.upgradeOptions.length > 0);
   };
 
+
   // Handle booking
   const handleBookNow = () => {
     if (!areRoomsAvailable()) return;
@@ -263,13 +264,14 @@ const HotelDetails = () => {
       hotelName: hotel.name,
       roomName: selectedRoom?.name || hotel.roomUpgradeData?.currentRoom?.name || 'Standard Room',
       totalAmount: getCurrentRoomPrice(),
-      selectedAddons: selectedAddons,
+      // Convert selectedAddons to JSON string properly
+      selectedAddons: JSON.stringify(selectedAddons),
       addonTotal: calculateAddonTotal(),
       address: hotel.address,
       image: hotel.images?.[0] || 'https://via.placeholder.com/400x300'
     };
 
-    console.log('bookingData ',bookingData)
+    console.log('bookingData ', bookingData);
 
     router.push({
       pathname: '/checkout',
