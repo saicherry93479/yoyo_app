@@ -62,7 +62,7 @@ export default function RootLayout() {
       <AuthProvider>
         <WishlistProvider>
           <SheetProvider>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+            <ThemeProvider value={colorScheme === 'dark' ? DefaultTheme : DefaultTheme}>
               <Stack initialRouteName='(tabs)'>
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
