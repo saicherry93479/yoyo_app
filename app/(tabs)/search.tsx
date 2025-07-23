@@ -172,11 +172,15 @@ export default function SearchScreen() {
         coordinates: searchData.location?.coordinates || { lat: 0, lng: 0 },
         city: searchData.location?.name || '',
         radius: 50,
-        dateRange: {
-          startDate: searchData.dateRange?.startDate || searchData?.timeRange?.startDateTime || new Date().toISOString(),
-          endDate: searchData.dateRange?.endDate || searchData?.timeRange?.endDateTime || new Date().toISOString(),
+        dateRange: searchData.bookingType === 'daily' ? {
+          startDate: searchData.dateRange?.startDate || new Date().toISOString(),
+          endDate: searchData.dateRange?.endDate || new Date().toISOString(),
+        } : {
+          startDate: searchData.timeRange?.startDateTime || new Date().toISOString(),
+          endDate: searchData.timeRange?.endDateTime || new Date().toISOString(),
         },
         guests: searchData.guests || { adults: 1, children: 0, infants: 0 },
+        bookingType: searchData.bookingType || 'daily',
         priceRange: searchFilters.priceRange || { min: 0, max: 999999 },
         starRating: searchFilters.rating || 0,
         amenities: searchFilters.amenities || [],

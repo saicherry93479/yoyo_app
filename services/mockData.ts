@@ -14,6 +14,9 @@ export interface MockHotel {
   longitude: number;
   distance?: string;
   offer?: string;
+  bookingType?: 'daily' | 'hourly';
+  perHour?: boolean;
+  perNight?: boolean;
   rooms: MockRoom[];
   reviews: MockReview[];
 }

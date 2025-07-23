@@ -43,7 +43,7 @@ interface SearchData {
   dateRange: DateRange;
   timeRange: TimeRange;
   guests: GuestCounts;
-  searchType: 'daily' | 'hourly';
+  bookingType: 'daily' | 'hourly';
 }
 
 interface SearchActionSheetProps {
@@ -60,7 +60,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     dateRange: { startDate: null, endDate: null },
     timeRange: { selectedDate: null, startDateTime: null, endDateTime: null, startTime: null, endTime: null },
     guests: { adults: 1, children: 0, infants: 0 },
-    searchType: 'daily'
+    bookingType: 'daily'
   });
   const [isSearching, setIsSearching] = useState(false);
 
@@ -157,7 +157,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     console.log('tab is ', tab);
     activeTabRef.current = tab;
     updateTabStyles(tab);
-    setSearchData(prev => ({ ...prev, searchType: tab === 0 ? 'daily' : 'hourly' }));
+    setSearchData(prev => ({ ...prev, bookingType: tab === 0 ? 'daily' : 'hourly' }));
   };
 
   const handleClose = () => {

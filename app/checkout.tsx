@@ -87,7 +87,8 @@ const CheckoutScreen = () => {
       roomName: String(params.roomName || ''),
       totalAmount: parseFloat(String(params.totalAmount || '0')) || 0,
       address: String(params.address || ''),
-      image: String(params.image || '')
+      image: String(params.image || ''),
+      bookingType: String(params.bookingType || 'daily')
     };
 
 useLayoutEffect(() => {
@@ -287,7 +288,10 @@ useLayoutEffect(() => {
                                     <Clock size={16} color="#6B7280" />
                                 </View>
                                 <Text className="text-gray-500 text-sm ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                    {nights} {nights === 1 ? 'night' : 'nights'}
+                                    {bookingData.bookingType === 'daily' 
+                                      ? `${nights} ${nights === 1 ? 'night' : 'nights'}`
+                                      : 'Hourly booking'
+                                    }
                                 </Text>
                             </View>
                             <View className="flex-row items-center mt-2">
@@ -411,19 +415,37 @@ useLayoutEffect(() => {
                         <View className="flex-1">
                             <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-in</Text>
                             <Text className="text-[#161312] text-lg mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                {formatDate(bookingData.checkIn)}
+                                {bookingData.bookingType === 'daily' 
+                                  ? formatDate(bookingData.checkIn)
+                                  : new Date(bookingData.checkIn).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })
+                                }
                             </Text>
                             <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                After 2:00 PM
+                                {bookingData.bookingType === 'daily' ? 'After 2:00 PM' : 'Start time'}
                             </Text>
                         </View>
                         <View className="flex-1">
                             <Text className="text-gray-500 text-sm" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-out</Text>
                             <Text className="text-[#161312] text-lg mt-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                {formatDate(bookingData.checkOut)}
+                                {bookingData.bookingType === 'daily' 
+                                  ? formatDate(bookingData.checkOut)
+                                  : new Date(bookingData.checkOut).toLocaleString('en-US', {
+                                      month: 'short',
+                                      day: 'numeric',
+                                      hour: '2-digit',
+                                      minute: '2-digit',
+                                      hour12: true
+                                    })
+                                }
                             </Text>
                             <Text className="text-gray-500 text-sm mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                Before 12:00 PM
+                                {bookingData.bookingType === 'daily' ? 'Before 12:00 PM' : 'End time'}
                             </Text>
                         </View>
                         <View className="items-center justify-center">
@@ -442,20 +464,34 @@ useLayoutEffect(() => {
 
                         <View className="flex-row justify-between items-center mb-3">
                             <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                ₹{bookingData.totalAmount.toLocaleString()} x {nights} {nights === 1 ? 'night' : 'nights'}
+                                ₹{bookingData.totalAmount.toLocaleString()} x {bookingData.bookingType === 'daily' 
+                                  ? `${nights} ${nights === 1 ? 'night' : 'nights'}`
+                                  : 'hourly rate'
+                                }
                             </Text>
                             <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                                ₹{subtotal.toLocaleString()}
+                                ₹{bookingData.bookingType === 'daily' ? subtotal.toLocaleString() : bookingData.totalAmount.toLocaleString()}
                             </Text>
                         </View>
 
-                        {totalAddonsForStay > 0 && (
+                        {totalAddonsForStay > 0 && bookingData.bookingType === 'daily' && (
                             <View className="flex-row justify-between items-center mb-3">
                                 <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                                     Add-ons x {nights} {nights === 1 ? 'night' : 'nights'}
                                 </Text>
                                 <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                                     ₹{totalAddonsForStay.toLocaleString()}
+                                </Text>
+                            </View>
+                        )}
+
+                        {selectedAddons.length > 0 && bookingData.bookingType === 'hourly' && (
+                            <View className="flex-row justify-between items-center mb-3">
+                                <Text className="text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                    Add-ons (hourly rate)
+                                </Text>
+                                <Text className="text-[#161312]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                    ₹{addonTotal.toLocaleString()}
                                 </Text>
                             </View>
                         )}
