@@ -231,7 +231,7 @@ export default function RegisterScreen() {
           {/* Register Button */}
           <View className="mt-8">
             <TouchableOpacity
-              className="w-full rounded-lg bg-[#FF5A5F] py-3.5 shadow-sm active:bg-[#171717] disabled:opacity-50"
+              className="w-full rounded-lg bg-black py-3.5 shadow-sm active:bg-[#1A1A1A] disabled:opacity-50"
               onPress={handleRegister}
               disabled={isLoading}
             >
@@ -296,7 +296,7 @@ export default function RegisterScreen() {
           <View className="mt-8 items-center">
             <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               Already have an account?{' '}
-              <Link href="/(auth)/login" className="text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              <Link href="/(auth)/login" className="text-black" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 Sign In
               </Link>
             </Text>

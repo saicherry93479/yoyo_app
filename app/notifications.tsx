@@ -240,7 +240,7 @@ export default function NotificationsScreen() {
                 </Text>
               </View>
             </View>
-            <Text className="text-[#FF5A5F]" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+            <Text className="text-black" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
               Send
             </Text>
           </View>

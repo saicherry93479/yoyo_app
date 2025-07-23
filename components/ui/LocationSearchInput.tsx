@@ -135,8 +135,8 @@ export function LocationSearchInput({
         paddingHorizontal: 16,
         paddingVertical: 12,
         borderBottomWidth: 1,
-        borderBottomColor: '#F1F5F9',
-        backgroundColor: 'white',
+        borderBottomColor: '#E5E5E5',
+        backgroundColor: '#FFFFFF',
       }}
       onPress={() => handleLocationSelect(location)}
     >
@@ -146,7 +146,7 @@ export function LocationSearchInput({
       <View style={{ flex: 1 }}>
         <Text style={{
           fontSize: 16,
-          color: '#0F172A',
+          color: '#000000',
           fontWeight: '600',
           marginBottom: 2,
           fontFamily: 'PlusJakartaSans-SemiBold'
@@ -155,7 +155,7 @@ export function LocationSearchInput({
         </Text>
         <Text style={{
           fontSize: 14,
-          color: '#64748B',
+          color: '#8A8A8A',
           fontFamily: 'PlusJakartaSans-Regular'
         }}>
           {location.description}
@@ -173,22 +173,22 @@ export function LocationSearchInput({
         paddingVertical: 12,
         borderBottomWidth: 1,
         borderBottomColor: '#F1F5F9',
-        backgroundColor: '#F0F9FF',
+        backgroundColor: '#F6F6F6',
       }}
       onPress={getCurrentLocation}
       disabled={isGettingLocation}
     >
       <View style={{ marginRight: 12 }}>
         {isGettingLocation ? (
-          <ActivityIndicator size="small" color="#3B82F6" />
+          <ActivityIndicator size="small" color="#000000" />
         ) : (
-          <Navigation size={20} color="#3B82F6" />
+          <Navigation size={20} color="#000000" />
         )}
       </View>
       <View style={{ flex: 1 }}>
         <Text style={{
           fontSize: 16,
-          color: '#2563EB',
+          color: '#000000',
           fontWeight: '600',
           fontFamily: 'PlusJakartaSans-SemiBold'
         }}>
@@ -196,7 +196,7 @@ export function LocationSearchInput({
         </Text>
         <Text style={{
           fontSize: 14,
-          color: '#3B82F6',
+          color: '#8A8A8A',
           fontFamily: 'PlusJakartaSans-Regular'
         }}>
           Find places near you

@@ -434,7 +434,7 @@ export default function OnboardingScreen() {
       <View className="px-6 py-6">
         {currentStep === steps.length - 1 ? (
           <TouchableOpacity
-            className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
+            className="w-full h-12 bg-black rounded-lg items-center justify-center"
             onPress={completeOnboarding}
             disabled={isLoading}
           >
@@ -448,7 +448,7 @@ export default function OnboardingScreen() {
           </TouchableOpacity>
         ) : (
           <TouchableOpacity
-            className="w-full h-12 bg-[#FF5A5F] rounded-lg items-center justify-center"
+            className="w-full h-12 bg-black rounded-lg items-center justify-center"
             onPress={handleNext}
           >
             <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

@@ -785,7 +785,7 @@ const HotelDetails = () => {
               )}
             </View>
 
-            <TouchableOpacity onPress={handleBookNow} className="bg-[#171717] px-6 py-3 rounded-full">
+            <TouchableOpacity onPress={handleBookNow} className="bg-black px-6 py-3 rounded-full">
               <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Book Now</Text>
             </TouchableOpacity>
           </View>
@@ -799,7 +799,7 @@ const HotelDetails = () => {
             </Text>
             <TouchableOpacity
               onPress={handleEditSearch}
-              className="bg-[#171717] px-6 py-3 rounded-full"
+              className="bg-black px-6 py-3 rounded-full"
             >
               <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Change Dates/Guests

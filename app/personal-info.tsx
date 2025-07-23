@@ -239,7 +239,7 @@ export default function PersonalInfoScreen() {
                   key={gender}
                   className={`flex-1 py-3 rounded-lg border items-center ${
                     formData.gender === gender
-                      ? 'border-[#FF5A5F] bg-red-50'
+                      ? 'border-black bg-gray-50'
                       : 'border-gray-300 bg-white'
                   } ${!isEditing ? 'opacity-50' : ''}`}
                   onPress={() => isEditing && updateFormData('gender', gender)}
@@ -248,7 +248,7 @@ export default function PersonalInfoScreen() {
                 >
                   <Text 
                     className={`text-sm ${
-                      formData.gender === gender ? 'text-[#FF5A5F]' : 'text-gray-700'
+                      formData.gender === gender ? 'text-black' : 'text-gray-700'
                     }`}
                     style={{ fontFamily: 'PlusJakartaSans-Medium' }}
                   >
@@ -276,7 +276,7 @@ export default function PersonalInfoScreen() {
               </TouchableOpacity>
               <TouchableOpacity
                 className={`flex-1 h-12 rounded-lg items-center justify-center ${
-                  isLoading ? 'bg-red-300' : 'bg-[#FF5A5F]'
+                  isLoading ? 'bg-gray-300' : 'bg-black'
                 }`}
                 onPress={handleSave}
                 disabled={isLoading}
