@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { X, Search } from 'lucide-react-native';
 import { LocationSearchInput } from './LocationSearchInput';
 import { DateRangePicker } from './DateRangePicker';
+import { TimeRangePicker } from './TimeRangePicker';
 import { GuestSelector } from './GuestSelector';
 import { router } from 'expo-router';
 
@@ -29,28 +30,42 @@ interface GuestCounts {
   infants: number;
 }
 
+interface TimeRange {
+  startTime: string | null;
+  endTime: string | null;
+}
+
 interface SearchData {
   location: Location | null;
   dateRange: DateRange;
+  timeRange: TimeRange;
   guests: GuestCounts;
+  bookingType: 'daily' | 'hourly';
 }
 
 interface SearchActionSheetProps {
   sheetId: string;
   payload?: {
     onSearch?: (searchData: SearchData) => void;
+    initialData?: SearchData;
   };
 }
 
 export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
-  const [searchData, setSearchData] = useState<SearchData>({
+  const [searchData, setSearchData] = useState<SearchData>(payload?.initialData || {
     location: null,
     dateRange: { startDate: null, endDate: null },
+    timeRange: { startTime: null, endTime: null },
     guests: { adults: 1, children: 0, infants: 0 }
+    bookingType: 'daily'
   });
   const [isSearching, setIsSearching] = useState(false);
 
-  const isSearchEnabled = searchData.location && searchData.dateRange.startDate && searchData.dateRange.endDate;
+  const isSearchEnabled = searchData.location && 
+    (searchData.bookingType === 'daily' 
+      ? (searchData.dateRange.startDate && searchData.dateRange.endDate)
+      : (searchData.timeRange.startTime && searchData.timeRange.endTime)
+    );
 
   const handleClose = () => {
     SheetManager.hide(sheetId);
@@ -89,6 +104,14 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
 
   const handleDateRangeSelect = (dateRange: DateRange) => {
     setSearchData(prev => ({ ...prev, dateRange }));
+  };
+
+  const handleTimeRangeSelect = (timeRange: TimeRange) => {
+    setSearchData(prev => ({ ...prev, timeRange }));
+  };
+
+  const handleBookingTypeChange = (bookingType: 'daily' | 'hourly') => {
+    setSearchData(prev => ({ ...prev, bookingType }));
   };
 
   const handleGuestCountChange = (guests: GuestCounts) => {
@@ -135,6 +158,32 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
 
             {/* Form Fields */}
             <View className="px-4">
+              {/* Booking Type Tabs */}
+              <View className="mb-6">
+                <View className="flex-row bg-gray-100 rounded-lg p-1">
+                  <TouchableOpacity
+                    className={`flex-1 py-2 rounded-md items-center ${
+                      searchData.bookingType === 'daily' ? 'bg-white shadow-sm' : ''
+                    }`}
+                    onPress={() => handleBookingTypeChange('daily')}
+                  >
+                    <Text className={`text-sm ${searchData.bookingType === 'daily' ? 'text-gray-900' : 'text-gray-600'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                      Daily
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    className={`flex-1 py-2 rounded-md items-center ${
+                      searchData.bookingType === 'hourly' ? 'bg-white shadow-sm' : ''
+                    }`}
+                    onPress={() => handleBookingTypeChange('hourly')}
+                  >
+                    <Text className={`text-sm ${searchData.bookingType === 'hourly' ? 'text-gray-900' : 'text-gray-600'}`} style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                      Hourly
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+
               {/* Where */}
               <View className="mb-6">
                 <Text 
@@ -151,20 +200,40 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 />
               </View>
 
-              {/* When */}
+              {/* When - Date Range for Daily */}
+              {searchData.bookingType === 'daily' && (
+                <View className="mb-6">
+                  <Text 
+                    className="text-sm text-slate-900 mb-2" 
+                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                  >
+                    When
+                  </Text>
+                  <DateRangePicker
+                    value={searchData.dateRange}
+                    onDateRangeSelect={handleDateRangeSelect}
+                    placeholder="Check-in - Check-out"
+                  />
+                </View>
+              )}
+
+              {/* When - Time Range for Hourly */}
+              {searchData.bookingType === 'hourly' && (
               <View className="mb-6">
                 <Text 
                   className="text-sm text-slate-900 mb-2" 
                   style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 >
-                  When
+                  Time Range
                 </Text>
-                <DateRangePicker
-                  value={searchData.dateRange}
-                  onDateRangeSelect={handleDateRangeSelect}
-                  placeholder="Check-in - Check-out"
+                <TimeRangePicker
+                  value={searchData.timeRange}
+                  onTimeRangeSelect={handleTimeRangeSelect}
+                  placeholder="Start time - End time"
+                  maxHours={12}
                 />
               </View>
+              )}
 
               {/* Who */}
               <View className="mb-6">
