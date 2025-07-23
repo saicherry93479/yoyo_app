@@ -78,6 +78,40 @@ export default function SearchScreen() {
   const params = useLocalSearchParams();
   const { addToWishlist, removeFromWishlistByHotelId, isInWishlist } = useWishlist();
 
+  // Format search display text
+  const getSearchDisplayText = () => {
+    if (!currentSearchData) return 'Search destinations, hotels...';
+    
+    const location = currentSearchData.location?.name || '';
+    const bookingType = currentSearchData.bookingType || 'daily';
+    
+    if (bookingType === 'hourly') {
+      const timeRange = currentSearchData.timeRange;
+      if (timeRange?.startTime && timeRange?.endTime) {
+        const formatTime = (time: string) => {
+          const hour = parseInt(time.split(':')[0]);
+          const period = hour >= 12 ? 'PM' : 'AM';
+          const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+          return `${displayHour}:00 ${period}`;
+        };
+        return `${location} • Hourly • ${formatTime(timeRange.startTime)} - ${formatTime(timeRange.endTime)}`;
+      }
+      return `${location} • Hourly`;
+    } else {
+      const dateRange = currentSearchData.dateRange;
+      if (dateRange?.startDate && dateRange?.endDate) {
+        const formatDate = (dateString: string) => {
+          return new Date(dateString).toLocaleDateString('en-US', { 
+            month: 'short', 
+            day: 'numeric' 
+          });
+        };
+        return `${location} • Daily • ${formatDate(dateRange.startDate)} - ${formatDate(dateRange.endDate)}`;
+      }
+      return `${location} • Daily`;
+    }
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShadowVisible: false,
@@ -316,7 +350,8 @@ export default function SearchScreen() {
         className="bg-[#FF5A5F] px-8 py-4 rounded-xl shadow-lg"
         onPress={() => SheetManager.show('search', {
           payload: {
-            onSearch: handleSearch
+            onSearch: handleSearch,
+            initialData: currentSearchData
           }
         })}
       >
@@ -357,7 +392,8 @@ export default function SearchScreen() {
           className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
           onPress={() => SheetManager.show('search', {
             payload: {
-              onSearch: handleSearch
+              onSearch: handleSearch,
+              initialData: currentSearchData
             }
           })}
         >
@@ -397,13 +433,14 @@ export default function SearchScreen() {
           className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
           onPress={() => SheetManager.show('search', {
             payload: {
-              onSearch: handleSearch
+              onSearch: handleSearch,
+              initialData: currentSearchData
             }
           })}
         >
           <Search size={20} color="#6B7280" />
           <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {currentSearchData?.location?.name || 'Search destinations, hotels...'}
+            {getSearchDisplayText()}
           </Text>
         </TouchableOpacity>
       </View>
