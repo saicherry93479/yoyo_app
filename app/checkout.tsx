@@ -56,7 +56,7 @@ const CheckoutScreen = () => {
       address: String(params.address || ''),
       image: String(params.image || '')
     };
-                className={`w-full p-4 rounded-2xl items-center ${loading ? 'bg-gray-400' : 'bg-black'}`}
+
 useLayoutEffect(() => {
         navigation.setOptions({
           headerShadowVisible: false,
