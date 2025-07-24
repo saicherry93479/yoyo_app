@@ -107,6 +107,31 @@ const BookingDetails = () => {
     );
   };
 
+  const formatDate = (dateString: string) => {
+    // Remove the 'Z' to treat it as local time instead of UTC
+    const localDateString = dateString.replace('Z', '');
+    const date = new Date(localDateString);
+
+    return date.toLocaleDateString('en-IN', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+  const formatTime = (dateString: string) => {
+    console.log('dateString', dateString);
+    const date = new Date(dateString); // Don't add 'Z'
+    return date.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
+    });
+  };
+
+
   const generateReceiptHTML = (booking: MockBooking) => {
     const addonsHTML = booking.addons && booking.addons.length > 0 ? `
       <div class="section">
@@ -171,32 +196,50 @@ const BookingDetails = () => {
           <div class="section-title">Trip Details</div>
           <div class="detail-row">
             <span>Check-in:</span>
-            <span>${new Date(booking.checkIn).toLocaleDateString('en-IN', {
-      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-    })}</span>
+            <span>${formatDate(booking.checkIn)}</span>
           </div>
           <div class="detail-row">
             <span>Check-out:</span>
-            <span>${new Date(booking.checkOut).toLocaleDateString('en-IN', {
-      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-    })}</span>
+            <span>${formatDate(booking.checkOut)}</span>
           </div>
           <div class="detail-row">
             <span>Guests:</span>
             <span>${booking.guests} ${booking.guests === 1 ? 'guest' : 'guests'}</span>
           </div>
-          <div class="detail-row">
-            <span>Nights:</span>
-            <span>${booking.nights} ${booking.nights === 1 ? 'night' : 'nights'}</span>
-          </div>
+         <div class="detail-row">
+          <span>Nights:</span>
+          <span>
+            ${booking.nights}
+            ${booking.bookingType === 'daily'
+        ? booking.nights === 1
+          ? 'night'
+          : 'nights'
+        : booking.nights === 1
+          ? 'hour'
+          : 'hours'
+      }
+          </span>
+        </div>
+
         </div>
         
         <div class="section">
           <div class="section-title">Price Breakdown</div>
-          <div class="detail-row">
-            <span>₹${booking.priceBreakdown.roomRate.toLocaleString()} × ${booking.nights} nights:</span>
+         <div class="detail-row">
+            <span>
+              ₹${booking.priceBreakdown.roomRate.toLocaleString()} × ${booking.nights}
+              ${booking.bookingType === 'daily'
+        ? booking.nights === 1
+          ? 'night'
+          : 'nights'
+        : booking.nights === 1
+          ? 'hour'
+          : 'hours'
+      }:
+            </span>
             <span>₹${booking.priceBreakdown.subtotal.toLocaleString()}</span>
           </div>
+
           <div class="detail-row">
             <span>Taxes and fees:</span>
             <span>₹${booking.priceBreakdown.taxes.toLocaleString()}</span>
@@ -332,15 +375,6 @@ const BookingDetails = () => {
     );
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-IN', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
-      year: 'numeric'
-    });
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -420,6 +454,11 @@ const BookingDetails = () => {
                 <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
                   {formatDate(booking.checkIn)}
                 </Text>
+                {/* {booking.bookingType === 'hourly' && (
+                  <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    {formatTime(booking.checkOut)}
+                  </Text>
+                )} */}
               </View>
             </View>
 
@@ -430,7 +469,7 @@ const BookingDetails = () => {
                   Check-out
                 </Text>
                 <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                  {formatDate(booking.checkOut)}
+                {formatDate(booking.checkOut)}
                 </Text>
               </View>
             </View>
@@ -494,13 +533,13 @@ const BookingDetails = () => {
           <View className="gap-3">
             <View className="flex-row justify-between">
               <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                ₹{booking.priceBreakdown.roomRate.toLocaleString()} × {booking.nights} nights
+                ₹{booking.priceBreakdown.roomRate.toLocaleString()} × {booking.nights} {booking.bookinType == 'daily' ? 'nights' : 'hours'}
               </Text>
               <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 ₹{booking.priceBreakdown.subtotal.toLocaleString()}
               </Text>
             </View>
-            
+
             {/* Add-ons in price breakdown */}
             {booking.addons && booking.addons.length > 0 && booking.addons.map((addon) => (
               <View key={addon.id} className="flex-row justify-between">
@@ -512,7 +551,7 @@ const BookingDetails = () => {
                 </Text>
               </View>
             ))}
-            
+
             <View className="flex-row justify-between">
               <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                 Taxes and fees

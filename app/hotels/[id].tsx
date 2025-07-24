@@ -100,7 +100,7 @@ const HotelDetails = () => {
           setSelectedRoom(response.data.hotel.roomUpgradeData.currentRoom);
         }
       } else {
-        setError(response.error || 'Failed to fetch hotel details');
+        setError('Failed to fetch hotel details');
       }
     } catch (err) {
       setError(err.message || 'An error occurred');
@@ -242,12 +242,24 @@ const HotelDetails = () => {
     setSelectedAddons(prev =>
       prev.map(addon => {
         if (addon.id === addonId) {
-          const newQuantity = increment ? addon.quantity + 1 : Math.max(1, addon.quantity - 1);
-          return { ...addon, quantity: newQuantity };
+          if (increment) {
+            return { ...addon, quantity: addon.quantity + 1 };
+          } else {
+            // Don't allow decreasing below 1, just remove the addon
+            if (addon.quantity <= 1) {
+              return addon; // Keep it as is, the remove functionality should be handled by the X button
+            }
+            return { ...addon, quantity: addon.quantity - 1 };
+          }
         }
         return addon;
       })
     );
+  };
+
+  // Handler for removing addon completely
+  const handleRemoveAddon = (addonId: string) => {
+    setSelectedAddons(prev => prev.filter(addon => addon.id !== addonId));
   };
 
   // Check if addon is selected
@@ -265,6 +277,7 @@ const HotelDetails = () => {
   const calculateAddonTotal = () => {
     return selectedAddons.reduce((total, addon) => total + (addon.price * addon.quantity), 0);
   };
+
   // Get current room price
   const getCurrentRoomPrice = () => {
     if (selectedRoom) {
@@ -277,12 +290,12 @@ const HotelDetails = () => {
   const getTotalPrice = () => {
     return getCurrentRoomPrice() + calculateAddonTotal();
   };
+
   // Check if rooms are available
   const areRoomsAvailable = () => {
     return hotel?.roomUpgradeData?.currentRoom ||
       (hotel?.roomUpgradeData?.upgradeOptions && hotel.roomUpgradeData.upgradeOptions.length > 0);
   };
-
 
   // Handle booking
   const handleBookNow = () => {
@@ -303,7 +316,6 @@ const HotelDetails = () => {
       address: hotel.address,
       image: hotel.images?.[0] || 'https://via.placeholder.com/400x300',
       bookingType:searchParams.bookingType
-
     };
 
     console.log('bookingData ', bookingData);
@@ -526,9 +538,98 @@ const HotelDetails = () => {
           </TouchableOpacity>
         </View>
 
+        {/* Room Upgrades */}
+        <View className="border-b border-stone-200 p-5">
+          <Text className="text-lg text-stone-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
+
+          <View className="gap-4">
+            {/* Current Room */}
+            {hotel.roomUpgradeData?.currentRoom && (
+              <TouchableOpacity
+                onPress={() => handleRoomSelect(hotel.roomUpgradeData.currentRoom)}
+                className={`flex-row items-center gap-4 p-4 border rounded-xl ${
+                  selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id 
+                    ? 'border-black bg-black/5' 
+                    : 'border-stone-200'
+                }`}
+              >
+                <Image
+                  source={{
+                    uri: hotel.roomUpgradeData.currentRoom.image || imageUrls[0]
+                  }}
+                  className="w-24 h-24 rounded-lg"
+                  style={{ resizeMode: 'cover' }}
+                />
+                <View className="flex-1">
+                  <View className="flex-row items-center gap-2 mb-1">
+                    <Text className="text-sm text-green-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                      Current Selection
+                    </Text>
+                    {selectedRoom?.id === hotel.roomUpgradeData.currentRoom.id && (
+                      <View className="w-5 h-5 bg-black rounded-full items-center justify-center">
+                        <Check size={12} color="white" />
+                      </View>
+                    )}
+                  </View>
+                  <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {hotel.roomUpgradeData.currentRoom.name}
+                  </Text>
+                  <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {hotel.roomUpgradeData.currentRoom.features}
+                  </Text>
+                  <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    ₹{hotel.roomUpgradeData.currentRoom.displayPrice}/ {bookingType==='hourly'?'hour':'night'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {/* Upgrade Options */}
+            {hotel.roomUpgradeData?.upgradeOptions?.map((room, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() => handleRoomSelect(room)}
+                className={`flex-row items-center gap-4 p-4 border rounded-xl ${
+                  selectedRoom?.id === room.id 
+                    ? 'border-black bg-black/5' 
+                    : 'border-stone-200'
+                }`}
+              >
+                <Image
+                  source={{
+                    uri: room.image || imageUrls[0]
+                  }}
+                  className="w-24 h-24 rounded-lg"
+                  style={{ resizeMode: 'cover' }}
+                />
+                <View className="flex-1">
+                  <View className="flex-row items-center gap-2 mb-1">
+                    <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                      Upgrade Available
+                    </Text>
+                    {selectedRoom?.id === room.id && (
+                      <View className="w-5 h-5 bg-black rounded-full items-center justify-center">
+                        <Check size={12} color="white" />
+                      </View>
+                    )}
+                  </View>
+                  <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {room.name}
+                  </Text>
+                  <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {room.features}
+                  </Text>
+                  <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    ₹{room.displayPrice}/{bookingType==='hourly'?'hour':'night'}
+                  </Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
         {/* Add-ons Section - Horizontal Scrollable */}
-        {/* Add-ons Section - Horizontal Scrollable */}
-        {(selectedRoom?.addons || hotel?.roomUpgradeData?.currentRoom?.addons) && (
+        {((selectedRoom?.addons && selectedRoom?.addons.length > 0) || (hotel?.roomUpgradeData?.currentRoom?.addons && hotel?.roomUpgradeData?.currentRoom?.addons.length > 0)) && (
           <View className="border-b border-stone-200 py-5">
             <View className="px-5 mb-4">
               <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -576,7 +677,7 @@ const HotelDetails = () => {
                         {!isSelected ? (
                           <TouchableOpacity
                             onPress={() => handleAddonToggle(addon)}
-                            className="flex-row items-center justify-center gap-2 bg-blue-600 rounded-xl py-3.5"
+                            className="flex-row items-center justify-center gap-2 bg-black rounded-xl py-3.5"
                           >
                             <Plus size={18} color="white" />
                             <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
@@ -584,36 +685,49 @@ const HotelDetails = () => {
                             </Text>
                           </TouchableOpacity>
                         ) : (
-                          <View className="flex-row items-center justify-between bg-stone-50 rounded-xl p-3">
-                            <View className="flex-1">
-                              <Text className="text-sm text-stone-600 mb-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                                Quantity
-                              </Text>
-                              <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                {quantity} {quantity === 1 ? 'item' : 'items'}
-                              </Text>
+                          <View className="space-y-3">
+                            <View className="flex-row items-center justify-between bg-stone-50 rounded-xl p-3">
+                              <View className="flex-1">
+                                <Text className="text-sm text-stone-600 mb-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                  Quantity
+                                </Text>
+                                <Text className="text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                  {quantity} {quantity === 1 ? 'item' : 'items'}
+                                </Text>
+                              </View>
+
+                              <View className="flex-row items-center gap-3">
+                                <TouchableOpacity
+                                  onPress={() => handleAddonQuantityChange(addon.id, false)}
+                                  className="w-10 h-10 rounded-full bg-white border border-stone-200 items-center justify-center shadow-sm"
+                                  disabled={quantity <= 1}
+                                >
+                                  <Minus size={16} color={quantity <= 1 ? "#d6d3d1" : "#374151"} />
+                                </TouchableOpacity>
+
+                                <Text className="text-lg text-stone-900 w-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                                  {quantity}
+                                </Text>
+
+                                <TouchableOpacity
+                                  onPress={() => handleAddonQuantityChange(addon.id, true)}
+                                  className="w-10 h-10 rounded-full bg-black items-center justify-center shadow-sm"
+                                >
+                                  <Plus size={16} color="white" />
+                                </TouchableOpacity>
+                              </View>
                             </View>
 
-                            <View className="flex-row items-center gap-3">
-                              <TouchableOpacity
-                                onPress={() => handleAddonQuantityChange(addon.id, false)}
-                                className="w-10 h-10 rounded-full bg-white border border-stone-200 items-center justify-center shadow-sm"
-                                disabled={quantity <= 0}
-                              >
-                                <Minus size={16} color={quantity <= 1 ? "#d6d3d1" : "#374151"} />
-                              </TouchableOpacity>
-
-                              <Text className="text-lg text-stone-900 w-8 text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                                {quantity}
+                            {/* Remove Button */}
+                            <TouchableOpacity
+                              onPress={() => handleRemoveAddon(addon.id)}
+                              className="flex-row items-center justify-center gap-2 bg-red-50 border border-red-200 rounded-xl py-3"
+                            >
+                              <Ionicons name="trash-outline" size={16} color="#dc2626" />
+                              <Text className="text-red-600 text-base" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                                Remove
                               </Text>
-
-                              <TouchableOpacity
-                                onPress={() => handleAddonQuantityChange(addon.id, true)}
-                                className="w-10 h-10 rounded-full bg-blue-600 items-center justify-center shadow-sm"
-                              >
-                                <Plus size={16} color="white" />
-                              </TouchableOpacity>
-                            </View>
+                            </TouchableOpacity>
                           </View>
                         )}
                       </View>
@@ -625,73 +739,8 @@ const HotelDetails = () => {
           </View>
         )}
 
-        {/* Room Upgrades */}
-        <View className="border-b border-stone-200 p-5">
-          <Text className="text-lg text-stone-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Room Options</Text>
-
-          <View className="gap-4">
-            {/* Current Room */}
-            {hotel.roomUpgradeData?.currentRoom && (
-              <View className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
-                <Image
-                  source={{
-                    uri: hotel.roomUpgradeData.currentRoom.image || imageUrls[0]
-                  }}
-                  className="w-24 h-24 rounded-lg"
-                  style={{ resizeMode: 'cover' }}
-                />
-                <View className="flex-1">
-                  <Text className="text-sm text-green-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    Current Selection
-                  </Text>
-                  <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    {hotel.roomUpgradeData.currentRoom.name}
-                  </Text>
-                  <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {hotel.roomUpgradeData.currentRoom.features}
-                  </Text>
-                  <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{hotel.roomUpgradeData.currentRoom.displayPrice}/ {bookingType==='hourly'?'hour':'night'}
-                  </Text>
-                </View>
-              </View>
-            )}
-
-            {/* Upgrade Options */}
-            {hotel.roomUpgradeData?.upgradeOptions?.map((room, index) => (
-              <View key={index} className="flex-row items-center gap-4 p-4 border border-stone-200 rounded-xl">
-                <Image
-                  source={{
-                    uri: room.image || imageUrls[0]
-                  }}
-                  className="w-24 h-24 rounded-lg"
-                  style={{ resizeMode: 'cover' }}
-                />
-                <View className="flex-1">
-                  <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    Upgrade Available
-                  </Text>
-                  <Text className="mt-0.5 text-base text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    {room.name}
-                  </Text>
-                  <Text className="mt-1 text-sm text-stone-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                    {room.features}
-                  </Text>
-                  <Text className="mt-1 text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    ₹{room.displayPrice}/{bookingType==='hourly'?'hour':'night'}
-                  </Text>
-                  <TouchableOpacity onPress={() => SheetManager.show('upgraderoom')} className="mt-2 flex-row items-center gap-1">
-                    <Text className="text-sm text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Upgrade</Text>
-                    <Ionicons name="arrow-forward" size={16} color="#1c1917" />
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))}
-          </View>
-        </View>
-
         {/* Reviews */}
-        <View className="border-b border-stone-200 p-5">
+        <View className="border-b border-stone-200 p-5 hidden">
           <Text className="text-lg text-stone-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Reviews</Text>
 
           {reviewCount > 0 ? (
@@ -760,9 +809,9 @@ const HotelDetails = () => {
             </View>
           )}
         </View>
-        {/* Bottom Booking Bar */}
+      </ScrollView>
 
-      </ScrollView >
+      {/* Bottom Booking Bar */}
       <View className="bg-white p-4 shadow-lg border-t border-stone-100">
         {areRoomsAvailable() ? (
           <View className="flex-row items-center justify-between">
@@ -809,12 +858,7 @@ const HotelDetails = () => {
         )}
       </View>
     </SafeAreaView>
-
-
-
-  )
-}
-
-
+  );
+};
 
 export default HotelDetails;

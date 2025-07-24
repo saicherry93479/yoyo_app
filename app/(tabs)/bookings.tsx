@@ -7,12 +7,7 @@ import { router } from "expo-router"
 import { useBookings } from '@/hooks/useBookings'
 import { BookingCardSkeleton } from '@/components/ui/SkeletonLoader'
 
-// Plus Icon Component
-const PlusIcon = ({ size = 24, color = "#000000" }) => (
-  <Svg width={size} height={size} viewBox="0 0 256 256" fill={color}>
-    <Path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
-  </Svg>
-)
+
 
 export default function MyTripsApp() {
   const [activeTab, setActiveTab] = useState('upcoming')
@@ -24,6 +19,8 @@ export default function MyTripsApp() {
   // Refresh data when screen comes into focus (when user navigates back)
   useFocusEffect(
     useCallback(() => {
+
+      console.log('bookings are ',bookings)
       // Only refresh if data is empty or there's an error
       if (!bookings || bookings.length === 0 || error) {
         refresh()
@@ -66,16 +63,22 @@ export default function MyTripsApp() {
   }, [navigation]);
 
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+    // Remove the 'Z' to treat it as local time instead of UTC
+    const localDateString = dateString.replace('Z', '');
+    const date = new Date(localDateString);
+    
     return date.toLocaleDateString('en-IN', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true
     });
   };
+  
 
   const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = new Date(dateString+'Z');
     return date.toLocaleTimeString('en-IN', {
       hour: '2-digit',
       minute: '2-digit',

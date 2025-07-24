@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, useLayoutEffect } from 'react';
 import {
   View,
   Text,
@@ -16,14 +16,152 @@ import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, User, Mail, Phone, LocationEdit as Edit3 } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 
+// Memoized Components
+const ProfilePhoto = React.memo(({ fullName }) => (
+  <View className="items-center mb-8">
+    <View className="relative">
+      <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
+        <User size={32} color="#9CA3AF" />
+      </View>
+    </View>
+    <Text className="text-lg text-gray-900 mt-3" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+      {fullName || 'Your Name'}
+    </Text>
+    <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+      Member since 2024
+    </Text>
+  </View>
+));
+
+const InfoField = React.memo(({ 
+  icon: Icon, 
+  label, 
+  value, 
+  field, 
+  placeholder, 
+  keyboardType = 'default',
+  editable = true,
+  isEditing,
+  onChangeText,
+  error
+}) => (
+  <View className="mb-6">
+    <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+      {label}
+    </Text>
+    <View className={`flex-row items-center rounded-lg border px-4 py-3 ${
+      isEditing && editable 
+        ? 'border-gray-300 bg-white' 
+        : 'border-gray-200 bg-gray-50'
+    }`}>
+      <Icon size={20} color="#9CA3AF" />
+      <TextInput
+        className="flex-1 ml-3 text-base text-gray-900"
+        style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+        placeholder={placeholder}
+        placeholderTextColor="#9CA3AF"
+        value={value}
+        onChangeText={onChangeText}
+        editable={isEditing && editable}
+        keyboardType={keyboardType}
+        autoCapitalize={field === 'email' ? 'none' : 'words'}
+        autoCorrect={false}
+        blurOnSubmit={false}
+      />
+    </View>
+    {error && (
+      <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+        {error}
+      </Text>
+    )}
+  </View>
+));
+
+const GenderSelector = React.memo(({ selectedGender, onGenderChange, isEditing }) => {
+  const genderOptions = useMemo(() => ['male', 'female', 'other'], []);
+
+  return (
+    <View className="mb-6">
+      <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+        Gender
+      </Text>
+      <View className="flex-row gap-3">
+        {genderOptions.map((gender) => (
+          <TouchableOpacity
+            key={gender}
+            className={`flex-1 py-3 rounded-lg border items-center ${
+              selectedGender === gender
+                ? 'border-black bg-gray-50'
+                : 'border-gray-300 bg-white'
+            } ${!isEditing ? 'opacity-50' : ''}`}
+            onPress={() => isEditing && onGenderChange(gender)}
+            disabled={!isEditing}
+            activeOpacity={0.7}
+          >
+            <Text 
+              className={`text-sm ${
+                selectedGender === gender ? 'text-black' : 'text-gray-700'
+              }`}
+              style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+            >
+              {gender.charAt(0).toUpperCase() + gender.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+});
+
+const ActionButtons = React.memo(({ isLoading, onCancel, onSave }) => (
+  <View className="bg-white border-t border-gray-200 px-6 py-4">
+    <View className="flex-row gap-3">
+      <TouchableOpacity
+        className="flex-1 h-12 bg-gray-100 rounded-lg items-center justify-center"
+        onPress={onCancel}
+        disabled={isLoading}
+        activeOpacity={0.7}
+      >
+        <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+          Cancel
+        </Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        className={`flex-1 h-12 rounded-lg items-center justify-center ${
+          isLoading ? 'bg-gray-300' : 'bg-black'
+        }`}
+        onPress={onSave}
+        disabled={isLoading}
+        activeOpacity={0.7}
+      >
+        {isLoading ? (
+          <View className="flex-row items-center">
+            <ActivityIndicator size="small" color="white" />
+            <Text className="text-base text-white ml-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Saving...
+            </Text>
+          </View>
+        ) : (
+          <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Save Changes
+          </Text>
+        )}
+      </TouchableOpacity>
+    </View>
+  </View>
+));
+
 export default function PersonalInfoScreen() {
   const navigation = useNavigation();
   const { user, setUser } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  
+  console.log('user in personal infor ',user)
+  // Form state
   const [formData, setFormData] = useState({
     name: user?.name || '',
-    fullName: user?.fullName || '',
+    fullName: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
     gender: user?.gender || '',
@@ -32,34 +170,43 @@ export default function PersonalInfoScreen() {
     securityAlerts: user?.securityAlerts || true,
     promotionalOffers: user?.promotionalOffers || false,
   });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  
+  const [errors, setErrors] = useState({});
 
-  React.useLayoutEffect(() => {
-    navigation.setOptions({
-      headerShadowVisible: false,
-      headerTitle: () => (
-        <Text className="text-xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-          Personal Information
-        </Text>
-      ),
-      headerTitleAlign: 'center',
-      headerRight: () => (
-        <TouchableOpacity onPress={() => setIsEditing(!isEditing)} className="mr-4">
-          <Edit3 size={20} color="#9CA3AF" />
-        </TouchableOpacity>
-      ),
-    });
-  }, [navigation, isEditing]);
-
-  const updateFormData = (field: string, value: string | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+  // Memoized field change handlers
+  const handleFullNameChange = useCallback((text) => {
+    setFormData(prev => ({ ...prev, fullName: text }));
+    if (errors.fullName) {
+      setErrors(prev => ({ ...prev, fullName: '' }));
     }
-  };
+  }, [errors.fullName]);
 
-  const validateForm = () => {
-    const newErrors: Record<string, string> = {};
+  const handleEmailChange = useCallback((text) => {
+    setFormData(prev => ({ ...prev, email: text }));
+    if (errors.email) {
+      setErrors(prev => ({ ...prev, email: '' }));
+    }
+  }, [errors.email]);
+
+  const handlePhoneChange = useCallback((text) => {
+    setFormData(prev => ({ ...prev, phone: text }));
+    if (errors.phone) {
+      setErrors(prev => ({ ...prev, phone: '' }));
+    }
+  }, [errors.phone]);
+
+  const handleGenderChange = useCallback((gender) => {
+    setFormData(prev => ({ ...prev, gender }));
+  }, []);
+
+  // Toggle editing mode
+  const toggleEditing = useCallback(() => {
+    setIsEditing(prev => !prev);
+  }, []);
+
+  // Validation function
+  const validateForm = useCallback(() => {
+    const newErrors = {};
 
     if (!formData.fullName.trim()) {
       newErrors.fullName = 'Full name is required';
@@ -73,14 +220,14 @@ export default function PersonalInfoScreen() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  };
+  }, [formData.fullName, formData.email]);
 
-  const handleSave = async () => {
+  // Save handler
+  const handleSave = useCallback(async () => {
     if (!validateForm()) return;
 
     setIsLoading(true);
     try {
-      // Prepare request body according to API schema
       const requestBody = {
         fullName: formData.fullName,
         email: formData.email,
@@ -90,7 +237,6 @@ export default function PersonalInfoScreen() {
       const response = await apiService.put('/auth/profile', requestBody);
       
       if (response.success) {
-        // Update user context with response data
         if (user && response.data.user) {
           const updatedUser = { 
             ...user, 
@@ -111,66 +257,47 @@ export default function PersonalInfoScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [formData.fullName, formData.email, formData.gender, user, setUser, validateForm]);
 
-  const handleCancel = () => {
+  // Cancel handler
+  const handleCancel = useCallback(() => {
     setFormData({
       fullName: user?.fullName || user?.name || '',
       email: user?.email || '',
-      gender: user?.gender || ''
+      gender: user?.gender || '',
+      phone: user?.phone || '',
+      name: user?.name || '',
+      bookingUpdates: user?.bookingUpdates || true,
+      checkinReminders: user?.checkinReminders || true,
+      securityAlerts: user?.securityAlerts || true,
+      promotionalOffers: user?.promotionalOffers || false,
     });
     setErrors({});
     setIsEditing(false);
-  };
+  }, [user]);
 
-  const InfoField = ({ 
-    icon: Icon, 
-    label, 
-    value, 
-    field, 
-    placeholder, 
-    keyboardType = 'default',
-    editable = true 
-  }: {
-    icon: any;
-    label: string;
-    value: string;
-    field: string;
-    placeholder: string;
-    keyboardType?: any;
-    editable?: boolean;
-  }) => (
-    <View className="mb-6">
-      <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-        {label}
-      </Text>
-      <View className={`flex-row items-center rounded-lg border px-4 py-3 ${
-        isEditing && editable 
-          ? 'border-gray-300 bg-white' 
-          : 'border-gray-200 bg-gray-50'
-      }`}>
-        <Icon size={20} color="#9CA3AF" />
-        <TextInput
-          className="flex-1 ml-3 text-base text-gray-900"
-          style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-          placeholder={placeholder}
-          placeholderTextColor="#9CA3AF"
-          value={value}
-          onChangeText={(text) => updateFormData(field, text)}
-          editable={isEditing && editable}
-          keyboardType={keyboardType}
-          autoCapitalize={field === 'email' ? 'none' : 'words'}
-          autoCorrect={false}
-          blurOnSubmit={false}
-        />
-      </View>
-      {errors[field] && (
-        <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-          {errors[field]}
+  // Header configuration
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      headerShadowVisible: false,
+      headerTitle: () => (
+        <Text className="text-xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+          Personal Information
         </Text>
-      )}
-    </View>
-  );
+      ),
+      headerTitleAlign: 'center',
+      headerRight: () => (
+        <TouchableOpacity onPress={toggleEditing} className="mr-4">
+          <Edit3 size={20} color="#9CA3AF" />
+        </TouchableOpacity>
+      ),
+    });
+  }, [navigation, toggleEditing]);
+
+  // Memoized scroll view content style
+  const scrollViewContentStyle = useMemo(() => ({
+    paddingBottom: isEditing ? 100 : 20
+  }), [isEditing]);
 
   return (
     <SafeAreaView className="flex-1 bg-white">
@@ -182,24 +309,12 @@ export default function PersonalInfoScreen() {
         <ScrollView 
           className="flex-1 px-6 py-6" 
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: isEditing ? 100 : 20 }}
+          contentContainerStyle={scrollViewContentStyle}
           keyboardShouldPersistTaps="handled"
           nestedScrollEnabled={true}
         >
           {/* Profile Photo */}
-          <View className="items-center mb-8">
-            <View className="relative">
-              <View className="w-24 h-24 bg-gray-100 rounded-full items-center justify-center">
-                <User size={32} color="#9CA3AF" />
-              </View>
-            </View>
-            <Text className="text-lg text-gray-900 mt-3" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {formData.fullName || 'Your Name'}
-            </Text>
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Member since 2024
-            </Text>
-          </View>
+          <ProfilePhoto fullName={formData.fullName} />
 
           {/* Form Fields */}
           <InfoField
@@ -208,6 +323,9 @@ export default function PersonalInfoScreen() {
             value={formData.fullName}
             field="fullName"
             placeholder="Enter your full name"
+            isEditing={isEditing}
+            onChangeText={handleFullNameChange}
+            error={errors.fullName}
           />
 
           <InfoField
@@ -217,6 +335,9 @@ export default function PersonalInfoScreen() {
             field="email"
             placeholder="Enter your email"
             keyboardType="email-address"
+            isEditing={isEditing}
+            onChangeText={handleEmailChange}
+            error={errors.email}
           />
           
           <InfoField
@@ -227,76 +348,26 @@ export default function PersonalInfoScreen() {
             placeholder="Enter your phone number"
             keyboardType="phone-pad"
             editable={false}
+            isEditing={isEditing}
+            onChangeText={handlePhoneChange}
+            error={errors.phone}
           />
 
-          <View className="mb-6">
-            <Text className="text-sm text-gray-700 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-              Gender
-            </Text>
-            <View className="flex-row gap-3">
-              {['male', 'female', 'other'].map((gender) => (
-                <TouchableOpacity
-                  key={gender}
-                  className={`flex-1 py-3 rounded-lg border items-center ${
-                    formData.gender === gender
-                      ? 'border-black bg-gray-50'
-                      : 'border-gray-300 bg-white'
-                  } ${!isEditing ? 'opacity-50' : ''}`}
-                  onPress={() => isEditing && updateFormData('gender', gender)}
-                  disabled={!isEditing}
-                  activeOpacity={0.7}
-                >
-                  <Text 
-                    className={`text-sm ${
-                      formData.gender === gender ? 'text-black' : 'text-gray-700'
-                    }`}
-                    style={{ fontFamily: 'PlusJakartaSans-Medium' }}
-                  >
-                    {gender.charAt(0).toUpperCase() + gender.slice(1)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
+          {/* Gender Selection */}
+          <GenderSelector
+            selectedGender={formData.gender}
+            onGenderChange={handleGenderChange}
+            isEditing={isEditing}
+          />
         </ScrollView>
 
         {/* Sticky Bottom Buttons */}
         {isEditing && (
-          <View className="bg-white border-t border-gray-200 px-6 py-4">
-            <View className="flex-row gap-3">
-              <TouchableOpacity
-                className="flex-1 h-12 bg-gray-100 rounded-lg items-center justify-center"
-                onPress={handleCancel}
-                disabled={isLoading}
-                activeOpacity={0.7}
-              >
-                <Text className="text-base text-gray-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                  Cancel
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                className={`flex-1 h-12 rounded-lg items-center justify-center ${
-                  isLoading ? 'bg-gray-300' : 'bg-black'
-                }`}
-                onPress={handleSave}
-                disabled={isLoading}
-                activeOpacity={0.7}
-              >
-                {isLoading ? (
-                  <View className="flex-row items-center">
-                    <ActivityIndicator size="small" color="white" />
-                    <Text className="text-base text-white ml-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                      Saving...
-                    </Text>
-                  </View>
-                ) : (
-                  <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    Save Changes
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
-          </View>
+          <ActionButtons
+            isLoading={isLoading}
+            onCancel={handleCancel}
+            onSave={handleSave}
+          />
         )}
       </KeyboardAvoidingView>
     </SafeAreaView>

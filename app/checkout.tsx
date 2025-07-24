@@ -67,8 +67,8 @@ const CheckoutScreen = () => {
     const selectedAddons = parseSelectedAddons();
     const addonTotal = parseFloat(String(params.addonTotal || '0')) || 0;
 
-    console.log('selectedAddons parsed:', selectedAddons);
-    console.log('addonTotal:', addonTotal);
+    // console.log('selectedAddons parsed:', selectedAddons);
+    // console.log('addonTotal:', addonTotal);
 
     // Guest information state
     const [guestInfo, setGuestInfo] = useState({

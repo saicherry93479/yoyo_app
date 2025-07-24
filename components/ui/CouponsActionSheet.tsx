@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -9,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
-import { X, Tag, Percent, Calendar } from 'lucide-react-native';
+import { X, Tag, Calendar } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 
@@ -26,6 +25,7 @@ interface Coupon {
   usageLimit: number;
   usedCount: number;
   status: 'active' | 'inactive';
+  isUsed: boolean;
   mappings: {
     cities: Array<{ id: string; name: string; state: string }>;
     hotels: Array<{ id: string; name: string; city: string }>;
@@ -59,7 +59,6 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
   const [loading, setLoading] = useState(false);
   const [validatingCoupon, setValidatingCoupon] = useState<string | null>(null);
   const [manualCouponCode, setManualCouponCode] = useState('');
-  const [showManualInput, setShowManualInput] = useState(false);
 
   const { hotelId, roomTypeId, orderAmount, onCouponApplied } = payload || {};
 
@@ -135,14 +134,14 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
   };
 
   const isValidForBooking = (coupon: Coupon) => {
-    // Check if coupon is applicable to the hotel
+    if (coupon.isUsed || coupon.status !== 'active') return false;
+
     const isValidForHotel = coupon.mappings.hotels.length === 0 || 
       coupon.mappings.hotels.some(hotel => hotel.id === hotelId);
     
-    // Check if order meets minimum amount
     const meetsMinAmount = !orderAmount || orderAmount >= coupon.minOrderAmount;
     
-    return isValidForHotel && meetsMinAmount && coupon.status === 'active';
+    return isValidForHotel && meetsMinAmount;
   };
 
   const renderCoupon = (coupon: Coupon) => {
@@ -153,86 +152,108 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
       <TouchableOpacity
         key={coupon.id}
         onPress={() => isValid && !isValidating ? validateCoupon(coupon.code) : null}
-        className={`p-4 rounded-2xl border mb-3 ${
-          isValid ? 'border-green-200 bg-green-50' : 'border-gray-200 bg-gray-50'
+        className={`mb-3 rounded-xl border ${
+          coupon.isUsed 
+            ? 'border-gray-200 bg-gray-50' 
+            : isValid 
+            ? 'border-black bg-white' 
+            : 'border-gray-200 bg-gray-50'
         }`}
         disabled={!isValid || isValidating}
+        activeOpacity={0.7}
       >
-        <View className="flex-row items-start justify-between">
-          <View className="flex-1">
-            <View className="flex-row items-center mb-2">
-              <View className="bg-gray-100 p-2 rounded-lg mr-3">
-                <Tag size={16} color="#DC2626" />
+        <View className="p-5">
+          <View className="flex-row items-center justify-between mb-3">
+            <View className="flex-row items-center">
+              <View className={`w-10 h-10 rounded-full items-center justify-center mr-3 ${
+                coupon.isUsed ? 'bg-gray-200' : 'bg-black'
+              }`}>
+                <Tag size={18} color={coupon.isUsed ? '#9CA3AF' : 'white'} />
               </View>
               <View>
                 <Text 
-                  className="text-lg font-bold text-gray-900" 
+                  className={`text-lg font-bold ${coupon.isUsed ? 'text-gray-500' : 'text-black'}`}
                   style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                 >
                   {coupon.code}
                 </Text>
                 <Text 
-                  className="text-sm text-gray-600" 
+                  className={`text-sm font-medium ${
+                    coupon.isUsed ? 'text-gray-400' : 'text-green-600'
+                  }`}
                   style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                 >
                   {getDiscountText(coupon)}
                 </Text>
               </View>
             </View>
-            
-            <Text 
-              className="text-sm text-gray-600 mb-2" 
-              style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-            >
-              {coupon.description}
-            </Text>
-            
-            {coupon.minOrderAmount > 0 && (
-              <Text 
-                className="text-xs text-gray-500" 
-                style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-              >
-                Min order: ₹{coupon.minOrderAmount}
-              </Text>
+
+            {coupon.isUsed ? (
+              <View className="bg-gray-100 px-3 py-1 rounded-full">
+                <Text 
+                  className="text-xs font-semibold text-gray-500"
+                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                >
+                  USED
+                </Text>
+              </View>
+            ) : isValidating ? (
+              <LoadingSpinner size="small" color="#000000" />
+            ) : isValid ? (
+              <View className="bg-black px-4 py-2 rounded-full">
+                <Text 
+                  className="text-xs font-semibold text-white"
+                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                >
+                  APPLY
+                </Text>
+              </View>
+            ) : (
+              <View className="bg-gray-200 px-3 py-1 rounded-full">
+                <Text 
+                  className="text-xs font-semibold text-gray-500"
+                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                >
+                  INVALID
+                </Text>
+              </View>
             )}
-            
-            <View className="flex-row items-center mt-2">
-              <Calendar size={12} color="#6B7280" />
+          </View>
+          
+          <Text 
+            className={`text-sm mb-3 leading-5 ${coupon.isUsed ? 'text-gray-400' : 'text-gray-600'}`}
+            style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+          >
+            {coupon.description}
+          </Text>
+          
+          <View className="flex-row items-center justify-between">
+            <View className="flex-row items-center">
+              <Calendar size={14} color={coupon.isUsed ? '#9CA3AF' : '#6B7280'} />
               <Text 
-                className="text-xs text-gray-500 ml-1" 
+                className={`text-xs ml-2 ${coupon.isUsed ? 'text-gray-400' : 'text-gray-500'}`}
                 style={{ fontFamily: 'PlusJakartaSans-Regular' }}
               >
                 Valid till {formatDate(coupon.validTo)}
               </Text>
             </View>
-          </View>
-          
-          <View className="ml-4">
-            {isValidating ? (
-              <LoadingSpinner size="small" color="#DC2626" />
-            ) : (
-              <TouchableOpacity
-                onPress={() => isValid ? validateCoupon(coupon.code) : null}
-                className={`px-4 py-2 rounded-lg ${
-                  isValid ? 'bg-[#171717]' : 'bg-gray-300'
-                }`}
-                disabled={!isValid}
+            
+            {coupon.minOrderAmount > 0 && (
+              <Text 
+                className={`text-xs ${coupon.isUsed ? 'text-gray-400' : 'text-gray-500'}`}
+                style={{ fontFamily: 'PlusJakartaSans-Regular' }}
               >
-                <Text 
-                  className={`text-sm font-semibold ${
-                    isValid ? 'text-white' : 'text-gray-500'
-                  }`}
-                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                >
-                  {isValid ? 'Apply' : 'Invalid'}
-                </Text>
-              </TouchableOpacity>
+                Min ₹{coupon.minOrderAmount}
+              </Text>
             )}
           </View>
         </View>
       </TouchableOpacity>
     );
   };
+
+  const availableCoupons = coupons.filter(coupon => !coupon.isUsed && isValidForBooking(coupon));
+  const otherCoupons = coupons.filter(coupon => coupon.isUsed || !isValidForBooking(coupon));
 
   return (
     <ActionSheet 
@@ -245,31 +266,32 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
       closable={true}
       closeOnTouchBackdrop={true}
     >
-      <View className="flex-col items-stretch rounded-t-2xl bg-white h-screen" >
+      <View className="flex-col items-stretch rounded-t-3xl bg-white h-screen">
         {/* Handle */}
-        <View className="flex h-5 w-full items-center justify-center pt-3">
-          <View className="h-1.5 w-10 rounded-full bg-gray-200" />
+        <View className="flex h-6 w-full items-center justify-center pt-2">
+          <View className="h-1 w-12 rounded-full bg-gray-300" />
         </View>
 
         {/* Header */}
-        <View className="flex-row items-center justify-between px-6 py-4">
+        <View className="flex-row items-center justify-between px-6 py-5">
           <Text 
-            className="text-2xl text-gray-900" 
+            className="text-2xl font-bold text-black" 
             style={{ fontFamily: 'PlusJakartaSans-Bold' }}
           >
-            Apply Coupon
+            Coupons
           </Text>
-          <TouchableOpacity onPress={handleClose} className="p-2">
-            <X size={24} color="#6B7280" />
+          <TouchableOpacity onPress={handleClose} className="p-2 -mr-2">
+            <X size={24} color="#000000" />
           </TouchableOpacity>
         </View>
 
         {/* Manual Coupon Input */}
-        <View className="px-6 py-4 border-b border-gray-200">
-          <View className="flex-row items-center gap-3">
+        <View className="px-6 pb-6">
+          <View className="flex-row items-center bg-gray-50 rounded-xl p-1">
             <TextInput
-              className="flex-1 h-12 px-4 border border-gray-300 rounded-lg"
+              className="flex-1 h-12 px-4 text-base"
               placeholder="Enter coupon code"
+              placeholderTextColor="#9CA3AF"
               value={manualCouponCode}
               onChangeText={setManualCouponCode}
               autoCapitalize="characters"
@@ -277,8 +299,8 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
             />
             <TouchableOpacity
               onPress={() => manualCouponCode.trim() && validateCoupon(manualCouponCode.trim())}
-              className={`px-6 py-3 rounded-lg ${
-                manualCouponCode.trim() ? 'bg-[#171717]' : 'bg-gray-300'
+              className={`px-6 py-3 rounded-lg mx-1 ${
+                manualCouponCode.trim() ? 'bg-black' : 'bg-gray-300'
               }`}
               disabled={!manualCouponCode.trim() || validatingCoupon === manualCouponCode.trim()}
             >
@@ -298,55 +320,67 @@ export function CouponsActionSheet({ sheetId, payload }: CouponsActionSheetProps
           </View>
         </View>
 
-        {/* Available Coupons */}
+        {/* Coupons List */}
         <View className="flex-1">
-          <View className="px-6 py-4">
-            <Text 
-              className="text-lg font-semibold text-gray-900" 
-              style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-            >
-              Available Coupons
-            </Text>
-          </View>
-
           {loading ? (
-            <View className="flex-1 items-center justify-center py-8">
-              <LoadingSpinner size="large" color="#DC2626" />
+            <View className="flex-1 items-center justify-center">
+              <LoadingSpinner size="large" color="#000000" />
               <Text 
-                className="text-gray-500 mt-2" 
+                className="text-gray-500 mt-4 text-base" 
                 style={{ fontFamily: 'PlusJakartaSans-Regular' }}
               >
                 Loading coupons...
               </Text>
             </View>
-          ) : (
+          ) : coupons.length > 0 ? (
             <ScrollView 
               className="flex-1 px-6"
               showsVerticalScrollIndicator={false}
             >
-              {coupons.length > 0 ? (
-                coupons.map(renderCoupon)
-              ) : (
-                <View className="items-center justify-center py-8">
-                  <Tag size={48} color="#9CA3AF" />
+              {availableCoupons.length > 0 && (
+                <View className="mb-6">
                   <Text 
-                    className="text-lg text-gray-500 mt-4" 
+                    className="text-base font-semibold text-black mb-4" 
                     style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                   >
-                    No Coupons Available
+                    Available ({availableCoupons.length})
                   </Text>
+                  {availableCoupons.map(renderCoupon)}
+                </View>
+              )}
+
+              {otherCoupons.length > 0 && (
+                <View className="mb-6">
                   <Text 
-                    className="text-sm text-gray-400 mt-2 text-center" 
-                    style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+                    className="text-base font-semibold text-black mb-4" 
+                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
                   >
-                    Check back later for new offers
+                    Other Coupons ({otherCoupons.length})
                   </Text>
+                  {otherCoupons.map(renderCoupon)}
                 </View>
               )}
               
-              {/* Bottom spacing */}
-              <View className="h-6" />
+              <View className="h-8" />
             </ScrollView>
+          ) : (
+            <View className="flex-1 items-center justify-center px-6">
+              <View className="w-20 h-20 rounded-full bg-gray-100 items-center justify-center mb-4">
+                <Tag size={32} color="#9CA3AF" />
+              </View>
+              <Text 
+                className="text-xl font-semibold text-black mb-2" 
+                style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+              >
+                No coupons available
+              </Text>
+              <Text 
+                className="text-base text-gray-500 text-center leading-6" 
+                style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+              >
+                Check back later for new offers and discounts
+              </Text>
+            </View>
           )}
         </View>
       </View>

@@ -80,13 +80,15 @@ const ProfileScreen = () => {
             router.push('/notifications')
           }
         },
-        { icon: SettingsIcon, label: 'Settings', onPress: () => { } },
+        // { icon: SettingsIcon, label: 'Settings', onPress: () => { } },
       ]
     },
     {
       section: 'Support',
       items: [
-        { icon: HelpIcon, label: 'Help Center', onPress: () => { } },
+        { icon: HelpIcon, label: 'Help Center', onPress: () => { 
+          router.push('/contactus')
+        } },
         {
           icon: MessageIcon, label: 'Contact us', onPress: () => {
             router.push('/contactus')
@@ -131,7 +133,7 @@ const ProfileScreen = () => {
       >
         <View className="px-4 py-6">
           {/* Profile Section */}
-          <View className="flex-row items-center gap-4 mb-8">
+          <View className="flex-row items-center gap-4 mb-8 hidden">
             <View className="relative">
               <Image
                 source={{ uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCEge7MQC0MLY28227eQEwx3A3dYhxnRrlXYFJZzZVy9K09XXZ1fu1Gw_Y6Y76uySWhIHGTa1BHnwUJd2hTvwqH5sL5bR-AXweZz8IdGWdYNV6KHcCRf0ShYDYi0fYZguUtd7bV8KuR7XOs9eNV9k0jq_FQYezxz-SNIRi2Z-cQKFNqajKaCOoBYI64w1LK4Vnm1B0AufLtX_Ngd-10fnErG_fs-1hRW7xp2l5Wl-YcUcCIuQGlw1ueeQpNUaR3Z6J9zEbRoj6ySg' }}
@@ -139,7 +141,7 @@ const ProfileScreen = () => {
                 style={{ aspectRatio: 1 }}
               />
             </View>
-            <View className="flex-col">
+            <View className="flex-col ">
               <Text className="text-black  text-2xl" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Sophia Carter</Text>
               <Text className="text-gray-500  text-sm" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>Guest</Text>
             </View>

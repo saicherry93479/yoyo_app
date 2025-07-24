@@ -207,7 +207,7 @@ export function useNearbyHotels(coordinates: { lat: number; lng: number } | null
 
       const response = await apiService.get('/search/nearby', { params });
 
-      console.log('response in nearby  ',response)
+      console.log('response in nearby  ',JSON.stringify(response))
 
       if (response.success) {
         const transformedHotels = response.data.hotels?.map(transformHotel) || [];

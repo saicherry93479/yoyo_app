@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, ActivityIndicator, Pressable } from 'react-native';
 import { X, Search } from 'lucide-react-native';
@@ -50,23 +50,47 @@ interface SearchActionSheetProps {
   sheetId: string;
   payload?: {
     onSearch?: (searchData: SearchData) => void;
+    initialData?: Partial<SearchData>;
   };
 }
 
-export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
-  const activeTabRef = useRef(0);
+// Helper function to create local datetime string without timezone conversion
+const createLocalDateTime = (date: Date, hours: number, minutes: number = 0) => {
+  const localDate = new Date(date);
+  localDate.setHours(hours, minutes, 0, 0);
+  
+  // Create ISO string manually to avoid UTC conversion
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getDate()).padStart(2, '0');
+  const hour = String(hours).padStart(2, '0');
+  const minute = String(minutes).padStart(2, '0');
+  
+  return `${year}-${month}-${day}T${hour}:${minute}:00.000`;
+};
 
+// Helper function to format time for display
+const formatTimeForDisplay = (hours: number, minutes: number = 0) => {
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+  const displayMinutes = minutes === 0 ? '00' : String(minutes).padStart(2, '0');
+  return `${displayHours}:${displayMinutes} ${period}`;
+};
+
+export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) {
   // Create proper default values
-  const createDefaultSearchData = (): SearchData => {
+  const createDefaultSearchData = (initialData?: Partial<SearchData>): SearchData => {
     const tomorrow = new Date(Date.now() + 24*60*60*1000);
     const dayAfterTomorrow = new Date(Date.now() + 3*24*60*60*1000);
     const tomorrowDateString = tomorrow.toISOString().split('T')[0];
     
-    // Default time slots (9 AM to 5 PM tomorrow) - using local time
-    const defaultStartTime = new Date(tomorrow);
-    defaultStartTime.setHours(9, 0, 0, 0);
-    const defaultEndTime = new Date(tomorrow);
-    defaultEndTime.setHours(17, 0, 0, 0);
+    // For daily bookings - set to 12:00 PM (noon) local time
+    const dailyStartTime = createLocalDateTime(tomorrow, 12, 0); // 12:00 PM
+    const dailyEndTime = createLocalDateTime(dayAfterTomorrow, 12, 0); // 12:00 PM next day
+    
+    // For hourly bookings - set to 9 AM to 5 PM local time
+    const hourlyStartTime = createLocalDateTime(tomorrow, 9, 0); // 9:00 AM
+    const hourlyEndTime = createLocalDateTime(tomorrow, 17, 0); // 5:00 PM
 
     // Default location (can be user's current location or popular destination)
     const defaultLocation: Location = {
@@ -80,36 +104,76 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
       }
     };
 
-    return {
+    const defaultData: SearchData = {
       location: defaultLocation,
       dateRange: { 
-        startDate: tomorrow.toISOString(), 
-        endDate: dayAfterTomorrow.toISOString() 
+        startDate: dailyStartTime, // For daily, use 12:00 PM
+        endDate: dailyEndTime 
       },
       timeRange: { 
         selectedDate: tomorrowDateString,
-        startDateTime: defaultStartTime.toISOString(),
-        endDateTime: defaultEndTime.toISOString(),
-        startTime: '9:00 AM',
-        endTime: '5:00 PM'
+        startDateTime: hourlyStartTime, // For hourly, use 9:00 AM
+        endDateTime: hourlyEndTime, // For hourly, use 5:00 PM
+        startTime: formatTimeForDisplay(9, 0), // '9:00 AM'
+        endTime: formatTimeForDisplay(17, 0) // '5:00 PM'
       },
       guests: { adults: 1, children: 0, infants: 0 },
       bookingType: 'daily'
     };
+
+    // Merge with initial data if provided
+    if (initialData) {
+      return {
+        ...defaultData,
+        ...initialData,
+        // Deep merge nested objects
+        location: initialData.location || defaultData.location,
+        dateRange: { 
+          ...defaultData.dateRange, 
+          ...(initialData.dateRange || {}) 
+        },
+        timeRange: { 
+          ...defaultData.timeRange, 
+          ...(initialData.timeRange || {}) 
+        },
+        guests: { 
+          ...defaultData.guests, 
+          ...(initialData.guests || {}) 
+        }
+      };
+    }
+
+    return defaultData;
   };
 
-  const [searchData, setSearchData] = useState<SearchData>(createDefaultSearchData);
+  const [searchData, setSearchData] = useState<SearchData>(() => 
+    createDefaultSearchData(payload?.initialData)
+  );
   const [isSearching, setIsSearching] = useState(false);
+  
+  // Initialize activeTab based on initial data or default
+  const [activeTab, setActiveTab] = useState<number>(() => {
+    const initialBookingType = payload?.initialData?.bookingType || 'daily';
+    return initialBookingType === 'daily' ? 0 : 1;
+  });
 
-  // Initialize tab styles on mount and set correct tab based on bookingType
-  useEffect(() => {
-    const initialTab = searchData.bookingType === 'daily' ? 0 : 1;
-    activeTabRef.current = initialTab;
-    setTimeout(() => updateTabStyles(initialTab), 100);
-  }, []);
+  // Helper function to get tab styles based on active state
+  const getTabStyle = (tabIndex: number) => ({
+    backgroundColor: activeTab === tabIndex ? 'white' : 'transparent',
+    shadowColor: activeTab === tabIndex ? '#000' : 'transparent',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: activeTab === tabIndex ? 0.1 : 0,
+    shadowRadius: 2,
+    elevation: activeTab === tabIndex ? 2 : 0,
+  });
+
+  const getTextStyle = (tabIndex: number) => ({
+    color: activeTab === tabIndex ? '#000000' : '#8A8A8A',
+    fontFamily: 'PlusJakartaSans-SemiBold'
+  });
 
   const isSearchEnabled = searchData.location && 
-    (activeTabRef.current === 0 
+    (activeTab === 0 
       ? (searchData.dateRange.startDate && searchData.dateRange.endDate)
       : (searchData.timeRange.selectedDate && searchData.timeRange.startDateTime && searchData.timeRange.endDateTime)
     );
@@ -118,89 +182,16 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     console.log('searchData ', searchData);
   }, [searchData]);
 
-  const updateTabStyles = (newTab: number) => {
-    // Get references to the tab elements
-    const dailyTab = dailyTabRef.current;
-    const hourlyTab = hourlyTabRef.current;
-    const dailyText = dailyTextRef.current;
-    const hourlyText = hourlyTextRef.current;
-
-    if (dailyTab && hourlyTab && dailyText && hourlyText) {
-      // Reset both tabs
-      dailyTab.setNativeProps({
-        style: {
-          backgroundColor: 'transparent',
-          shadowColor: 'transparent',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.1,
-          shadowRadius: 2,
-          elevation: 0,
-        }
-      });
-      hourlyTab.setNativeProps({
-        style: {
-          backgroundColor: 'transparent',
-          shadowColor: 'transparent',
-          shadowOffset: { width: 0, height: 1 },
-          shadowOpacity: 0.1,
-          shadowRadius: 2,
-          elevation: 0,
-        }
-      });
-
-      // Reset text colors
-      dailyText.setNativeProps({
-        style: {
-          color: '#8A8A8A' // Uber medium gray
-        }
-      });
-      hourlyText.setNativeProps({
-        style: {
-          color: '#8A8A8A' // Uber medium gray
-        }
-      });
-
-      // Apply active styles to selected tab
-      if (newTab === 0) {
-        dailyTab.setNativeProps({
-          style: {
-            backgroundColor: 'white',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 2,
-          }
-        });
-        dailyText.setNativeProps({
-          style: {
-            color: '#000000' // Uber black
-          }
-        });
-      } else {
-        hourlyTab.setNativeProps({
-          style: {
-            backgroundColor: 'white',
-            shadowColor: '#000',
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.1,
-            shadowRadius: 2,
-            elevation: 2,
-          }
-        });
-        hourlyText.setNativeProps({
-          style: {
-            color: '#000000' // Uber black
-          }
-        });
-      }
-    }
-  };
+  // Debug payload data
+  useEffect(() => {
+    console.log('Payload received:', payload);
+    console.log('Initial data from payload:', payload?.initialData);
+    console.log('Initial setup - activeTab:', activeTab, 'bookingType:', searchData.bookingType);
+  }, [payload]);
 
   const handleTabPress = (tab: number) => {
-    console.log('tab is ', tab);
-    activeTabRef.current = tab;
-    updateTabStyles(tab);
+    console.log('tab pressed:', tab);
+    setActiveTab(tab);
     
     setSearchData(prev => {
       const newBookingType = tab === 0 ? 'daily' : 'hourly';
@@ -210,17 +201,15 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
         const tomorrow = new Date(Date.now() + 24*60*60*1000);
         const tomorrowDateString = tomorrow.toISOString().split('T')[0];
         
-        const defaultStartTime = new Date(tomorrow);
-        defaultStartTime.setHours(9, 0, 0, 0);
-        const defaultEndTime = new Date(tomorrow);
-        defaultEndTime.setHours(17, 0, 0, 0);
+        const defaultStartTime = createLocalDateTime(tomorrow, 9, 0); // 9:00 AM
+        const defaultEndTime = createLocalDateTime(tomorrow, 17, 0); // 5:00 PM
 
         const updatedTimeRange = {
           selectedDate: prev.timeRange.selectedDate || tomorrowDateString,
-          startDateTime: prev.timeRange.startDateTime || defaultStartTime.toISOString(),
-          endDateTime: prev.timeRange.endDateTime || defaultEndTime.toISOString(),
-          startTime: prev.timeRange.startTime || '09:00',
-          endTime: prev.timeRange.endTime || '17:00'
+          startDateTime: prev.timeRange.startDateTime || defaultStartTime,
+          endDateTime: prev.timeRange.endDateTime || defaultEndTime,
+          startTime: prev.timeRange.startTime || formatTimeForDisplay(9, 0),
+          endTime: prev.timeRange.endTime || formatTimeForDisplay(17, 0)
         };
 
         return { 
@@ -230,14 +219,14 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
         };
       }
       
-      // If switching to daily, ensure dateRange has values
+      // If switching to daily, ensure dateRange has values with 12:00 PM time
       if (tab === 0) {
         const tomorrow = new Date(Date.now() + 24*60*60*1000);
         const dayAfterTomorrow = new Date(Date.now() + 3*24*60*60*1000);
         
         const updatedDateRange = {
-          startDate: prev.dateRange.startDate || tomorrow.toISOString(),
-          endDate: prev.dateRange.endDate || dayAfterTomorrow.toISOString()
+          startDate: prev.dateRange.startDate || createLocalDateTime(tomorrow, 12, 0), // 12:00 PM
+          endDate: prev.dateRange.endDate || createLocalDateTime(dayAfterTomorrow, 12, 0) // 12:00 PM
         };
 
         return { 
@@ -259,6 +248,8 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
     if (!isSearchEnabled) return;
 
     setIsSearching(true);
+
+    console.log('searchData in search actionsheet',searchData)
 
     // Simulate search API call
     setTimeout(() => {
@@ -289,12 +280,6 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
   const handleGuestCountChange = (guests: GuestCounts) => {
     setSearchData(prev => ({ ...prev, guests }));
   };
-
-  // Refs for tab elements
-  const dailyTabRef = useRef<TouchableOpacity>(null);
-  const hourlyTabRef = useRef<TouchableOpacity>(null);
-  const dailyTextRef = useRef<Text>(null);
-  const hourlyTextRef = useRef<Text>(null);
 
   return (
     <ActionSheet
@@ -338,36 +323,32 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
             <View className="px-4 mb-4">
               <View className="flex-row bg-gray-100  rounded-xl p-1">
                 <TouchableOpacity
-                  ref={dailyTabRef}
                   onPress={() => handleTabPress(0)}
                   className="flex-1 py-3 px-4 rounded-lg"
+                  style={getTabStyle(0)}
                 >
                   <Text
-                    ref={dailyTextRef}
-                    className="text-center text-sm text-gray-600 "
-                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                    className="text-center text-sm"
+                    style={getTextStyle(0)}
                   >
                     Daily
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  ref={hourlyTabRef}
                   onPress={() => handleTabPress(1)}
                   className="flex-1 py-3 px-4 rounded-lg"
+                  style={getTabStyle(1)}
                 >
                   <Text
-                    ref={hourlyTextRef}
-                    className="text-center text-sm text-gray-600 "
-                    style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+                    className="text-center text-sm"
+                    style={getTextStyle(1)}
                   >
                     Hourly
                   </Text>
                 </TouchableOpacity>
               </View>
             </View>
-
-       
 
             {/* Form Fields */}
             <View className="px-4">
@@ -395,7 +376,7 @@ export function SearchActionSheet({ sheetId, payload }: SearchActionSheetProps) 
                 >
                   When
                 </Text>
-                {activeTabRef.current === 0 ? (
+                {activeTab === 0 ? (
                   <DateRangePicker
                     value={searchData.dateRange}
                     onDateRangeSelect={handleDateRangeSelect}

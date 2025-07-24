@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "555333996320",
+    "project_id": "myapp-bba24",
+    "storage_bucket": "myapp-bba24.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:555333996320:android:c8db3d0965766452dd9145",
+        "android_client_info": {
+          "package_name": "com.cherry93479.yoyo_app_bolt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "555333996320-4scirnkr558h6c3j2mf25s33utmf5dgi.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cherry93479.yoyo_app_bolt",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "555333996320-ffeihcnb76mjs8d7l17csjsqmgsq62v9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBW1tTyeVu3LWJsCCyrqds_pLzWI2JIQPs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "555333996320-ffeihcnb76mjs8d7l17csjsqmgsq62v9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

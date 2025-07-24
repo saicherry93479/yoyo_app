@@ -160,6 +160,13 @@ export default function SearchScreen() {
     }
   }, [params.searchData]);
 
+  function getTodayAtNoonISO() {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);  // 12:00 PM local time
+    return date.toISOString().split('T')[0] + 'T12:00:00';
+  }
+  
+
   const performSearch = async (searchData: any, searchFilters: SearchFilters = {}) => {
     if (!searchData) return;
 
@@ -172,13 +179,16 @@ export default function SearchScreen() {
         coordinates: searchData.location?.coordinates || { lat: 0, lng: 0 },
         city: searchData.location?.name || '',
         radius: 50,
-        dateRange: searchData.bookingType === 'daily' ? {
-          startDate: searchData.dateRange?.startDate || new Date().toISOString(),
-          endDate: searchData.dateRange?.endDate || new Date().toISOString(),
-        } : {
-          startDate: searchData.timeRange?.startDateTime || new Date().toISOString(),
-          endDate: searchData.timeRange?.endDateTime || new Date().toISOString(),
-        },
+        dateRange: searchData.bookingType === 'daily' 
+        ? {
+            startDate: searchData.dateRange?.startDate || getTodayAtNoonISO(),
+            endDate: searchData.dateRange?.endDate || getTodayAtNoonISO(),
+          } 
+        : {
+            startDate: searchData.timeRange?.startDateTime || getTodayAtNoonISO(),
+            endDate: searchData.timeRange?.endDateTime || getTodayAtNoonISO(),
+          },
+      
         guests: searchData.guests || { adults: 1, children: 0, infants: 0 },
         bookingType: searchData.bookingType || 'daily',
         priceRange: searchFilters.priceRange || { min: 0, max: 999999 },

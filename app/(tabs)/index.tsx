@@ -18,28 +18,7 @@ const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
   </Svg>
 )
 
-const FilterIcon = ({ size = 16, color = "#374151" }) => (
-  <Svg
-    width={size}
-    height={size}
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke={color}
-    strokeWidth="2.5"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <Line x1="4" y1="21" x2="4" y2="14" />
-    <Line x1="4" y1="10" x2="4" y2="3" />
-    <Line x1="12" y1="21" x2="12" y2="12" />
-    <Line x1="12" y1="8" x2="12" y2="3" />
-    <Line x1="20" y1="21" x2="20" y2="16" />
-    <Line x1="20" y1="12" x2="20" y2="3" />
-    <Line x1="1" y1="14" x2="7" y2="14" />
-    <Line x1="9" y1="8" x2="15" y2="8" />
-    <Line x1="17" y1="16" x2="23" y2="16" />
-  </Svg>
-)
+
 
 const LocationIcon = ({ size = 20, color = "currentColor" }) => (
   <Svg
@@ -109,12 +88,12 @@ export default function HotelBookingApp() {
   })
   const navigation = useNavigation()
   const { addToWishlist, removeFromWishlistByHotelId, isInWishlist, forceRefresh } = useWishlist()
-  
+
   // Wishlist handlers
   const handleWishlistToggle = async (hotel: any) => {
     try {
       const isCurrentlyInWishlist = isInWishlist(hotel.id)
-      
+
       if (isCurrentlyInWishlist) {
         await removeFromWishlistByHotelId(hotel.id)
       } else {
@@ -125,21 +104,21 @@ export default function HotelBookingApp() {
       Alert.alert('Error', 'Failed to update wishlist. Please try again.')
     }
   }
-  
+
   // Location permission and fetching logic
   const requestLocationPermission = async () => {
     try {
       setLocation(prev => ({ ...prev, loading: true, error: null }))
-      
+
       const { status } = await Location.requestForegroundPermissionsAsync()
-      
+
       if (status !== 'granted') {
-        setLocation(prev => ({ 
-          ...prev, 
-          hasPermission: false, 
-          permissionDenied: true, 
+        setLocation(prev => ({
+          ...prev,
+          hasPermission: false,
+          permissionDenied: true,
           loading: false,
-          error: 'Location permission denied' 
+          error: 'Location permission denied'
         }))
         return
       }
@@ -159,10 +138,10 @@ export default function HotelBookingApp() {
         error: null
       })
     } catch (error) {
-      setLocation(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: 'Failed to get location' 
+      setLocation(prev => ({
+        ...prev,
+        loading: false,
+        error: 'Failed to get location'
       }))
     }
   }
@@ -170,20 +149,20 @@ export default function HotelBookingApp() {
   const checkLocationPermission = async () => {
     try {
       const { status } = await Location.getForegroundPermissionsAsync()
-      
+
       if (status === 'granted') {
         await requestLocationPermission()
       } else {
-        setLocation(prev => ({ 
-          ...prev, 
-          hasPermission: false, 
-          permissionDenied: status === 'denied' 
+        setLocation(prev => ({
+          ...prev,
+          hasPermission: false,
+          permissionDenied: status === 'denied'
         }))
       }
     } catch (error) {
-      setLocation(prev => ({ 
-        ...prev, 
-        error: 'Failed to check location permission' 
+      setLocation(prev => ({
+        ...prev,
+        error: 'Failed to check location permission'
       }))
     }
   }
@@ -212,6 +191,11 @@ export default function HotelBookingApp() {
       default:
         return nearbyData
     }
+  }
+  function getNoonISO(date) {
+    const d = new Date(date);
+    d.setHours(12, 0, 0, 0);
+    return date.toISOString().split('T')[0] + 'T12:00:00';  // or return local string if needed
   }
 
   const currentData = getCurrentData()
@@ -300,16 +284,17 @@ export default function HotelBookingApp() {
       const searchParams = new URLSearchParams();
       searchParams.append('guests', '2'); // Default to 2 guests
       searchParams.append('bookingType', 'daily'); // Default to daily
-      
+
       // Default to next 2 nights
       const checkIn = new Date();
       checkIn.setDate(checkIn.getDate() + 1);
       const checkOut = new Date();
       checkOut.setDate(checkOut.getDate() + 3);
-      
-      searchParams.append('checkIn', checkIn.toISOString());
-      searchParams.append('checkOut', checkOut.toISOString());
-      
+
+      searchParams.append('checkIn', getNoonISO(checkIn));
+      searchParams.append('checkOut', getNoonISO(checkOut));
+
+
       router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
     }} key={hotel.id} className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
       <View className="relative">
@@ -319,7 +304,7 @@ export default function HotelBookingApp() {
           style={{ resizeMode: 'cover' }}
         />
         {hotel.offer && (
-          <View className="absolute top-3 left-3 bg-gray-500 px-2 py-1 rounded">
+          <View className="absolute top-3 left-3 bg-black px-2 py-1 rounded">
             <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               {hotel.offer}
             </Text>
@@ -338,9 +323,15 @@ export default function HotelBookingApp() {
             <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               {hotel.name}
             </Text>
-            <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            <Text
+              className="text-sm text-gray-500 mt-1"
+              style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+              numberOfLines={1}
+              ellipsizeMode="tail"
+            >
               {hotel.location}
             </Text>
+
           </View>
           <View className="flex-row items-center gap-1">
             <Star size={14} color="#FCD34D" fill="#FCD34D" />
@@ -366,9 +357,9 @@ export default function HotelBookingApp() {
             <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               ₹{hotel.price.toLocaleString()}
             </Text>
-            {hotel.originalPrice && (
+            {hotel.originalPrice !== hotel.price && (
               <Text className="text-sm text-gray-500 line-through ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                ₹{hotel.originalPrice.toLocaleString()}
+                ₹{hotel?.originalPrice?.toLocaleString()}
               </Text>
             )}
             <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -381,20 +372,36 @@ export default function HotelBookingApp() {
   );
 
   const renderCompactHotelCard = (hotel: any) => (
-    <Pressable onPress={() => router.push(`/hotels/${hotel.id}`)} key={hotel.id} className="flex-col gap-3 w-72 mr-4">
+    <Pressable onPress={() => {
+      // For home screen, we'll use default values since there's no active search
+      const searchParams = new URLSearchParams();
+      searchParams.append('guests', '2'); // Default to 2 guests
+      searchParams.append('bookingType', 'daily'); // Default to daily
+
+      // Default to next 2 nights
+      const checkIn = new Date();
+      checkIn.setDate(checkIn.getDate() + 1);
+      const checkOut = new Date();
+      checkOut.setDate(checkOut.getDate() + 3);
+
+      searchParams.append('checkIn', getNoonISO(checkIn));
+      searchParams.append('checkOut', getNoonISO(checkOut));
+
+      router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
+    }} key={hotel.id} className="flex-col gap-3 w-72 mr-4">
       <View className="relative w-full overflow-hidden rounded-xl">
         <Image
           source={{ uri: hotel.images[0] }}
           className="w-full h-48 rounded-xl"
           style={{ resizeMode: 'cover' }}
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           className="absolute top-3 right-3 rounded-full bg-white/80 p-2"
           onPress={() => handleWishlistToggle(hotel)}
         >
-          <Heart 
-            size={18} 
-            color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"} 
+          <Heart
+            size={18}
+            color={isInWishlist(hotel.id) ? "#EF4444" : "#6B7280"}
             fill={isInWishlist(hotel.id) ? "#EF4444" : "none"}
           />
         </TouchableOpacity>
@@ -412,11 +419,19 @@ export default function HotelBookingApp() {
             <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.rating}</Text>
           </View>
         </View>
-        <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>{hotel.location}</Text>
+        <Text
+          className="text-sm text-gray-500 mt-1"
+          style={{ fontFamily: 'PlusJakartaSans-Regular' }}
+          numberOfLines={1}
+          ellipsizeMode="tail"
+        >
+          {hotel.location}
+        </Text>
+
         <View className="flex-row items-center mt-1">
           <Text className="text-base text-gray-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>₹{hotel.price.toLocaleString()} </Text>
-          {hotel.originalPrice && (
-            <Text className="text-sm text-gray-500 line-through" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>₹{hotel.originalPrice.toLocaleString()}</Text>
+          {hotel.originalPrice !== hotel.price && (
+            <Text className="text-sm text-gray-500 line-through" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>₹{hotel?.originalPrice?.toLocaleString()}</Text>
           )}
           <Text className="text-sm text-gray-800" style={{ fontFamily: 'PlusJakartaSans-Regular' }}> / night</Text>
         </View>
@@ -530,7 +545,7 @@ export default function HotelBookingApp() {
         </View>
       </View>
 
-      <ScrollView 
+      <ScrollView
         className="flex-1"
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -580,7 +595,7 @@ export default function HotelBookingApp() {
         {/* Only show additional sections if we have hotels and not in loading/error state */}
         {(activeTab !== 'nearby' || location.hasPermission) && !currentData.loading && !currentData.error && currentData.hotels.length > 0 && (
           <>
-         
+
             {/* <View className="px-4 flex-col gap-4 mt-4">
               <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Deals & Coupons</Text>
               <View className="bg-white p-4 rounded-xl flex-row items-center justify-between gap-4 border border-gray-100">
