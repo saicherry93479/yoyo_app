@@ -116,20 +116,11 @@ export default function SearchScreen() {
     navigation.setOptions({
       headerShadowVisible: false,
       headerTitle: () => (
-        <View className="flex-1">
-          <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            Explore Hotels
-          </Text>
-          {total > 0 && (
-            <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              {total} properties found
-            </Text>
-          )}
-        </View>
+        <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Explore Hotels</Text>
       ),
-      headerTitleAlign: 'left',
+      headerTitleAlign: 'center',
     });
-  }, [navigation, total]);
+  }, [navigation]);
 
   // Wishlist handlers
   const handleWishlistToggle = async (hotel: Hotel) => {

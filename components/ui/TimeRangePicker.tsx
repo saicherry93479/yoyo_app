@@ -1,104 +1,167 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal, ScrollView, Alert } from 'react-native';
-import { Clock, Calendar, X, RotateCcw } from 'lucide-react-native';
+import { Clock, Calendar, X, ChevronRight, MapPin } from 'lucide-react-native';
 
 interface TimeRange {
   selectedDate: string | null;
-  startDateTime: string | null; // Full ISO datetime string
-  endDateTime: string | null;   // Full ISO datetime string
-  startTime: string | null;     // Display time (for UI)
-  endTime: string | null;       // Display time (for UI)
+  startDateTime: string | null;
+  endDateTime: string | null;
+  startTime: string | null;
+  endTime: string | null;
 }
 
 interface TimeRangePickerProps {
   value: TimeRange;
   onTimeRangeSelect: (timeRange: TimeRange) => void;
   placeholder?: string;
+  minHours?: number; // Minimum booking duration in hours
 }
 
 export function TimeRangePicker({ 
   value, 
   onTimeRangeSelect, 
-  placeholder = "Select date and time range"
+  placeholder = "Select check-in & check-out",
+  minHours = 2
 }: TimeRangePickerProps) {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedData, setSelectedData] = useState<TimeRange>(value);
-  const [currentStep, setCurrentStep] = useState<'date' | 'time'>('date');
-  const [timeSelectionMode, setTimeSelectionMode] = useState<'start' | 'end' | null>(null);
+  const [currentStep, setCurrentStep] = useState<'date' | 'checkin' | 'checkout'>('date');
 
-  // Generate next 30 days for date selection
+  // Get current time rounded to next hour
+  const getCurrentTimeSlot = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1, 0, 0, 0); // Round to next hour
+    return now;
+  };
+
+  // Generate available dates (today + next 7 days)
   const generateDateOptions = () => {
     const dates = [];
     const today = new Date();
     
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < 8; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
       
-      const dateString = date.toISOString().split('T')[0]; // YYYY-MM-DD format
-      const displayDate = date.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: 'numeric'
-      });
+      const dateString = date.toISOString().split('T')[0];
+      let displayDate;
+      
+      if (i === 0) {
+        displayDate = 'Today';
+      } else if (i === 1) {
+        displayDate = 'Tomorrow';
+      } else {
+        displayDate = date.toLocaleDateString('en-US', {
+          weekday: 'short',
+          month: 'short',
+          day: 'numeric'
+        });
+      }
       
       dates.push({
         value: dateString,
         display: displayDate,
-        isToday: i === 0
+        fullDate: date.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric'
+        }),
+        isToday: i === 0,
+        isTomorrow: i === 1
       });
     }
     return dates;
   };
 
-  // Generate time slots from selected date 12:00 AM to next day 12:00 PM (36 hours)
-  const generateTimeSlots = () => {
+  // Generate time slots based on selected date
+  const generateTimeSlots = (isCheckout = false) => {
     const slots = [];
     
     if (!selectedData.selectedDate) return slots;
     
-    // Create date in local timezone
     const [year, month, day] = selectedData.selectedDate.split('-').map(Number);
     const selectedDate = new Date(year, month - 1, day);
+    const isToday = selectedData.selectedDate === new Date().toISOString().split('T')[0];
     
-    // Generate 36 hours of slots (from 12:00 AM to next day 12:00 PM)
-    for (let hour = 0; hour < 36; hour++) {
-      for (let minute = 0; minute < 60; minute += 30) {
-        const slotDate = new Date(selectedDate);
-        slotDate.setHours(hour, minute, 0, 0);
-        
-        const currentHour = hour % 24;
-        const isNextDay = hour >= 24;
-        
-        const timeString = `${currentHour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        const displayTime = formatTime(timeString, isNextDay);
-        
-        // Use local datetime string instead of UTC
-        const localDateTime = slotDate.getFullYear() + '-' + 
-          String(slotDate.getMonth() + 1).padStart(2, '0') + '-' + 
-          String(slotDate.getDate()).padStart(2, '0') + 'T' + 
-          String(slotDate.getHours()).padStart(2, '0') + ':' + 
-          String(slotDate.getMinutes()).padStart(2, '0') + ':00';
-        
-        slots.push({ 
-          value: timeString,
-          display: displayTime,
-          actualHour: hour,
-          fullDateTime: localDateTime,
-          isNextDay
-        });
+    let startHour = 0;
+    let startMinute = 0;
+    
+    // If today, start from current time + 1 hour
+    if (isToday && !isCheckout) {
+      const currentSlot = getCurrentTimeSlot();
+      startHour = currentSlot.getHours();
+      startMinute = 0; // Always start at hour
+    }
+    
+    // If checkout, we need to generate slots from checkin + minimum hours
+    if (isCheckout && selectedData.startDateTime) {
+      const checkinTime = new Date(selectedData.startDateTime);
+      const checkinDate = new Date(checkinTime.getFullYear(), checkinTime.getMonth(), checkinTime.getDate());
+      const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      
+      // If checkout date is same as checkin date
+      if (checkinDate.getTime() === selectedDateOnly.getTime()) {
+        startHour = checkinTime.getHours() + minHours;
+      } else {
+        // If checkout is on a different day, start from beginning of that day
+        startHour = 0;
       }
     }
+    
+    // For check-in: Only show today's slots (0-23 hours)
+    // For checkout: Show slots until next day 2 PM
+    const maxHours = isCheckout ? 38 : 24; // Check-in only today, checkout until 2 PM next day
+    
+    for (let hour = startHour; hour < maxHours; hour++) {
+      const currentHour = hour % 24;
+      const isNextDay = hour >= 24;
+      
+      // For check-in: Don't allow next day slots
+      if (!isCheckout && isNextDay) break;
+      
+      // For checkout: Stop at 2 PM next day
+      if (isCheckout && isNextDay && currentHour >= 14) break;
+      
+      const slotDate = new Date(selectedDate);
+      if (isNextDay) {
+        slotDate.setDate(slotDate.getDate() + 1);
+      }
+      slotDate.setHours(currentHour, 0, 0, 0);
+      
+      // For checkout, validate minimum duration
+      if (isCheckout && selectedData.startDateTime) {
+        const checkinTime = new Date(selectedData.startDateTime);
+        const diffHours = (slotDate.getTime() - checkinTime.getTime()) / (1000 * 60 * 60);
+        if (diffHours < minHours) continue; // Skip this slot
+      }
+      
+      const timeString = `${currentHour.toString().padStart(2, '0')}:00`;
+      const displayTime = formatTime(timeString, isNextDay);
+      
+      const localDateTime = slotDate.getFullYear() + '-' + 
+        String(slotDate.getMonth() + 1).padStart(2, '0') + '-' + 
+        String(slotDate.getDate()).padStart(2, '0') + 'T' + 
+        String(slotDate.getHours()).padStart(2, '0') + ':00:00';
+      
+      slots.push({ 
+        value: timeString,
+        display: displayTime,
+        fullDateTime: localDateTime,
+        isNextDay,
+        actualDate: slotDate
+      });
+    }
+    
     return slots;
   };
 
   const formatTime = (timeString: string, isNextDay: boolean = false) => {
-    const [hour, minute] = timeString.split(':');
+    const [hour] = timeString.split(':');
     const hourNum = parseInt(hour);
     const period = hourNum >= 12 ? 'PM' : 'AM';
     const displayHour = hourNum === 0 ? 12 : hourNum > 12 ? hourNum - 12 : hourNum;
     const nextDayIndicator = isNextDay ? ' +1' : '';
-    return `${displayHour}:${minute} ${period}${nextDayIndicator}`;
+    return `${displayHour}:00 ${period}${nextDayIndicator}`;
   };
 
   const getDisplayText = () => {
@@ -116,9 +179,30 @@ export function TimeRangePicker({
         month: 'short',
         day: 'numeric'
       });
-      return `${dateDisplay}: Select time range`;
+      return `${dateDisplay}: Select times`;
     }
     return placeholder;
+  };
+
+  const calculateDuration = () => {
+    if (!selectedData.startDateTime || !selectedData.endDateTime) return '';
+    
+    const start = new Date(selectedData.startDateTime);
+    const end = new Date(selectedData.endDateTime);
+    const diffMs = end.getTime() - start.getTime();
+    const diffHours = diffMs / (1000 * 60 * 60);
+    
+    if (diffHours < 1) {
+      return `${Math.round(diffHours * 60)} min`;
+    } else if (diffHours === 1) {
+      return '1 hour';
+    } else if (diffHours % 1 === 0) {
+      return `${diffHours} hours`;
+    } else {
+      const hours = Math.floor(diffHours);
+      const minutes = Math.round((diffHours - hours) * 60);
+      return `${hours}h ${minutes}m`;
+    }
   };
 
   const handleDateSelect = (dateValue: string) => {
@@ -129,45 +213,43 @@ export function TimeRangePicker({
       startTime: null,
       endTime: null
     });
-    setCurrentStep('time');
-    setTimeSelectionMode(null);
+    setCurrentStep('checkin');
   };
 
-  const handleTimeSelect = (slot: any) => {
-    if (timeSelectionMode === 'start' || (!selectedData.startDateTime && !timeSelectionMode)) {
-      // Select start time
-      setSelectedData({
-        ...selectedData,
-        startDateTime: slot.fullDateTime,
-        startTime: slot.display,
-        // Clear end time if it's before the new start time
-        endDateTime: selectedData.endDateTime && new Date(selectedData.endDateTime) <= new Date(slot.fullDateTime) ? null : selectedData.endDateTime,
-        endTime: selectedData.endDateTime && new Date(selectedData.endDateTime) <= new Date(slot.fullDateTime) ? null : selectedData.endTime
-      });
-      setTimeSelectionMode(null);
-    } else if (timeSelectionMode === 'end' || (!selectedData.endDateTime && selectedData.startDateTime)) {
-      // Select end time - validate it's after start time
-      if (selectedData.startDateTime && new Date(slot.fullDateTime) <= new Date(selectedData.startDateTime)) {
-        Alert.alert(
-          'Invalid Time Range',
-          'End time must be after start time.',
-          [{ text: 'OK' }]
-        );
-        return;
-      }
-      
-      setSelectedData({
-        ...selectedData,
-        endDateTime: slot.fullDateTime,
-        endTime: slot.display
-      });
-      setTimeSelectionMode(null);
+  const handleCheckinSelect = (slot: any) => {
+    setSelectedData({
+      ...selectedData,
+      startDateTime: slot.fullDateTime,
+      startTime: slot.display,
+      endDateTime: null,
+      endTime: null
+    });
+    setCurrentStep('checkout');
+  };
+
+  const handleCheckoutSelect = (slot: any) => {
+    const start = new Date(selectedData.startDateTime!);
+    const end = new Date(slot.fullDateTime);
+    const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+    
+    if (diffHours < minHours) {
+      Alert.alert(
+        'Minimum Booking Duration',
+        `Minimum booking duration is ${minHours} hours.`,
+        [{ text: 'OK' }]
+      );
+      return;
     }
+    
+    setSelectedData({
+      ...selectedData,
+      endDateTime: slot.fullDateTime,
+      endTime: slot.display
+    });
   };
 
   const handleConfirm = () => {
     if (selectedData.selectedDate && selectedData.startDateTime && selectedData.endDateTime) {
-      console.log('selectdata ',selectedData)
       onTimeRangeSelect(selectedData);
       setIsModalVisible(false);
     }
@@ -184,35 +266,11 @@ export function TimeRangePicker({
     setSelectedData(clearedData);
     onTimeRangeSelect(clearedData);
     setCurrentStep('date');
-    setTimeSelectionMode(null);
-  };
-
-  const handleClearTimes = () => {
-    setSelectedData({
-      ...selectedData,
-      startDateTime: null,
-      endDateTime: null,
-      startTime: null,
-      endTime: null
-    });
-    setTimeSelectionMode(null);
-  };
-
-  const handleBackToDate = () => {
-    setCurrentStep('date');
-    setTimeSelectionMode(null);
-  };
-
-  const handleEditStartTime = () => {
-    setTimeSelectionMode('start');
-  };
-
-  const handleEditEndTime = () => {
-    setTimeSelectionMode('end');
   };
 
   const dateOptions = generateDateOptions();
-  const timeSlots = generateTimeSlots();
+  const checkinSlots = generateTimeSlots(false);
+  const checkoutSlots = generateTimeSlots(true);
 
   return (
     <>
@@ -220,24 +278,32 @@ export function TimeRangePicker({
         className="relative"
         onPress={() => {
           setIsModalVisible(true);
-          setCurrentStep(selectedData.selectedDate ? 'time' : 'date');
-          setTimeSelectionMode(null);
+          setCurrentStep('date'); // Always start from step 1
         }}
       >
-        <View className="absolute inset-y-0 left-0 flex items-center justify-center pl-4 z-10">
-          {currentStep === 'date' || !selectedData.selectedDate ? (
-            <Calendar size={20} color="#94A3B8" />
-          ) : (
-            <Clock size={20} color="#94A3B8" />
-          )}
-        </View>
-        <View className="w-full h-14 rounded-lg border border-slate-200 bg-slate-50 pl-12 pr-4 py-3 justify-center">
-          <Text 
-            className={`text-base ${selectedData.selectedDate ? 'text-slate-900' : 'text-slate-400'}`}
-            style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-          >
-            {getDisplayText()}
-          </Text>
+        <View className="w-full bg-white rounded-2xl border border-gray-100 shadow-sm">
+          <View className="flex-row items-center p-4">
+            <View className="w-10 h-10 bg-black rounded-full items-center justify-center mr-3">
+              <Clock size={18} color="white" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs text-gray-500 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                HOURLY BOOKING
+              </Text>
+              <Text 
+                className={`text-sm ${selectedData.selectedDate ? 'text-gray-900' : 'text-gray-400'}`}
+                style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+              >
+                {getDisplayText()}
+              </Text>
+              {selectedData.startDateTime && selectedData.endDateTime && (
+                <Text className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Duration: {calculateDuration()}
+                </Text>
+              )}
+            </View>
+            <ChevronRight size={20} color="#9CA3AF" />
+          </View>
         </View>
       </TouchableOpacity>
 
@@ -247,276 +313,303 @@ export function TimeRangePicker({
         presentationStyle="pageSheet"
         onRequestClose={() => setIsModalVisible(false)}
       >
-        <View className="flex-1 bg-white">
+        <View className="flex-1 bg-gray-50">
           {/* Header */}
-          <View className="flex-row items-center justify-between px-4 py-4 border-b border-gray-200">
-            <TouchableOpacity onPress={handleClear}>
-              <Text className="text-base text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Clear
-              </Text>
-            </TouchableOpacity>
-            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              {currentStep === 'date' ? 'Select date' : 'Select time range'}
-            </Text>
-            <TouchableOpacity onPress={() => setIsModalVisible(false)}>
-              <X size={24} color="#6B7280" />
-            </TouchableOpacity>
-          </View>
-
-          {currentStep === 'date' ? (
-            /* Date Selection */
-            <View className="flex-1 px-4 py-4">
-              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                <View className="mb-4">
-                  <Text className="text-lg text-gray-900 mb-3" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                    Choose a date
-                  </Text>
-                  
-                  <View className="space-y-2">
-                    {dateOptions.map((date) => {
-                      const isSelected = selectedData.selectedDate === date.value;
-                      
-                      return (
-                        <TouchableOpacity
-                          key={date.value}
-                          className={`w-full py-4 px-4 rounded-lg border ${
-                            isSelected
-                              ? 'bg-black border-[#000000]'
-                              : 'bg-white border-gray-200'
-                          }`}
-                          onPress={() => handleDateSelect(date.value)}
-                        >
-                          <View className="flex-row items-center justify-between">
-                            <Text 
-                              className={`text-base ${
-                                isSelected ? 'text-white' : 'text-gray-900'
-                              }`}
-                              style={{ fontFamily: 'PlusJakartaSans-Medium' }}
-                            >
-                              {date.display}
-                            </Text>
-                            {date.isToday && (
-                              <Text 
-                                className={`text-sm ${
-                                  isSelected ? 'text-white' : 'text-[#000000]'
-                                }`}
-                                style={{ fontFamily: 'PlusJakartaSans-Regular' }}
-                              >
-                                Today
-                              </Text>
-                            )}
-                          </View>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              </ScrollView>
-            </View>
-          ) : (
-            /* Time Selection */
-            <View className="flex-1 px-4 py-4">
-              {/* Selected Date Display */}
-              <TouchableOpacity 
-                className="flex-row items-center mb-4 p-3 bg-gray-50 rounded-lg"
-                onPress={handleBackToDate}
-              >
-                <Calendar size={16} color="#6B7280" />
-                <Text className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  {selectedData.selectedDate && new Date(selectedData.selectedDate).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </Text>
-                <Text className="text-xs text-gray-400 ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  (Tap to change)
+          <View className="bg-white px-6 py-5 border-b border-gray-100">
+            <View className="flex-row items-center justify-between">
+              <TouchableOpacity onPress={handleClear}>
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Clear
                 </Text>
               </TouchableOpacity>
-
-              {/* Time Selection Mode Indicator */}
-              {timeSelectionMode && (
-                <View className="mb-3 p-2 bg-blue-50 rounded-lg border border-blue-200">
-                  <Text className="text-sm text-blue-700 text-center" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    {timeSelectionMode === 'start' ? 'Select start time' : 'Select end time'}
-                  </Text>
-                </View>
-              )}
-
-              {/* Current Selection Display with Edit Options */}
-              <View className="flex-row mb-4">
-                <View className="flex-1 mr-2">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                      Start Time
-                    </Text>
-                    {selectedData.startTime && (
-                      <TouchableOpacity onPress={handleEditStartTime}>
-                        <Text className="text-xs text-[#000000]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                          Change
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  <TouchableOpacity 
-                    className={`h-12 rounded-lg border px-3 justify-center ${
-                      timeSelectionMode === 'start' ? 'border-[#000000] bg-gray-50' : 'border-gray-200 bg-gray-50'
-                    }`}
-                    onPress={handleEditStartTime}
-                  >
-                    <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                      {selectedData.startTime || 'Select'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <View className="flex-1 ml-2">
-                  <View className="flex-row items-center justify-between mb-2">
-                    <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                      End Time
-                    </Text>
-                    {selectedData.endTime && (
-                      <TouchableOpacity onPress={handleEditEndTime}>
-                        <Text className="text-xs text-[#000000]" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                          Change
-                        </Text>
-                      </TouchableOpacity>
-                    )}
-                  </View>
-                  <TouchableOpacity 
-                    className={`h-12 rounded-lg border px-3 justify-center ${
-                      timeSelectionMode === 'end' ? 'border-[#000000] bg-gray-50' : 'border-gray-200 bg-gray-50'
-                    }`}
-                    onPress={handleEditEndTime}
-                  >
-                    <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                      {selectedData.endTime || 'Select'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
+              <View className="items-center">
+                <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  {currentStep === 'date' ? 'Select Date' : 
+                   currentStep === 'checkin' ? 'Check-in Time' : 'Check-out Time'}
+                </Text>
+                <Text className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Step {currentStep === 'date' ? '1' : currentStep === 'checkin' ? '2' : '3'} of 3
+                </Text>
               </View>
-
-              {/* Clear Times Button */}
-              {(selectedData.startTime || selectedData.endTime) && (
-                <TouchableOpacity 
-                  className="flex-row items-center justify-center mb-4 p-2 bg-gray-100 rounded-lg"
-                  onPress={handleClearTimes}
-                >
-                  <RotateCcw size={16} color="#6B7280" />
-                  <Text className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    Clear selected times
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Time Slots Grid */}
-              <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
-                <View className="mb-4">
-                  <Text className="text-lg text-gray-900 mb-3" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                    Available Times (12:00 AM - Next Day 12:00 PM)
-                  </Text>
-                  
-                  <View className="flex-row flex-wrap justify-between">
-                    {timeSlots.map((slot) => {
-                      const isStartSelected = selectedData.startDateTime === slot.fullDateTime;
-                      const isEndSelected = selectedData.endDateTime === slot.fullDateTime;
-                      const isDisabled = selectedData.startDateTime && 
-                        new Date(slot.fullDateTime) <= new Date(selectedData.startDateTime) && 
-                        !isStartSelected &&
-                        timeSelectionMode !== 'start';
-                      
-                      return (
-                        <TouchableOpacity
-                          key={slot.fullDateTime}
-                          className={`w-[48%] mb-2 py-3 px-4 rounded-lg border ${
-                            isStartSelected || isEndSelected
-                              ? 'bg-black border-[#000000]'
-                              : isDisabled
-                              ? 'bg-gray-100 border-gray-200'
-                              : 'bg-white border-gray-200'
-                          }`}
-                          onPress={() => {
-                            if (isDisabled) return;
-                            handleTimeSelect(slot);
-                          }}
-                          disabled={isDisabled}
-                        >
-                          <Text 
-                            className={`text-center text-sm ${
-                              isStartSelected || isEndSelected
-                                ? 'text-white'
-                                : isDisabled
-                                ? 'text-gray-400'
-                                : 'text-gray-900'
-                            }`}
-                            style={{ fontFamily: 'PlusJakartaSans-Medium' }}
-                          >
-                            {slot.display}
-                          </Text>
-                          {isStartSelected && (
-                            <Text className="text-center text-xs text-white mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                              Start
-                            </Text>
-                          )}
-                          {isEndSelected && (
-                            <Text className="text-center text-xs text-white mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                              End
-                            </Text>
-                          )}
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </View>
-              </ScrollView>
+              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+                <X size={24} color="#6B7280" />
+              </TouchableOpacity>
             </View>
-          )}
+            
+            {/* Progress Bar */}
+            <View className="flex-row mt-5 space-x-2">
+              <View className={`flex-1 h-1.5 rounded-full ${currentStep === 'date' || currentStep === 'checkin' || currentStep === 'checkout' ? 'bg-black' : 'bg-gray-200'}`} />
+              <View className={`flex-1 h-1.5 rounded-full ${currentStep === 'checkin' || currentStep === 'checkout' ? 'bg-black' : 'bg-gray-200'}`} />
+              <View className={`flex-1 h-1.5 rounded-full ${currentStep === 'checkout' && selectedData.endDateTime ? 'bg-black' : 'bg-gray-200'}`} />
+            </View>
 
-          {/* Footer */}
-          <View className="px-4 py-4 border-t border-gray-200">
-            {currentStep === 'date' ? (
-              <TouchableOpacity
-                className={`w-full h-12 rounded-lg items-center justify-center ${
-                  selectedData.selectedDate 
-                    ? 'bg-black' 
-                    : 'bg-gray-200'
-                }`}
-                onPress={() => selectedData.selectedDate && setCurrentStep('time')}
+            {/* Step Navigation */}
+            <View className="flex-row justify-center mt-4 space-x-8">
+              <TouchableOpacity 
+                className="items-center"
+                onPress={() => setCurrentStep('date')}
+              >
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${
+                  currentStep === 'date' ? 'bg-black' : 'bg-gray-200'
+                }`}>
+                  <Text className={`text-sm ${currentStep === 'date' ? 'text-white' : 'text-gray-600'}`} 
+                        style={{ fontFamily: 'PlusJakartaSans-Bold' }}>1</Text>
+                </View>
+                <Text className={`text-xs mt-1 ${currentStep === 'date' ? 'text-black' : 'text-gray-500'}`} 
+                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Date</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                className="items-center"
+                onPress={() => selectedData.selectedDate && setCurrentStep('checkin')}
                 disabled={!selectedData.selectedDate}
               >
-                <Text 
-                  className={`text-base ${
-                    selectedData.selectedDate 
-                      ? 'text-white' 
-                      : 'text-gray-400'
-                  }`}
-                  style={{ fontFamily: 'PlusJakartaSans-Bold' }}
-                >
-                  Continue to time selection
-                </Text>
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${
+                  currentStep === 'checkin' ? 'bg-black' : selectedData.selectedDate ? 'bg-gray-300' : 'bg-gray-200'
+                }`}>
+                  <Text className={`text-sm ${currentStep === 'checkin' ? 'text-white' : 'text-gray-600'}`} 
+                        style={{ fontFamily: 'PlusJakartaSans-Bold' }}>2</Text>
+                </View>
+                <Text className={`text-xs mt-1 ${currentStep === 'checkin' ? 'text-black' : 'text-gray-500'}`} 
+                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-in</Text>
               </TouchableOpacity>
-            ) : (
-              <TouchableOpacity
-                className={`w-full h-12 rounded-lg items-center justify-center ${
-                  selectedData.selectedDate && selectedData.startDateTime && selectedData.endDateTime 
-                    ? 'bg-black' 
-                    : 'bg-gray-200'
-                }`}
-                onPress={handleConfirm}
-                disabled={!selectedData.selectedDate || !selectedData.startDateTime || !selectedData.endDateTime}
+
+              <TouchableOpacity 
+                className="items-center"
+                onPress={() => selectedData.startDateTime && setCurrentStep('checkout')}
+                disabled={!selectedData.startDateTime}
               >
-                <Text 
-                  className={`text-base ${
-                    selectedData.selectedDate && selectedData.startDateTime && selectedData.endDateTime 
-                      ? 'text-white' 
-                      : 'text-gray-400'
-                  }`}
-                  style={{ fontFamily: 'PlusJakartaSans-Bold' }}
-                >
-                  Confirm selection
-                </Text>
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${
+                  currentStep === 'checkout' ? 'bg-black' : selectedData.startDateTime ? 'bg-gray-300' : 'bg-gray-200'
+                }`}>
+                  <Text className={`text-sm ${currentStep === 'checkout' ? 'text-white' : 'text-gray-600'}`} 
+                        style={{ fontFamily: 'PlusJakartaSans-Bold' }}>3</Text>
+                </View>
+                <Text className={`text-xs mt-1 ${currentStep === 'checkout' ? 'text-black' : 'text-gray-500'}`} 
+                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-out</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* Content */}
+          <ScrollView className="flex-1 px-6 py-6" showsVerticalScrollIndicator={false}>
+            {currentStep === 'date' && (
+              <View>
+                <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  When would you like to book?
+                </Text>
+                <Text className="text-sm text-gray-600 mb-8" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Choose your preferred date
+                </Text>
+
+                <View className="space-y-4">
+                  {dateOptions.map((date) => {
+                    const isSelected = selectedData.selectedDate === date.value;
+                    
+                    return (
+                      <TouchableOpacity
+                        key={date.value}
+                        className={`bg-white rounded-3xl border-2 ${
+                          isSelected ? 'border-black shadow-lg' : 'border-gray-100 shadow-sm'
+                        }`}
+                        onPress={() => handleDateSelect(date.value)}
+                      >
+                        <View className="p-6">
+                          <View className="flex-row items-center justify-between">
+                            <View className="flex-row items-center">
+                              <View className={`w-5 h-5 rounded-full border-2 mr-5 ${
+                                isSelected ? 'bg-black border-black' : 'border-gray-300'
+                              }`}>
+                                {isSelected && (
+                                  <View className="w-1.5 h-1.5 bg-white rounded-full self-center mt-1.5" />
+                                )}
+                              </View>
+                              <View>
+                                <Text 
+                                  className={`text-lg ${isSelected ? 'text-black' : 'text-gray-900'}`}
+                                  style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                                >
+                                  {date.display}
+                                </Text>
+                                <Text className="text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                                  {date.fullDate}
+                                </Text>
+                              </View>
+                            </View>
+                            {(date.isToday || date.isTomorrow) && (
+                              <View className={`px-4 py-2 rounded-full ${
+                                date.isToday ? 'bg-green-100' : 'bg-blue-100'
+                              }`}>
+                                <Text 
+                                  className={`text-xs font-bold ${
+                                    date.isToday ? 'text-green-700' : 'text-blue-700'
+                                  }`}
+                                  style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                                >
+                                  {date.isToday ? 'TODAY' : 'TOMORROW'}
+                                </Text>
+                              </View>
+                            )}
+                          </View>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
             )}
+
+            {currentStep === 'checkin' && (
+              <View>
+                <View className="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm">
+                  <View className="flex-row items-center">
+                    <Calendar size={16} color="#6B7280" />
+                    <Text className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                      {selectedData.selectedDate && dateOptions.find(d => d.value === selectedData.selectedDate)?.fullDate}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  What time do you want to check-in?
+                </Text>
+                <Text className="text-sm text-gray-600 mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Select your check-in time (same day only)
+                </Text>
+
+                <View className="flex-row flex-wrap justify-between">
+                  {checkinSlots.map((slot) => {
+                    const isSelected = selectedData.startDateTime === slot.fullDateTime;
+                    
+                    return (
+                      <TouchableOpacity
+                        key={slot.fullDateTime}
+                        className={`w-[31%] mb-4 py-5 px-3 rounded-2xl border-2 ${
+                          isSelected
+                            ? 'bg-black border-black shadow-lg'
+                            : 'bg-white border-gray-100 shadow-sm'
+                        }`}
+                        onPress={() => handleCheckinSelect(slot)}
+                      >
+                        <Text 
+                          className={`text-center text-sm ${
+                            isSelected ? 'text-white' : 'text-gray-900'
+                          }`}
+                          style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                        >
+                          {slot.display}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+
+            {currentStep === 'checkout' && (
+              <View>
+                <View className="bg-white rounded-2xl p-4 mb-6 border border-gray-100 shadow-sm">
+                  <View className="flex-row items-center justify-between">
+                    <View className="flex-row items-center">
+                      <Calendar size={16} color="#6B7280" />
+                      <Text className="text-sm text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                        {selectedData.selectedDate && dateOptions.find(d => d.value === selectedData.selectedDate)?.fullDate}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center">
+                      <Text className="text-xs text-gray-500 mr-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                        Check-in:
+                      </Text>
+                      <Text className="text-sm text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                        {selectedData.startTime}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+
+                <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  What time do you want to check-out?
+                </Text>
+                <Text className="text-sm text-gray-600 mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Minimum booking: {minHours} hours
+                </Text>
+
+                <View className="flex-row flex-wrap justify-between">
+                  {checkoutSlots.map((slot) => {
+                    const isSelected = selectedData.endDateTime === slot.fullDateTime;
+                    const startTime = new Date(selectedData.startDateTime!);
+                    const slotTime = new Date(slot.fullDateTime);
+                    const diffHours = (slotTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+                    
+                    return (
+                      <TouchableOpacity
+                        key={slot.fullDateTime}
+                        className={`w-[31%] mb-4 py-5 px-3 rounded-2xl border-2 ${
+                          isSelected
+                            ? 'bg-black border-black shadow-lg'
+                            : 'bg-white border-gray-100 shadow-sm'
+                        }`}
+                        onPress={() => handleCheckoutSelect(slot)}
+                      >
+                        <Text 
+                          className={`text-center text-sm ${
+                            isSelected ? 'text-white' : 'text-gray-900'
+                          }`}
+                          style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+                        >
+                          {slot.display}
+                        </Text>
+                        {isSelected && diffHours > 0 && (
+                          <Text className="text-center text-xs text-white mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                            {Math.round(diffHours)}h duration
+                          </Text>
+                        )}
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              </View>
+            )}
+          </ScrollView>
+
+          {/* Footer */}
+          <View className="bg-white px-6 py-4 border-t border-gray-100">
+            <TouchableOpacity
+              className={`w-full h-14 rounded-2xl items-center justify-center ${
+                (currentStep === 'date' && selectedData.selectedDate) ||
+                (currentStep === 'checkin' && selectedData.startDateTime) ||
+                (currentStep === 'checkout' && selectedData.endDateTime)
+                  ? 'bg-black' 
+                  : 'bg-gray-200'
+              }`}
+              onPress={() => {
+                if (currentStep === 'date' && selectedData.selectedDate) {
+                  setCurrentStep('checkin');
+                } else if (currentStep === 'checkin' && selectedData.startDateTime) {
+                  setCurrentStep('checkout');
+                } else if (currentStep === 'checkout' && selectedData.endDateTime) {
+                  handleConfirm();
+                }
+              }}
+              disabled={
+                (currentStep === 'date' && !selectedData.selectedDate) ||
+                (currentStep === 'checkin' && !selectedData.startDateTime) ||
+                (currentStep === 'checkout' && !selectedData.endDateTime)
+              }
+            >
+              <Text 
+                className={`text-sm ${
+                  (currentStep === 'date' && selectedData.selectedDate) ||
+                  (currentStep === 'checkin' && selectedData.startDateTime) ||
+                  (currentStep === 'checkout' && selectedData.endDateTime)
+                    ? 'text-white' 
+                    : 'text-gray-400'
+                }`}
+                style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+              >
+                {currentStep === 'checkout' ? 'Confirm Booking' : 'Continue'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>

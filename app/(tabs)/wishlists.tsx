@@ -30,7 +30,7 @@ const WishlistScreen = () => {
         navigation.setOptions({
           headerShadowVisible: false,
           headerTitle: () => (
-            <Text className="text-xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>WhishLists</Text>
+            <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>WhishLists</Text>
           ),
           headerTitleAlign: 'center',
         });
