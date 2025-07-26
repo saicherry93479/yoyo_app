@@ -84,6 +84,16 @@ const ProfileScreen = () => {
       ]
     },
     {
+      section: 'Business',
+      items: [
+        {
+          icon: UserIcon, label: 'Join YOYO as partner', onPress: () => {
+            router.push('/partner-registration')
+          }
+        },
+      ]
+    },
+    {
       section: 'Support',
       items: [
         { icon: HelpIcon, label: 'Help Center', onPress: () => { 

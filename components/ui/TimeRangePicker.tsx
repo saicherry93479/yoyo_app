@@ -83,60 +83,55 @@ export function TimeRangePicker({
     const selectedDate = new Date(year, month - 1, day);
     const isToday = selectedData.selectedDate === new Date().toISOString().split('T')[0];
     
-    let startHour = 0;
-    let startMinute = 0;
-    
-    // If today, start from current time + 1 hour
-    if (isToday && !isCheckout) {
-      const currentSlot = getCurrentTimeSlot();
-      startHour = currentSlot.getHours();
-      startMinute = 0; // Always start at hour
-    }
-    
-    // If checkout, we need to generate slots from checkin + minimum hours
     if (isCheckout && selectedData.startDateTime) {
+      // For checkout, generate fixed duration options: 3hrs, 6hrs, 9hrs
       const checkinTime = new Date(selectedData.startDateTime);
-      const checkinDate = new Date(checkinTime.getFullYear(), checkinTime.getMonth(), checkinTime.getDate());
-      const selectedDateOnly = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+      const durations = [3, 6, 9]; // Fixed duration options in hours
       
-      // If checkout date is same as checkin date
-      if (checkinDate.getTime() === selectedDateOnly.getTime()) {
-        startHour = checkinTime.getHours() + minHours;
-      } else {
-        // If checkout is on a different day, start from beginning of that day
-        startHour = 0;
-      }
+      durations.forEach(duration => {
+        const checkoutTime = new Date(checkinTime.getTime() + duration * 60 * 60 * 1000);
+        
+        // Check if checkout time is valid (not too late in the day)
+        if (checkoutTime.getHours() <= 21) { // Don't allow checkout after 9 PM
+          const timeString = `${checkoutTime.getHours().toString().padStart(2, '0')}:00`;
+          const isNextDay = checkoutTime.getDate() !== checkinTime.getDate();
+          const displayTime = formatTime(timeString, isNextDay);
+          
+          const localDateTime = checkoutTime.getFullYear() + '-' + 
+            String(checkoutTime.getMonth() + 1).padStart(2, '0') + '-' + 
+            String(checkoutTime.getDate()).padStart(2, '0') + 'T' + 
+            String(checkoutTime.getHours()).padStart(2, '0') + ':00:00';
+          
+          slots.push({ 
+            value: timeString,
+            display: `${displayTime} (${duration}hrs)`,
+            fullDateTime: localDateTime,
+            isNextDay,
+            actualDate: checkoutTime,
+            duration
+          });
+        }
+      });
+      
+      return slots;
     }
     
-    // For check-in: Only show today's slots (0-23 hours)
-    // For checkout: Show slots until next day 2 PM
-    const maxHours = isCheckout ? 38 : 24; // Check-in only today, checkout until 2 PM next day
+    // For check-in, generate hourly slots
+    let startHour = 6; // Start from 6 AM
     
-    for (let hour = startHour; hour < maxHours; hour++) {
-      const currentHour = hour % 24;
-      const isNextDay = hour >= 24;
-      
-      // For check-in: Don't allow next day slots
-      if (!isCheckout && isNextDay) break;
-      
-      // For checkout: Stop at 2 PM next day
-      if (isCheckout && isNextDay && currentHour >= 14) break;
-      
+    // If today, start from current time + 1 hour but not before 6 AM
+    if (isToday) {
+      const currentSlot = getCurrentTimeSlot();
+      startHour = Math.max(6, currentSlot.getHours());
+    }
+    
+    // Generate check-in slots from 6 AM to 6 PM (18:00)
+    for (let hour = startHour; hour <= 18; hour++) {
       const slotDate = new Date(selectedDate);
-      if (isNextDay) {
-        slotDate.setDate(slotDate.getDate() + 1);
-      }
-      slotDate.setHours(currentHour, 0, 0, 0);
+      slotDate.setHours(hour, 0, 0, 0);
       
-      // For checkout, validate minimum duration
-      if (isCheckout && selectedData.startDateTime) {
-        const checkinTime = new Date(selectedData.startDateTime);
-        const diffHours = (slotDate.getTime() - checkinTime.getTime()) / (1000 * 60 * 60);
-        if (diffHours < minHours) continue; // Skip this slot
-      }
-      
-      const timeString = `${currentHour.toString().padStart(2, '0')}:00`;
-      const displayTime = formatTime(timeString, isNextDay);
+      const timeString = `${hour.toString().padStart(2, '0')}:00`;
+      const displayTime = formatTime(timeString, false);
       
       const localDateTime = slotDate.getFullYear() + '-' + 
         String(slotDate.getMonth() + 1).padStart(2, '0') + '-' + 
@@ -147,7 +142,7 @@ export function TimeRangePicker({
         value: timeString,
         display: displayTime,
         fullDateTime: localDateTime,
-        isNextDay,
+        isNextDay: false,
         actualDate: slotDate
       });
     }
