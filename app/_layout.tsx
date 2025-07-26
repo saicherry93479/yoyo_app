@@ -67,7 +67,7 @@ export default function RootLayout() {
                 <Stack.Screen name="(auth)" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: true }} />
-                <Stack.Screen name="hotels" options={{ headerShown: true }} />
+                {/* <Stack.Screen name="hotels" options={{ headerShown: true }} /> */}
                 <Stack.Screen name="checkout" options={{ headerShown: true, presentation: 'card' }} />
                 <Stack.Screen name="contactus" options={{ headerShown: true, presentation: 'card' }} />
                 <Stack.Screen name="personal-info" options={{ headerShown: true, presentation: 'card' }} />

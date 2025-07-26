@@ -685,7 +685,7 @@ const HotelDetails = () => {
                             </Text>
                           </TouchableOpacity>
                         ) : (
-                          <View className="space-y-3">
+                          <View className="flex gap-y-3">
                             <View className="flex-row items-center justify-between bg-stone-50 rounded-xl p-3">
                               <View className="flex-1">
                                 <Text className="text-sm text-stone-600 mb-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>

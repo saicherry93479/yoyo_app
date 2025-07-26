@@ -397,7 +397,7 @@ export function TimeRangePicker({
                   Choose your preferred date
                 </Text>
 
-                <View className="space-y-4">
+                <View className="flex gap-y-4">
                   {dateOptions.map((date) => {
                     const isSelected = selectedData.selectedDate === date.value;
                     

@@ -126,7 +126,7 @@ export default function OffersActionSheet({ sheetId, payload }: OffersActionShee
               Select offers to apply to your search results
             </Text>
 
-            <View className="space-y-4">
+            <View className="flex gap-y-4">
               {availableOffers.map((offer) => {
                 const isSelected = selectedOffers.includes(offer.name);
                 

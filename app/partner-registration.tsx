@@ -129,7 +129,7 @@ const PartnerRegistrationScreen = () => {
         </View>
 
         {/* Form */}
-        <View className="space-y-6">
+        <View className="flex gap-y-6">
           {/* Hotel Information */}
           <View className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm">
             <Text className="text-[#161312] text-lg mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>

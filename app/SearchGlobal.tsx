@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Alert } from 'react-native';
 import { useNavigation, router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Star, ListFilter as Filter, Heart, ArrowLeft, X, ArrowUpDown, ChevronDown } from 'lucide-react-native';
+import { Search, MapPin, Star, ListFilter as Filter, Heart, ArrowLeft, X, ArrowUpDown, ChevronDown, Tag } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
 import { apiService } from '@/services/api';
