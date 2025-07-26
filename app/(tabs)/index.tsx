@@ -330,7 +330,7 @@ export default function HotelBookingApp() {
               <Search size={18} color="#6B7280" />
               <View style={{ marginLeft: 12 }}>
                 <Text style={{ fontFamily: 'PlusJakartaSans-SemiBold', color: '#111827' }}>
-                  Bangalore
+                  Current Location
                 </Text>
                 <Text style={{ fontFamily: 'PlusJakartaSans-Regular', color: '#6B7280', fontSize: 12 }}>
                   26 Jul - 27 Jul • 1 guest
@@ -630,7 +630,7 @@ export default function HotelBookingApp() {
               handleHourlyBooking(hotel, 3);
             }}
           >
-            <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               3hrs
             </Text>
             <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -645,7 +645,7 @@ export default function HotelBookingApp() {
               handleHourlyBooking(hotel, 6);
             }}
           >
-            <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               6hrs
             </Text>
             <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -660,7 +660,7 @@ export default function HotelBookingApp() {
               handleHourlyBooking(hotel, 9);
             }}
           >
-            <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+            <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               9hrs
             </Text>
             <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -909,6 +909,8 @@ export default function HotelBookingApp() {
         placeholder="Select check-in & check-out"
         visible={showTimeRangePicker}
         onClose={() => setShowTimeRangePicker(false)}
+        showButton={false}
+        
       />
     </View>
   )

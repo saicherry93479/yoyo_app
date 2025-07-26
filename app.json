@@ -19,7 +19,12 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.cherry93479.yoyo_app_bolt"
+      "package": "com.cherry93479.yoyo_app_bolt",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM"
+        }
+      }
     },
     "web": {
       "bundler": "metro",

@@ -17,15 +17,17 @@ interface TimeRangePickerProps {
   minHours?: number; // Minimum booking duration in hours
   visible?: boolean; // External control for modal visibility
   onClose?: () => void; // Callback when modal should close
+  showButton?: boolean
 }
 
-export function TimeRangePicker({ 
-  value, 
-  onTimeRangeSelect, 
+export function TimeRangePicker({
+  value,
+  onTimeRangeSelect,
   placeholder = "Select check-in & check-out",
   minHours = 2,
   visible = false,
-  onClose
+  onClose,
+  showButton = true
 }: TimeRangePickerProps) {
   const [isModalVisible, setIsModalVisible] = useState(visible);
   const [selectedData, setSelectedData] = useState<TimeRange>(value);
@@ -51,14 +53,14 @@ export function TimeRangePicker({
   const generateDateOptions = () => {
     const dates = [];
     const today = new Date();
-    
+
     for (let i = 0; i < 8; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      
+
       const dateString = date.toISOString().split('T')[0];
       let displayDate;
-      
+
       if (i === 0) {
         displayDate = 'Today';
       } else if (i === 1) {
@@ -70,7 +72,7 @@ export function TimeRangePicker({
           day: 'numeric'
         });
       }
-      
+
       dates.push({
         value: dateString,
         display: displayDate,
@@ -89,33 +91,33 @@ export function TimeRangePicker({
   // Generate time slots based on selected date
   const generateTimeSlots = (isCheckout = false) => {
     const slots = [];
-    
+
     if (!selectedData.selectedDate) return slots;
-    
+
     const [year, month, day] = selectedData.selectedDate.split('-').map(Number);
     const selectedDate = new Date(year, month - 1, day);
     const isToday = selectedData.selectedDate === new Date().toISOString().split('T')[0];
-    
+
     if (isCheckout && selectedData.startDateTime) {
       // For checkout, generate fixed duration options: 3hrs, 6hrs, 9hrs
       const checkinTime = new Date(selectedData.startDateTime);
       const durations = [3, 6, 9]; // Fixed duration options in hours
-      
+
       durations.forEach(duration => {
         const checkoutTime = new Date(checkinTime.getTime() + duration * 60 * 60 * 1000);
-        
+
         // Check if checkout time is valid (not too late in the day)
         if (checkoutTime.getHours() <= 21) { // Don't allow checkout after 9 PM
           const timeString = `${checkoutTime.getHours().toString().padStart(2, '0')}:00`;
           const isNextDay = checkoutTime.getDate() !== checkinTime.getDate();
           const displayTime = formatTime(timeString, isNextDay);
-          
-          const localDateTime = checkoutTime.getFullYear() + '-' + 
-            String(checkoutTime.getMonth() + 1).padStart(2, '0') + '-' + 
-            String(checkoutTime.getDate()).padStart(2, '0') + 'T' + 
+
+          const localDateTime = checkoutTime.getFullYear() + '-' +
+            String(checkoutTime.getMonth() + 1).padStart(2, '0') + '-' +
+            String(checkoutTime.getDate()).padStart(2, '0') + 'T' +
             String(checkoutTime.getHours()).padStart(2, '0') + ':00:00';
-          
-          slots.push({ 
+
+          slots.push({
             value: timeString,
             display: `${displayTime} (${duration}hrs)`,
             fullDateTime: localDateTime,
@@ -125,33 +127,33 @@ export function TimeRangePicker({
           });
         }
       });
-      
+
       return slots;
     }
-    
+
     // For check-in, generate hourly slots
     let startHour = 6; // Start from 6 AM
-    
+
     // If today, start from current time + 1 hour but not before 6 AM
     if (isToday) {
       const currentSlot = getCurrentTimeSlot();
       startHour = Math.max(6, currentSlot.getHours());
     }
-    
+
     // Generate check-in slots from 6 AM to 6 PM (18:00)
     for (let hour = startHour; hour <= 18; hour++) {
       const slotDate = new Date(selectedDate);
       slotDate.setHours(hour, 0, 0, 0);
-      
+
       const timeString = `${hour.toString().padStart(2, '0')}:00`;
       const displayTime = formatTime(timeString, false);
-      
-      const localDateTime = slotDate.getFullYear() + '-' + 
-        String(slotDate.getMonth() + 1).padStart(2, '0') + '-' + 
-        String(slotDate.getDate()).padStart(2, '0') + 'T' + 
+
+      const localDateTime = slotDate.getFullYear() + '-' +
+        String(slotDate.getMonth() + 1).padStart(2, '0') + '-' +
+        String(slotDate.getDate()).padStart(2, '0') + 'T' +
         String(slotDate.getHours()).padStart(2, '0') + ':00:00';
-      
-      slots.push({ 
+
+      slots.push({
         value: timeString,
         display: displayTime,
         fullDateTime: localDateTime,
@@ -159,7 +161,7 @@ export function TimeRangePicker({
         actualDate: slotDate
       });
     }
-    
+
     return slots;
   };
 
@@ -179,7 +181,7 @@ export function TimeRangePicker({
         month: 'short',
         day: 'numeric'
       });
-      
+
       return `${dateDisplay}: ${selectedData.startTime} - ${selectedData.endTime}`;
     } else if (selectedData.selectedDate) {
       const date = new Date(selectedData.selectedDate);
@@ -194,12 +196,12 @@ export function TimeRangePicker({
 
   const calculateDuration = () => {
     if (!selectedData.startDateTime || !selectedData.endDateTime) return '';
-    
+
     const start = new Date(selectedData.startDateTime);
     const end = new Date(selectedData.endDateTime);
     const diffMs = end.getTime() - start.getTime();
     const diffHours = diffMs / (1000 * 60 * 60);
-    
+
     if (diffHours < 1) {
       return `${Math.round(diffHours * 60)} min`;
     } else if (diffHours === 1) {
@@ -239,7 +241,7 @@ export function TimeRangePicker({
     const start = new Date(selectedData.startDateTime!);
     const end = new Date(slot.fullDateTime);
     const diffHours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-    
+
     if (diffHours < minHours) {
       Alert.alert(
         'Minimum Booking Duration',
@@ -248,7 +250,7 @@ export function TimeRangePicker({
       );
       return;
     }
-    
+
     setSelectedData({
       ...selectedData,
       endDateTime: slot.fullDateTime,
@@ -265,9 +267,9 @@ export function TimeRangePicker({
   };
 
   const handleClear = () => {
-    const clearedData = { 
-      selectedDate: null, 
-      startDateTime: null, 
+    const clearedData = {
+      selectedDate: null,
+      startDateTime: null,
       endDateTime: null,
       startTime: null,
       endTime: null
@@ -288,7 +290,7 @@ export function TimeRangePicker({
 
   return (
     <>
-      <TouchableOpacity
+      {showButton && <TouchableOpacity
         className="relative"
         onPress={() => {
           setIsModalVisible(true);
@@ -304,7 +306,7 @@ export function TimeRangePicker({
               <Text className="text-xs text-gray-500 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
                 HOURLY BOOKING
               </Text>
-              <Text 
+              <Text
                 className={`text-sm ${selectedData.selectedDate ? 'text-gray-900' : 'text-gray-400'}`}
                 style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
               >
@@ -320,6 +322,7 @@ export function TimeRangePicker({
           </View>
         </View>
       </TouchableOpacity>
+      }
 
       <Modal
         visible={isModalVisible}
@@ -338,8 +341,8 @@ export function TimeRangePicker({
               </TouchableOpacity>
               <View className="items-center">
                 <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  {currentStep === 'date' ? 'Select Date' : 
-                   currentStep === 'checkin' ? 'Check-in Time' : 'Check-out Time'}
+                  {currentStep === 'date' ? 'Select Date' :
+                    currentStep === 'checkin' ? 'Check-in Time' : 'Check-out Time'}
                 </Text>
                 <Text className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
                   Step {currentStep === 'date' ? '1' : currentStep === 'checkin' ? '2' : '3'} of 3
@@ -349,7 +352,7 @@ export function TimeRangePicker({
                 <X size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
-            
+
             {/* Progress Bar */}
             <View className="flex-row mt-5 space-x-2">
               <View className={`flex-1 h-1.5 rounded-full ${currentStep === 'date' || currentStep === 'checkin' || currentStep === 'checkout' ? 'bg-black' : 'bg-gray-200'}`} />
@@ -359,48 +362,45 @@ export function TimeRangePicker({
 
             {/* Step Navigation */}
             <View className="flex-row justify-center mt-4 space-x-8">
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="items-center"
                 onPress={() => setCurrentStep('date')}
               >
-                <View className={`w-8 h-8 rounded-full items-center justify-center ${
-                  currentStep === 'date' ? 'bg-black' : 'bg-gray-200'
-                }`}>
-                  <Text className={`text-sm ${currentStep === 'date' ? 'text-white' : 'text-gray-600'}`} 
-                        style={{ fontFamily: 'PlusJakartaSans-Bold' }}>1</Text>
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${currentStep === 'date' ? 'bg-black' : 'bg-gray-200'
+                  }`}>
+                  <Text className={`text-sm ${currentStep === 'date' ? 'text-white' : 'text-gray-600'}`}
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}>1</Text>
                 </View>
-                <Text className={`text-xs mt-1 ${currentStep === 'date' ? 'text-black' : 'text-gray-500'}`} 
-                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Date</Text>
+                <Text className={`text-xs mt-1 ${currentStep === 'date' ? 'text-black' : 'text-gray-500'}`}
+                  style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Date</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="items-center"
                 onPress={() => selectedData.selectedDate && setCurrentStep('checkin')}
                 disabled={!selectedData.selectedDate}
               >
-                <View className={`w-8 h-8 rounded-full items-center justify-center ${
-                  currentStep === 'checkin' ? 'bg-black' : selectedData.selectedDate ? 'bg-gray-300' : 'bg-gray-200'
-                }`}>
-                  <Text className={`text-sm ${currentStep === 'checkin' ? 'text-white' : 'text-gray-600'}`} 
-                        style={{ fontFamily: 'PlusJakartaSans-Bold' }}>2</Text>
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${currentStep === 'checkin' ? 'bg-black' : selectedData.selectedDate ? 'bg-gray-300' : 'bg-gray-200'
+                  }`}>
+                  <Text className={`text-sm ${currentStep === 'checkin' ? 'text-white' : 'text-gray-600'}`}
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}>2</Text>
                 </View>
-                <Text className={`text-xs mt-1 ${currentStep === 'checkin' ? 'text-black' : 'text-gray-500'}`} 
-                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-in</Text>
+                <Text className={`text-xs mt-1 ${currentStep === 'checkin' ? 'text-black' : 'text-gray-500'}`}
+                  style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-in</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity 
+              <TouchableOpacity
                 className="items-center"
                 onPress={() => selectedData.startDateTime && setCurrentStep('checkout')}
                 disabled={!selectedData.startDateTime}
               >
-                <View className={`w-8 h-8 rounded-full items-center justify-center ${
-                  currentStep === 'checkout' ? 'bg-black' : selectedData.startDateTime ? 'bg-gray-300' : 'bg-gray-200'
-                }`}>
-                  <Text className={`text-sm ${currentStep === 'checkout' ? 'text-white' : 'text-gray-600'}`} 
-                        style={{ fontFamily: 'PlusJakartaSans-Bold' }}>3</Text>
+                <View className={`w-8 h-8 rounded-full items-center justify-center ${currentStep === 'checkout' ? 'bg-black' : selectedData.startDateTime ? 'bg-gray-300' : 'bg-gray-200'
+                  }`}>
+                  <Text className={`text-sm ${currentStep === 'checkout' ? 'text-white' : 'text-gray-600'}`}
+                    style={{ fontFamily: 'PlusJakartaSans-Bold' }}>3</Text>
                 </View>
-                <Text className={`text-xs mt-1 ${currentStep === 'checkout' ? 'text-black' : 'text-gray-500'}`} 
-                      style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-out</Text>
+                <Text className={`text-xs mt-1 ${currentStep === 'checkout' ? 'text-black' : 'text-gray-500'}`}
+                  style={{ fontFamily: 'PlusJakartaSans-Medium' }}>Check-out</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -419,27 +419,25 @@ export function TimeRangePicker({
                 <View className="flex gap-y-4">
                   {dateOptions.map((date) => {
                     const isSelected = selectedData.selectedDate === date.value;
-                    
+
                     return (
                       <TouchableOpacity
                         key={date.value}
-                        className={`bg-white rounded-3xl border-2 ${
-                          isSelected ? 'border-black shadow-lg' : 'border-gray-100 shadow-sm'
-                        }`}
+                        className={`bg-white rounded-3xl border-2 ${isSelected ? 'border-black shadow-lg' : 'border-gray-100 shadow-sm'
+                          }`}
                         onPress={() => handleDateSelect(date.value)}
                       >
                         <View className="p-6">
                           <View className="flex-row items-center justify-between">
                             <View className="flex-row items-center">
-                              <View className={`w-5 h-5 rounded-full border-2 mr-5 ${
-                                isSelected ? 'bg-black border-black' : 'border-gray-300'
-                              }`}>
+                              <View className={`w-5 h-5 rounded-full border-2 mr-5 ${isSelected ? 'bg-black border-black' : 'border-gray-300'
+                                }`}>
                                 {isSelected && (
                                   <View className="w-1.5 h-1.5 bg-white rounded-full self-center mt-1.5" />
                                 )}
                               </View>
                               <View>
-                                <Text 
+                                <Text
                                   className={`text-lg ${isSelected ? 'text-black' : 'text-gray-900'}`}
                                   style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                                 >
@@ -451,13 +449,11 @@ export function TimeRangePicker({
                               </View>
                             </View>
                             {(date.isToday || date.isTomorrow) && (
-                              <View className={`px-4 py-2 rounded-full ${
-                                date.isToday ? 'bg-green-100' : 'bg-blue-100'
-                              }`}>
-                                <Text 
-                                  className={`text-xs font-bold ${
-                                    date.isToday ? 'text-green-700' : 'text-blue-700'
-                                  }`}
+                              <View className={`px-4 py-2 rounded-full ${date.isToday ? 'bg-green-100' : 'bg-blue-100'
+                                }`}>
+                                <Text
+                                  className={`text-xs font-bold ${date.isToday ? 'text-green-700' : 'text-blue-700'
+                                    }`}
                                   style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                                 >
                                   {date.isToday ? 'TODAY' : 'TOMORROW'}
@@ -494,21 +490,19 @@ export function TimeRangePicker({
                 <View className="flex-row flex-wrap justify-between">
                   {checkinSlots.map((slot) => {
                     const isSelected = selectedData.startDateTime === slot.fullDateTime;
-                    
+
                     return (
                       <TouchableOpacity
                         key={slot.fullDateTime}
-                        className={`w-[31%] mb-4 py-5 px-3 rounded-2xl border-2 ${
-                          isSelected
+                        className={`w-[31%] mb-4 py-5 px-3 rounded-2xl border-2 ${isSelected
                             ? 'bg-black border-black shadow-lg'
                             : 'bg-white border-gray-100 shadow-sm'
-                        }`}
+                          }`}
                         onPress={() => handleCheckinSelect(slot)}
                       >
-                        <Text 
-                          className={`text-center text-sm ${
-                            isSelected ? 'text-white' : 'text-gray-900'
-                          }`}
+                        <Text
+                          className={`text-center text-sm ${isSelected ? 'text-white' : 'text-gray-900'
+                            }`}
                           style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                         >
                           {slot.display}
@@ -554,21 +548,19 @@ export function TimeRangePicker({
                     const startTime = new Date(selectedData.startDateTime!);
                     const slotTime = new Date(slot.fullDateTime);
                     const diffHours = (slotTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-                    
+
                     return (
                       <TouchableOpacity
                         key={slot.fullDateTime}
-                        className={`w-[31%] mb-4 py-5 px-3 rounded-2xl border-2 ${
-                          isSelected
+                        className={`w-[31%] mb-4 py-5 px-3 rounded-2xl border-2 ${isSelected
                             ? 'bg-black border-black shadow-lg'
                             : 'bg-white border-gray-100 shadow-sm'
-                        }`}
+                          }`}
                         onPress={() => handleCheckoutSelect(slot)}
                       >
-                        <Text 
-                          className={`text-center text-sm ${
-                            isSelected ? 'text-white' : 'text-gray-900'
-                          }`}
+                        <Text
+                          className={`text-center text-sm ${isSelected ? 'text-white' : 'text-gray-900'
+                            }`}
                           style={{ fontFamily: 'PlusJakartaSans-Bold' }}
                         >
                           {slot.display}
@@ -589,13 +581,12 @@ export function TimeRangePicker({
           {/* Footer */}
           <View className="bg-white px-6 py-4 border-t border-gray-100">
             <TouchableOpacity
-              className={`w-full h-14 rounded-2xl items-center justify-center ${
-                (currentStep === 'date' && selectedData.selectedDate) ||
-                (currentStep === 'checkin' && selectedData.startDateTime) ||
-                (currentStep === 'checkout' && selectedData.endDateTime)
-                  ? 'bg-black' 
+              className={`w-full h-14 rounded-2xl items-center justify-center ${(currentStep === 'date' && selectedData.selectedDate) ||
+                  (currentStep === 'checkin' && selectedData.startDateTime) ||
+                  (currentStep === 'checkout' && selectedData.endDateTime)
+                  ? 'bg-black'
                   : 'bg-gray-200'
-              }`}
+                }`}
               onPress={() => {
                 if (currentStep === 'date' && selectedData.selectedDate) {
                   setCurrentStep('checkin');
@@ -611,14 +602,13 @@ export function TimeRangePicker({
                 (currentStep === 'checkout' && !selectedData.endDateTime)
               }
             >
-              <Text 
-                className={`text-sm ${
-                  (currentStep === 'date' && selectedData.selectedDate) ||
-                  (currentStep === 'checkin' && selectedData.startDateTime) ||
-                  (currentStep === 'checkout' && selectedData.endDateTime)
-                    ? 'text-white' 
+              <Text
+                className={`text-sm ${(currentStep === 'date' && selectedData.selectedDate) ||
+                    (currentStep === 'checkin' && selectedData.startDateTime) ||
+                    (currentStep === 'checkout' && selectedData.endDateTime)
+                    ? 'text-white'
                     : 'text-gray-400'
-                }`}
+                  }`}
                 style={{ fontFamily: 'PlusJakartaSans-Bold' }}
               >
                 {currentStep === 'checkout' ? 'Confirm Booking' : 'Continue'}

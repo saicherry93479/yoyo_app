@@ -703,7 +703,7 @@ export default function SearchGlobalScreen() {
           {/* Map Toggle Button */}
           <TouchableOpacity
             onPress={() => setShowMapView(!showMapView)}
-            className="ml-3 p-2 bg-white rounded-full border border-gray-200"
+            className="ml-3 p-2 bg-white rounded-full border border-gray-200 hidden"
           >
             <Map size={20} color={showMapView ? "#000" : "#6B7280"} />
           </TouchableOpacity>

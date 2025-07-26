@@ -71,7 +71,7 @@ const availableOffers: Offer[] = [
   }
 ];
 
-export default function OffersActionSheet({ sheetId, payload }: OffersActionSheetProps) {
+export  function OffersActionSheet({ sheetId, payload }: OffersActionSheetProps) {
   const [selectedOffers, setSelectedOffers] = useState<string[]>(payload?.currentOffers || []);
 
   const handleOfferToggle = (offerName: string) => {
