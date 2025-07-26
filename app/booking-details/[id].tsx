@@ -70,41 +70,17 @@ const BookingDetails = () => {
   const handleCancelBooking = async () => {
     if (!booking) return;
 
-    Alert.alert(
-      'Cancel Booking',
-      'Are you sure you want to cancel this booking? This action cannot be undone.',
-      [
-        {
-          text: 'No, Keep Booking',
-          style: 'cancel',
-        },
-        {
-          text: 'Yes, Cancel',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              setCancelling(true);
-              const response = await apiService.put(`/bookings/${booking.id}/cancel`);
-
-              console.log('response inn cancelling ', response)
-
-              if (response.success) {
-                setBooking(prev => prev ? { ...prev, status: 'cancelled' } : null);
-
-                Alert.alert('Success', 'Your booking has been cancelled successfully.');
-
-              } else {
-                Alert.alert('Error', response.message || 'Failed to cancel booking');
-              }
-            } catch (err: any) {
-              Alert.alert('Error', err.message || 'An error occurred while cancelling');
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ]
-    );
+    router.push({
+      pathname: '/cancel-booking',
+      params: {
+        bookingId: booking.id,
+        bookingReference: booking.bookingReference,
+        hotelName: booking.hotelName,
+        totalAmount: booking.totalAmount.toString(),
+        checkIn: booking.checkIn,
+        checkOut: booking.checkOut,
+      }
+    });
   };
 
   const formatDate = (dateString: string) => {
@@ -427,11 +403,33 @@ const BookingDetails = () => {
           <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             {booking.hotelName}
           </Text>
-          <View className="flex-row items-center mb-4">
-            <MapPin size={16} color="#6B7280" />
-            <Text className="text-gray-600 ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              {booking.address}
-            </Text>
+          <View className="flex-row items-center justify-between mb-4">
+            <View className="flex-row items-center flex-1">
+              <MapPin size={16} color="#6B7280" />
+              <Text className="text-gray-600 ml-2 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                {booking.address}
+              </Text>
+            </View>
+            <TouchableOpacity
+              className="ml-3 p-2 bg-black rounded-full"
+              onPress={() => {
+                const address = encodeURIComponent(booking.address);
+                const url = Platform.OS === 'ios' 
+                  ? `maps://maps.google.com/maps?q=${address}`
+                  : `geo:0,0?q=${address}`;
+                
+                Linking.canOpenURL(url).then(supported => {
+                  if (supported) {
+                    Linking.openURL(url);
+                  } else {
+                    // Fallback to web maps
+                    Linking.openURL(`https://maps.google.com/maps?q=${address}`);
+                  }
+                });
+              }}
+            >
+              <MapPin size={16} color="white" />
+            </TouchableOpacity>
           </View>
           <Text className="text-lg text-gray-800 mb-4" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
             {booking.roomType}

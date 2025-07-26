@@ -18,6 +18,7 @@ interface SearchFilters {
   amenities?: string[];
   propertyType?: string[];
   sortBy?: string;
+  offers?: string[];
 }
 
 interface Hotel {
@@ -119,6 +120,7 @@ export default function SearchGlobalScreen() {
     if (filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 999999)) count++;
     if (filters.rating && filters.rating > 0) count++;
     if (filters.amenities && filters.amenities.length > 0) count++;
+    if (filters.offers && filters.offers.length > 0) count++;
     if (filters.sortBy && filters.sortBy !== 'recommended') count++;
     return count;
   };
@@ -135,6 +137,9 @@ export default function SearchGlobalScreen() {
         break;
       case 'amenities':
         delete newFilters.amenities;
+        break;
+      case 'offers':
+        delete newFilters.offers;
         break;
       case 'sort':
         newFilters.sortBy = 'recommended';
@@ -266,7 +271,8 @@ export default function SearchGlobalScreen() {
     onPress: () => void, 
     onClear?: () => void,
     icon?: React.ReactNode,
-    isSort?: boolean
+    isSort?: boolean,
+    shouldNotReopenOnClear?: boolean
   ) => (
     <View className="flex-row items-center">
       <TouchableOpacity
@@ -295,10 +301,12 @@ export default function SearchGlobalScreen() {
             onPress={(e) => {
               e.stopPropagation();
               onClear();
-              // Re-open the action sheet after clearing
-              setTimeout(() => {
-                onPress();
-              }, 100);
+              // Only re-open if shouldNotReopenOnClear is not true
+              if (!shouldNotReopenOnClear) {
+                setTimeout(() => {
+                  onPress();
+                }, 100);
+              }
             }} 
             className="ml-2"
           >
@@ -493,7 +501,15 @@ export default function SearchGlobalScreen() {
     const isPriceActive = filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 999999);
     const isRatingActive = filters.rating && filters.rating > 0;
     const isAmenitiesActive = filters.amenities && filters.amenities.length > 0;
+    const isOffersActive = filters.offers && filters.offers.length > 0;
     const isSortActive = filters.sortBy && filters.sortBy !== 'recommended';
+
+    // Get display text for offers
+    const getOffersDisplayText = () => {
+      if (!isOffersActive || !filters.offers || filters.offers.length === 0) return 'Offers';
+      if (filters.offers.length === 1) return filters.offers[0];
+      return `${filters.offers.length} offers`;
+    };
 
     return (
       <View className="bg-white "
@@ -532,7 +548,9 @@ export default function SearchGlobalScreen() {
                   }
                 }),
                 isPriceActive ? () => clearFilter('price') : undefined,
-                <Text className={`text-sm ${isPriceActive ? 'text-white' : 'text-gray-600'}`}>₹</Text>
+                <Text className={`text-sm ${isPriceActive ? 'text-white' : 'text-gray-600'}`}>₹</Text>,
+                false,
+                true // shouldNotReopenOnClear
               )}
 
               {renderFilterTag(
@@ -545,7 +563,9 @@ export default function SearchGlobalScreen() {
                   }
                 }),
                 isRatingActive ? () => clearFilter('rating') : undefined,
-                <Star size={14} color={isRatingActive ? "white" : "#6B7280"} />
+                <Star size={14} color={isRatingActive ? "white" : "#6B7280"} />,
+                false,
+                true // shouldNotReopenOnClear
               )}
 
               {renderFilterTag(
@@ -558,7 +578,24 @@ export default function SearchGlobalScreen() {
                   }
                 }),
                 isAmenitiesActive ? () => clearFilter('amenities') : undefined,
-                <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />
+                <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />,
+                false,
+                true // shouldNotReopenOnClear
+              )}
+
+              {renderFilterTag(
+                getOffersDisplayText(),
+                isOffersActive,
+                () => SheetManager.show('offers-filter', {
+                  payload: {
+                    currentOffers: filters.offers || [],
+                    onOffersSelect: (offers: string[]) => handleFilterChange({ offers })
+                  }
+                }),
+                isOffersActive ? () => clearFilter('offers') : undefined,
+                <Tag size={14} color={isOffersActive ? "white" : "#6B7280"} />,
+                false,
+                true // shouldNotReopenOnClear
               )}
             </View>
           </ScrollView>
