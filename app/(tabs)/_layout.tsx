@@ -68,6 +68,7 @@ export default function TabLayout() {
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, size }) => <SearchIcon size={size} color={color} />,
+          tabBarStyle: { display: 'none' }
           // headerShown:false
         }}
       />

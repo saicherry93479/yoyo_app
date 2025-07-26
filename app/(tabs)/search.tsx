@@ -1,7 +1,7 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { View, Text, TouchableOpacity, SafeAreaView, Pressable } from 'react-native';
 import { useNavigation, router } from 'expo-router';
-import { Search } from 'lucide-react-native';
+import { ArrowLeft, Search } from 'lucide-react-native';
 import { LocationSearchInput } from '@/components/ui/LocationSearchInput';
 import { DateRangePicker } from '@/components/ui/DateRangePicker';
 import { TimeRangePicker } from '@/components/ui/TimeRangePicker';
@@ -147,6 +147,9 @@ export default function SearchScreen() {
         <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Search Hotels</Text>
       ),
       headerTitleAlign: 'center',
+      headerLeft:()=><Pressable className='pl-4' onPressIn={()=>router.back()}>
+          <ArrowLeft></ArrowLeft>
+      </Pressable>
     });
   }, [navigation]);
 
