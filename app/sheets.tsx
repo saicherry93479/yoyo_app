@@ -15,7 +15,7 @@ import { PriceFilterActionSheet } from '@/components/ui/PriceFilterActionSheet';
 import { RatingFilterActionSheet } from '@/components/ui/RatingFilterActionSheet';
 import { AmenitiesFilterActionSheet } from '@/components/ui/AmenitiesFilterActionSheet';
 import { OffersActionSheet } from '@/components/ui/OffersActionSheet';
-import { TimeRangePicker } from '@/components/ui/TimeRangePicker';
+
 
 registerSheet('profile-options', CustomActionSheet);
 registerSheet('amenities', AmenitiesActionSheet);
