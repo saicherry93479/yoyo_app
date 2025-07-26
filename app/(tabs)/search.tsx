@@ -1,554 +1,361 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView, RefreshControl, Alert } from 'react-native';
-import { useNavigation, router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Star, ListFilter as Filter, Heart } from 'lucide-react-native';
-import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
-import { SheetManager } from 'react-native-actions-sheet';
-import { apiService } from '@/services/api';
-import { useWishlist } from '@/contexts/WishlistContext';
-import { HeartIcon } from '@/components/ui/HeartIcon';
+import { View, Text, TouchableOpacity, SafeAreaView } from 'react-native';
+import { useNavigation, router } from 'expo-router';
+import { Search } from 'lucide-react-native';
+import { LocationSearchInput } from '@/components/ui/LocationSearchInput';
+import { DateRangePicker } from '@/components/ui/DateRangePicker';
+import { TimeRangePicker } from '@/components/ui/TimeRangePicker';
+import { GuestSelector } from '@/components/ui/GuestSelector';
 
-interface SearchFilters {
-  priceRange?: {
-    min: number;
-    max: number;
-  };
-  rating?: number;
-  amenities?: string[];
-  propertyType?: string[];
-  sortBy?: string;
-}
-
-interface Hotel {
+interface Location {
   id: string;
   name: string;
-  description: string | null;
-  address: string;
-  city: string;
-  starRating: number;
-  amenities: string[];
-  coordinates: {
+  description: string;
+  type: 'city' | 'region' | 'country' | 'recent' | 'current';
+  coordinates?: {
     lat: number;
     lng: number;
   };
-  distance: number | null;
-  rating: {
-    average: number;
-    count: number;
-  };
-  pricing: {
-    startingFrom: number;
-    range: {
-      min: number;
-      max: number;
-    };
-    currency: string;
-    totalPrice: number | null;
-    perNight: boolean;
-  } | null;
-  offers?: Array<{
-    title: string;
-    discountType: 'percentage' | 'fixed';
-    discountValue: number;
-    code: string;
-    validUntil?: string;
-  }>;
-  images: {
-    primary: string | null;
-    gallery?: string[];
-  };
-  paymentOptions: {
-    onlineEnabled: boolean;
-    offlineEnabled: boolean;
-  };
 }
 
+interface DateRange {
+  startDate: string | null;
+  endDate: string | null;
+}
+
+interface TimeRange {
+  selectedDate: string | null;
+  startDateTime: string | null;
+  endDateTime: string | null;
+  startTime: string | null;
+  endTime: string | null;
+}
+
+interface GuestCounts {
+  adults: number;
+  children: number;
+  infants: number;
+}
+
+interface SearchData {
+  location: Location | null;
+  dateRange: DateRange;
+  timeRange: TimeRange;
+  guests: GuestCounts;
+  bookingType: 'daily' | 'hourly';
+}
+
+// Helper function to create local datetime string without timezone conversion
+const createLocalDateTime = (date: Date, hours: number, minutes: number = 0) => {
+  const localDate = new Date(date);
+  localDate.setHours(hours, minutes, 0, 0);
+
+  // Create ISO string manually to avoid UTC conversion
+  const year = localDate.getFullYear();
+  const month = String(localDate.getMonth() + 1).padStart(2, '0');
+  const day = String(localDate.getDate()).padStart(2, '0');
+  const hour = String(hours).padStart(2, '0');
+  const minute = String(minutes).padStart(2, '0');
+
+  return `${year}-${month}-${day}T${hour}:${minute}:00.000`;
+};
+
+// Helper function to format time for display
+const formatTimeForDisplay = (hours: number, minutes: number = 0) => {
+  const period = hours >= 12 ? 'PM' : 'AM';
+  const displayHours = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+  const displayMinutes = minutes === 0 ? '00' : String(minutes).padStart(2, '0');
+  return `${displayHours}:${displayMinutes} ${period}`;
+};
+
 export default function SearchScreen() {
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
-  const [total, setTotal] = useState(0);
-  const [currentSearchData, setCurrentSearchData] = useState<any>(null);
-  const [filters, setFilters] = useState<SearchFilters>({
-    sortBy: 'recommended'
+  const navigation = useNavigation();
+
+  // Create proper default values
+  const createDefaultSearchData = (): SearchData => {
+    const tomorrow = new Date(Date.now() + 24*60*60*1000);
+    const dayAfterTomorrow = new Date(Date.now() + 3*24*60*60*1000);
+    const tomorrowDateString = tomorrow.toISOString().split('T')[0];
+
+    // For daily bookings - set to 12:00 PM (noon) local time
+    const dailyStartTime = createLocalDateTime(tomorrow, 12, 0); // 12:00 PM
+    const dailyEndTime = createLocalDateTime(dayAfterTomorrow, 12, 0); // 12:00 PM next day
+
+    // For hourly bookings - set to 9 AM to 5 PM local time
+    const hourlyStartTime = createLocalDateTime(tomorrow, 9, 0); // 9:00 AM
+    const hourlyEndTime = createLocalDateTime(tomorrow, 17, 0); // 5:00 PM
+
+    // Default location (can be user's current location or popular destination)
+    const defaultLocation: Location = {
+      id: 'default-mumbai',
+      name: 'Mumbai, India',
+      description: 'Mumbai, Maharashtra, India',
+      type: 'city',
+      coordinates: {
+        lat: 19.0760,
+        lng: 72.8777
+      }
+    };
+
+    return {
+      location: defaultLocation,
+      dateRange: { 
+        startDate: dailyStartTime, // For daily, use 12:00 PM
+        endDate: dailyEndTime 
+      },
+      timeRange: { 
+        selectedDate: tomorrowDateString,
+        startDateTime: hourlyStartTime, // For hourly, use 9:00 AM
+        endDateTime: hourlyEndTime, // For hourly, use 5:00 PM
+        startTime: formatTimeForDisplay(9, 0), // '9:00 AM'
+        endTime: formatTimeForDisplay(17, 0) // '5:00 PM'
+      },
+      guests: { adults: 1, children: 0, infants: 0 },
+      bookingType: 'daily'
+    };
+  };
+
+  const [searchData, setSearchData] = useState<SearchData>(createDefaultSearchData);
+  const [activeTab, setActiveTab] = useState<number>(0);
+  const [isSearching, setIsSearching] = useState(false);
+
+  // Helper function to get tab styles based on active state
+  const getTabStyle = (tabIndex: number) => ({
+    backgroundColor: activeTab === tabIndex ? 'white' : 'transparent',
+    shadowColor: activeTab === tabIndex ? '#000' : 'transparent',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: activeTab === tabIndex ? 0.1 : 0,
+    shadowRadius: 2,
+    elevation: activeTab === tabIndex ? 2 : 0,
   });
 
-  const navigation = useNavigation();
-  const params = useLocalSearchParams();
-  const { addToWishlist, removeFromWishlistByHotelId, isInWishlist } = useWishlist();
+  const getTextStyle = (tabIndex: number) => ({
+    color: activeTab === tabIndex ? '#000000' : '#8A8A8A',
+    fontFamily: 'PlusJakartaSans-SemiBold'
+  });
 
-  // Format search display text
-  const getSearchDisplayText = () => {
-    if (!currentSearchData) return 'Search destinations, hotels...';
-
-    const location = currentSearchData.location?.name || '';
-    const bookingType = currentSearchData.bookingType || 'daily';
-
-    if (bookingType === 'hourly') {
-      const timeRange = currentSearchData.timeRange;
-      if (timeRange?.startTime && timeRange?.endTime) {
-        const formatTime = (time: string) => {
-          const hour = parseInt(time.split(':')[0]);
-          const period = hour >= 12 ? 'PM' : 'AM';
-          const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
-          return `${displayHour}:00 ${period}`;
-        };
-        return `${location} • Hourly • ${formatTime(timeRange.startTime)} - ${formatTime(timeRange.endTime)}`;
-      }
-      return `${location} • Hourly`;
-    } else {
-      const dateRange = currentSearchData.dateRange;
-      if (dateRange?.startDate && dateRange?.endDate) {
-        const formatDate = (dateString: string) => {
-          return new Date(dateString).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
-          });
-        };
-        return `${location} • Daily • ${formatDate(dateRange.startDate)} - ${formatDate(dateRange.endDate)}`;
-      }
-      return `${location} • Daily`;
-    }
-  };
+  const isSearchEnabled = searchData.location && 
+    (activeTab === 0 
+      ? (searchData.dateRange.startDate && searchData.dateRange.endDate)
+      : (searchData.timeRange.selectedDate && searchData.timeRange.startDateTime && searchData.timeRange.endDateTime)
+    );
 
   useLayoutEffect(() => {
     navigation.setOptions({
       headerShadowVisible: false,
       headerTitle: () => (
-        <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Explore Hotels</Text>
+        <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Search Hotels</Text>
       ),
       headerTitleAlign: 'center',
     });
   }, [navigation]);
 
-  // Wishlist handlers
-  const handleWishlistToggle = async (hotel: Hotel) => {
-    try {
-      const isCurrentlyInWishlist = isInWishlist(hotel.id)
+  const handleTabPress = (tab: number) => {
+    console.log('tab pressed:', tab);
+    setActiveTab(tab);
 
-      if (isCurrentlyInWishlist) {
-        await removeFromWishlistByHotelId(hotel.id)
-      } else {
-        await addToWishlist(hotel.id)
+    setSearchData(prev => {
+      const newBookingType = tab === 0 ? 'daily' : 'hourly';
+
+      // If switching to hourly and timeRange is incomplete, set defaults
+      if (tab === 1) {
+        const tomorrow = new Date(Date.now() + 24*60*60*1000);
+        const tomorrowDateString = tomorrow.toISOString().split('T')[0];
+
+        const defaultStartTime = createLocalDateTime(tomorrow, 9, 0); // 9:00 AM
+        const defaultEndTime = createLocalDateTime(tomorrow, 17, 0); // 5:00 PM
+
+        const updatedTimeRange = {
+          selectedDate: prev.timeRange.selectedDate || tomorrowDateString,
+          startDateTime: prev.timeRange.startDateTime || defaultStartTime,
+          endDateTime: prev.timeRange.endDateTime || defaultEndTime,
+          startTime: prev.timeRange.startTime || formatTimeForDisplay(9, 0),
+          endTime: prev.timeRange.endTime || formatTimeForDisplay(17, 0)
+        };
+
+        return { 
+          ...prev, 
+          bookingType: newBookingType,
+          timeRange: updatedTimeRange
+        };
       }
-    } catch (error) {
-      console.error('Error toggling wishlist:', error)
-      Alert.alert('Error', 'Failed to update wishlist. Please try again.')
-    }
-  }
 
-  // Parse search data from params
-  useEffect(() => {
-    if (params.searchData) {
-      try {
-        const searchData = JSON.parse(params.searchData as string);
-        setCurrentSearchData(searchData);
-        performSearch(searchData, filters);
-      } catch (error) {
-        console.error('Error parsing search data:', error);
+      // If switching to daily, ensure dateRange has values with 12:00 PM time
+      if (tab === 0) {
+        const tomorrow = new Date(Date.now() + 24*60*60*1000);
+        const dayAfterTomorrow = new Date(Date.now() + 3*24*60*60*1000);
+
+        const updatedDateRange = {
+          startDate: prev.dateRange.startDate || createLocalDateTime(tomorrow, 12, 0), // 12:00 PM
+          endDate: prev.dateRange.endDate || createLocalDateTime(dayAfterTomorrow, 12, 0) // 12:00 PM
+        };
+
+        return { 
+          ...prev, 
+          bookingType: newBookingType,
+          dateRange: updatedDateRange
+        };
       }
-    }
-  }, [params.searchData]);
 
-  function getTodayAtNoonISO() {
-    const date = new Date();
-    date.setHours(12, 0, 0, 0);  // 12:00 PM local time
-    return date.toISOString().split('T')[0] + 'T12:00:00';
-  }
-  
-
-  const performSearch = async (searchData: any, searchFilters: SearchFilters = {}) => {
-    if (!searchData) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      // Prepare request body according to API specification
-      const requestBody = {
-        coordinates: searchData.location?.coordinates || { lat: 0, lng: 0 },
-        city: searchData.location?.name || '',
-        radius: 50,
-        dateRange: searchData.bookingType === 'daily' 
-        ? {
-            startDate: searchData.dateRange?.startDate || getTodayAtNoonISO(),
-            endDate: searchData.dateRange?.endDate || getTodayAtNoonISO(),
-          } 
-        : {
-            startDate: searchData.timeRange?.startDateTime || getTodayAtNoonISO(),
-            endDate: searchData.timeRange?.endDateTime || getTodayAtNoonISO(),
-          },
-      
-        guests: searchData.guests || { adults: 1, children: 0, infants: 0 },
-        bookingType: searchData.bookingType || 'daily',
-        priceRange: searchFilters.priceRange || { min: 0, max: 999999 },
-        starRating: searchFilters.rating || 0,
-        amenities: searchFilters.amenities || [],
-        sortBy: searchFilters.sortBy || 'recommended',
-        page: 1,
-        limit: 20
-      };
-
-      console.log('Search request body:', JSON.stringify(requestBody, null, 2));
-
-      const response = await apiService.post('/search/search', requestBody);
-
-      console.log('response ',response)
-
-      console.log('Search response:', JSON.stringify(response, null, 2));
-
-      if (response.success) {
-        setHotels(response.data.hotels || []);
-        setTotal(response.data.total || 0);
-      } else {
-        setError(response.error || 'Search failed');
-        setHotels([]);
-        setTotal(0);
-      }
-    } catch (err: any) {
-      console.error('Search error:', err);
-      setError(err.message || 'Search failed');
-      setHotels([]);
-      setTotal(0);
-    } finally {
-      setLoading(false);
-    }
+      return { ...prev, bookingType: newBookingType };
+    });
   };
 
-  const handleFilterChange = (newFilters: SearchFilters) => {
-    const updatedFilters = { ...filters, ...newFilters };
-    setFilters(updatedFilters);
-    if (currentSearchData) {
-      performSearch(currentSearchData, updatedFilters);
-    }
-  };
+  const handleSearch = () => {
+    if (!isSearchEnabled) return;
 
-  const handleSearch = (searchData: any) => {
-    setCurrentSearchData(searchData);
-    performSearch(searchData, filters);
-  };
+    setIsSearching(true);
 
-  const handleRefresh = () => {
-    if (currentSearchData) {
-      setRefreshing(true);
-      performSearch(currentSearchData, filters).finally(() => setRefreshing(false));
-    }
-  };
+    console.log('searchData in search screen', searchData);
 
-  const renderHotelCard = (hotel: Hotel) => (
-    <TouchableOpacity 
-      key={hotel.id}
-      className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
-      onPress={() => {
-
-        console.log('currentSearchData ',currentSearchData)
-        const searchParams = new URLSearchParams();
-        if (currentSearchData?.guests) {
-          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
-          searchParams.append('guests', totalGuests.toString());
-        }
-        if(currentSearchData.bookingType==='hourly'){
-          if (currentSearchData.timeRange?.startDateTime) {
-            searchParams.append('checkIn', currentSearchData.timeRange?.startDateTime);
-          }
-          if (currentSearchData.timeRange?.endDateTime) {
-            searchParams.append('checkOut', currentSearchData.timeRange?.endDateTime);
-          }
-
-        }else{
-          if (currentSearchData?.dateRange?.startDate) {
-            searchParams.append('checkIn', currentSearchData.dateRange.startDate);
-          }
-          if (currentSearchData?.dateRange?.endDate) {
-            searchParams.append('checkOut', currentSearchData.dateRange.endDate);
-          }
-        }
-        searchParams.append('bookingType',currentSearchData.bookingType)
-
-
-        const queryString = searchParams.toString();
-        const url = queryString ? `/hotels/${hotel.id}?${queryString}` : `/hotels/${hotel.id}`;
-        router.push(url);
-      }}
-    >
-      <View className="relative">
-        <Image
-          source={{ uri: hotel.images.primary || 'https://images.pexels.com/photos/258154/pexels-photo-258154.jpeg?auto=compress&cs=tinysrgb&w=800' }}
-          className="w-full h-48"
-          style={{ resizeMode: 'cover' }}
-        />
-        {hotel.offers && hotel.offers.length > 0 && (
-          <View className="absolute top-3 left-3 bg-gray-500 px-2 py-1 rounded">
-            <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              {hotel.offers[0].title}
-            </Text>
-          </View>
-        )}
-        <HeartIcon
-          isInWishlist={isInWishlist(hotel.id)}
-          onPress={() => handleWishlistToggle(hotel)}
-          size={18}
-        />
-      </View>
-
-      <View className="p-4">
-        <View className="flex-row items-start justify-between mb-2">
-          <View className="flex-1">
-            <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              {hotel.name}
-            </Text>
-            <View className="flex-row items-center mt-1">
-              <MapPin size={14} color="#6B7280" />
-              <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                {hotel.address}, {hotel.city}
-              </Text>
-            </View>
-          </View>
-          <View className="flex-row items-center">
-            <Star size={14} color="#FCD34D" fill="#FCD34D" />
-            <Text className="text-sm text-gray-900 ml-1" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {hotel.rating.average.toFixed(1)}
-            </Text>
-            <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              ({hotel.rating.count})
-            </Text>
-          </View>
-        </View>
-
-        {hotel.distance && (
-          <Text className="text-sm text-gray-500 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {hotel.distance.toFixed(1)} km away
-          </Text>
-        )}
-
-        <View className="flex-row flex-wrap gap-2 mb-3">
-          {hotel.amenities.slice(0, 3).map((amenity: string, index: number) => (
-            <View key={index} className="bg-gray-100 px-2 py-1 rounded">
-              <Text className="text-xs text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                {amenity}
-              </Text>
-            </View>
-          ))}
-          {hotel.amenities.length > 3 && (
-            <View className="bg-gray-100 px-2 py-1 rounded">
-              <Text className="text-xs text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                +{hotel.amenities.length - 3} more
-              </Text>
-            </View>
-          )}
-        </View>
-
-        <View className="flex-row items-center justify-between">
-          <View className="flex-row items-baseline">
-            <Text className="text-xl text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              ₹{hotel.pricing?.startingFrom.toLocaleString() || 0}
-            </Text>
-            {hotel.pricing?.range?.max && hotel.pricing.range.max > hotel.pricing.startingFrom && (
-              <Text className="text-sm text-gray-500 line-through ml-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                ₹{hotel.pricing.range.max.toLocaleString()}
-              </Text>
-            )}
-            <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              /night
-            </Text>
-          </View>
-        </View>
-      </View>
-    </TouchableOpacity>
-  );
-
-  const handleSearchFromSheet = (searchData: any) => {
-    // Navigate to search tab with the search data
+    // Navigate to SearchGlobal with the search data
     router.push({
-      pathname: '/(tabs)/search',
+      pathname: '/SearchGlobal',
       params: {
         searchData: JSON.stringify(searchData)
       }
     });
+
+    setIsSearching(false);
   };
 
-  const renderEmptyState = () => (
-    <View className="flex-1 items-center justify-center py-20 px-6">
-      <Text className="text-6xl mb-6">🔍</Text>
-      <Text className="text-2xl text-gray-900 text-center mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-        Start Exploring
-      </Text>
-      <Text className="text-base text-gray-600 text-center mb-8 leading-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-        Search for your perfect destination and discover amazing hotels with great deals and reviews.
-      </Text>
-      <TouchableOpacity
-          className="bg-black  px-8 py-4 rounded-xl shadow-lg"
-          onPress={() => SheetManager.show('search', {
-            payload: {
-              onSearch: handleSearchFromSheet
-            }
-          })}
-        >
-          <View className="flex-row items-center gap-2">
-            <Search size={20} color="white" className="" />
-            <Text className="text-white  text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              Search Hotels
-            </Text>
-          </View>
-        </TouchableOpacity>
-    </View>
-  );
+  const handleLocationSelect = (location: Location) => {
+    setSearchData(prev => ({ ...prev, location }));
+  };
 
-  const renderNoResultsState = () => (
-    <View className="flex-1 items-center justify-center py-20 px-6">
-      <Text className="text-6xl mb-6">😔</Text>
-      <Text className="text-2xl text-gray-900 text-center mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-        No Hotels Found
-      </Text>
-      <Text className="text-base text-gray-600 text-center mb-8 leading-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-        We couldn't find any hotels matching your search criteria. Try adjusting your filters or search for a different location.
-      </Text>
-      <View className="flex-row gap-3">
-        <TouchableOpacity
-          className="bg-gray-100 px-6 py-3 rounded-lg"
-          onPress={() => SheetManager.show('filters', {
-            payload: {
-              currentFilters: filters,
-              onApplyFilters: handleFilterChange
-            }
-          })}
-        >
-          <Text className="text-gray-700 text-base" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-            Adjust Filters
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className="bg-black px-6 py-3 rounded-lg"
-          onPress={() => SheetManager.show('search', {
-            payload: {
-              onSearch: handleSearchFromSheet,
-            }
-          })}
-        >
-          <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-            New Search
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const handleDateRangeSelect = (dateRange: DateRange) => {
+    setSearchData(prev => ({ ...prev, dateRange }));
+  };
 
-  const renderErrorState = () => (
-    <View className="flex-1 items-center justify-center py-20 px-6">
-      <Text className="text-6xl mb-6">⚠️</Text>
-      <Text className="text-2xl text-gray-900 text-center mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-        Something went wrong
-      </Text>
-      <Text className="text-base text-gray-600 text-center mb-8 leading-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-        {/* {error} */}
-      </Text>
-      <TouchableOpacity
-        className="bg-black px-6 py-3 rounded-lg"
-        onPress={handleRefresh}
-      >
-        <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-          Try Again
-        </Text>
-      </TouchableOpacity>
-    </View>
-  );
+  const handleTimeRangeSelect = (timeRange: TimeRange) => {
+    setSearchData(prev => ({ ...prev, timeRange }));
+  };
+
+  const handleGuestCountChange = (guests: GuestCounts) => {
+    setSearchData(prev => ({ ...prev, guests }));
+  };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      {/* Search Bar */}
-      <View className="bg-white px-4 py-3 border-b border-gray-100">
-        <TouchableOpacity 
-          className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
-          onPress={() => SheetManager.show('search', {
-            payload: {
-              onSearch: handleSearchFromSheet,
-              initialData: currentSearchData
-            }
-          })}
-        >
-          <Search size={20} color="#6B7280" />
-          <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {getSearchDisplayText()}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Filter Bar - Only show if we have results */}
-      {!loading && !error && hotels.length > 0 && (
-        <View className="bg-white px-4 py-3 border-b border-gray-100">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View className="flex-row gap-3">
-              <TouchableOpacity 
-                className="flex-row items-center bg-gray-100 px-4 py-2 rounded-full"
-                onPress={() => SheetManager.show('filters', {
-                  payload: {
-                    currentFilters: filters,
-                    onApplyFilters: handleFilterChange
-                  }
-                })}
+    <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 justify-between px-4">
+        {/* Tabs */}
+        <View className="mb-6 mt-4">
+          <View className="flex-row bg-gray-100 rounded-xl p-1">
+            <TouchableOpacity
+              onPress={() => handleTabPress(0)}
+              className="flex-1 py-3 px-4 rounded-lg"
+              style={getTabStyle(0)}
+            >
+              <Text
+                className="text-center text-sm"
+                style={getTextStyle(0)}
               >
-                <Filter size={16} color="#6B7280" />
-                <Text className="text-gray-700 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  Filters
-                </Text>
-              </TouchableOpacity>
+                Daily
+              </Text>
+            </TouchableOpacity>
 
-              {[
-                { id: 'price', label: 'Price' },
-                { id: 'rating', label: 'Rating' },
-                { id: 'distance', label: 'Distance' },
-                { id: 'amenities', label: 'Amenities' }
-              ].map((filter) => (
-                <TouchableOpacity 
-                  key={filter.id}
-                  className="bg-gray-100 px-4 py-2 rounded-full"
-                  onPress={() => {
-                    const quickFilters: any = {};
-                    if (filter.id === 'price') quickFilters.sortBy = 'price_low';
-                    if (filter.id === 'rating') quickFilters.rating = 4;
-                    handleFilterChange(quickFilters);
-                  }}
-                >
-                  <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                    {filter.label}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </ScrollView>
+            <TouchableOpacity
+              onPress={() => handleTabPress(1)}
+              className="flex-1 py-3 px-4 rounded-lg"
+              style={getTabStyle(1)}
+            >
+              <Text
+                className="text-center text-sm"
+                style={getTextStyle(1)}
+              >
+                Hourly
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
 
-      {/* Results */}
-      <ScrollView 
-        className="flex-1 px-4 py-4" 
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#000000']}
-            tintColor="#000000"
-          />
-        }
-      >
-        {loading ? (
-          <View>
-            {Array.from({ length: 4 }).map((_, index) => (
-              <HotelCardSkeleton key={index} />
-            ))}
+        {/* Form Fields */}
+        <View className="flex-1">
+          {/* Where */}
+          <View className="mb-6">
+            <Text
+              className="text-sm text-black mb-2"
+              style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+            >
+              Where
+            </Text>
+            <LocationSearchInput
+              value={searchData.location?.name || ''}
+              googleApiKey='AIzaSyDBFyJk1ZsnnqxLC43WT_-OSCFZaG0OaNM'
+              onLocationSelect={handleLocationSelect}
+              placeholder="Search destinations"
+            />
           </View>
-        ) : error ? (
-          renderErrorState()
-        ) : hotels.length === 0 ? (
-          currentSearchData ? renderNoResultsState() : renderEmptyState()
-        ) : (
-          <View>
-            {hotels.map(renderHotelCard)}
+
+          {/* When - Show DateRangePicker for Daily, TimeRangePicker for Hourly */}
+          <View className="mb-6">
+            <Text
+              className="text-sm text-black mb-2"
+              style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+            >
+              When
+            </Text>
+            {activeTab === 0 ? (
+              <DateRangePicker
+                value={searchData.dateRange}
+                onDateRangeSelect={handleDateRangeSelect}
+                placeholder="Check-in - Check-out"
+              />
+            ) : (
+              <TimeRangePicker
+                value={searchData.timeRange}
+                onTimeRangeSelect={handleTimeRangeSelect}
+                placeholder="Start time - End time"
+              />
+            )}
           </View>
-        )}
-      </ScrollView>
+
+          {/* Who */}
+          <View className="mb-6">
+            <Text
+              className="text-sm text-black mb-2"
+              style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
+            >
+              Who
+            </Text>
+            <GuestSelector
+              value={searchData.guests}
+              onGuestCountChange={handleGuestCountChange}
+              placeholder="1 guest"
+            />
+          </View>
+        </View>
+
+        {/* Footer with Search Button */}
+        <View className="pb-6">
+          <TouchableOpacity
+            onPress={handleSearch}
+            className={`flex h-14 w-full items-center justify-center rounded-xl shadow-lg ${isSearchEnabled && !isSearching
+                ? 'bg-black'
+                : 'bg-gray-300'
+              }`}
+            style={{
+              shadowColor: isSearchEnabled ? '#000000' : '#000',
+              shadowOffset: { width: 0, height: 4 },
+              shadowOpacity: isSearchEnabled ? 0.3 : 0.1,
+              shadowRadius: 8,
+              elevation: 8,
+            }}
+            disabled={!isSearchEnabled || isSearching}
+          >
+            <View className="flex-row items-center gap-2">
+              <Search size={20} color={isSearchEnabled ? "white" : "#8A8A8A"} />
+              <Text
+                className={`text-base tracking-wide ${isSearchEnabled ? 'text-white' : 'text-gray-500'
+                  }`}
+                style={{ fontFamily: 'PlusJakartaSans-Bold' }}
+              >
+                Search Hotels
+              </Text>
+            </View>
+          </TouchableOpacity>
+        </View>
+      </View>
     </SafeAreaView>
   );
 }

@@ -228,9 +228,7 @@ export default function HotelBookingApp() {
                 paddingVertical: 10,
                 width: '100%'
               }}
-              onPress={() =>
-                SheetManager.show('search', { payload: { onSearch: handleSearchFromSheet } })
-              }
+              onPress={() => router.push('/(tabs)/search')}
             >
               <Search size={18} color="#6B7280" />
               <View style={{ marginLeft: 12 }}>
@@ -260,15 +258,15 @@ export default function HotelBookingApp() {
       onPress={() => {
         const searchParams = new URLSearchParams();
         searchParams.append('guests', '2');
-  
+
         const checkIn = new Date();
         checkIn.setDate(checkIn.getDate() + 1);
         const checkOut = new Date();
         checkOut.setDate(checkOut.getDate() + 3);
-  
+
         searchParams.append('checkIn', checkIn.toISOString());
         searchParams.append('checkOut', checkOut.toISOString());
-  
+
         router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
       }}
       key={hotel.id}
@@ -280,14 +278,14 @@ export default function HotelBookingApp() {
           className="w-full h-56"
           style={{ resizeMode: 'cover' }}
         />
-  
+
         {/* Pay at Hotel Badge */}
         <View className="absolute top-3 left-3 bg-white px-3 py-1 rounded-full">
           <Text className="text-xs text-black" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
             Pay at hotel
           </Text>
         </View>
-  
+
         {/* Offer Badge */}
         {hotel.offer && (
           <View className="absolute top-3 right-12 bg-black px-2 py-1 rounded">
@@ -296,14 +294,14 @@ export default function HotelBookingApp() {
             </Text>
           </View>
         )}
-  
+
         <HeartIcon
           isInWishlist={isInWishlist(hotel.id)}
           onPress={() => handleWishlistToggle(hotel)}
           size={18}
         />
       </View>
-  
+
       <View className="p-4">
         {/* Main Details Section */}
         <View className="flex-row justify-between items-start mb-4">
@@ -316,14 +314,14 @@ export default function HotelBookingApp() {
               {hotel.location}
             </Text>
           </View>
-  
+
           {/* Right Side - Price Per Night */}
           <View className="items-end">
             <View className="flex-row items-baseline">
               <Text className="text-xl text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 ₹{hotel.price.toLocaleString()}
               </Text>
-              
+
             </View>
             <Text className="text-xs text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               per night
@@ -340,7 +338,7 @@ export default function HotelBookingApp() {
             )} */}
           </View>
         </View>
-  
+
         {/* Hourly Pricing Boxes */}
         <View className="flex-row gap-2">
           <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
@@ -351,7 +349,7 @@ export default function HotelBookingApp() {
               ₹{Math.round(hotel.price * 0.3).toLocaleString()}
             </Text>
           </View>
-          
+
           <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
             <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               6hrs
@@ -360,7 +358,7 @@ export default function HotelBookingApp() {
               ₹{Math.round(hotel.price * 0.5).toLocaleString()}
             </Text>
           </View>
-          
+
           <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
             <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               9hrs
@@ -379,7 +377,7 @@ export default function HotelBookingApp() {
 
     const checkInDate = new Date(nextBooking.checkInDate);
     const checkOutDate = new Date(nextBooking.checkOutDate);
-    
+
     return (
       <TouchableOpacity
         className="bg-black rounded-2xl p-4 mx-4 mb-6"
