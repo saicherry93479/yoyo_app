@@ -506,32 +506,43 @@ export default function HotelBookingApp() {
     );
   };
 
-  // Handle hourly booking selection
+  // Handle hourly booking selection - state for TimeRangePicker
+  const [showTimeRangePicker, setShowTimeRangePicker] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<any>(null);
+  const [selectedHours, setSelectedHours] = useState<number>(3);
+  const [timeRange, setTimeRange] = useState({
+    selectedDate: null,
+    startDateTime: null,
+    endDateTime: null,
+    startTime: null,
+    endTime: null
+  });
+
   const handleHourlyBooking = (hotel: any, hours: number) => {
-    const timeRange = {
+    setSelectedHotel(hotel);
+    setSelectedHours(hours);
+    setTimeRange({
       selectedDate: null,
       startDateTime: null,
       endDateTime: null,
       startTime: null,
       endTime: null
-    };
-
-    SheetManager.show('time-range-picker', {
-      payload: {
-        value: timeRange,
-        initialStep: 'checkout', // Start directly at checkout step
-        minHours: hours,
-        onTimeRangeSelect: (selectedTimeRange: any) => {
-          const searchParams = new URLSearchParams();
-          searchParams.append('guests', '2');
-          searchParams.append('checkIn', selectedTimeRange.startDateTime);
-          searchParams.append('checkOut', selectedTimeRange.endDateTime);
-          searchParams.append('bookingType', 'hourly');
-          
-          router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
-        }
-      }
     });
+    setShowTimeRangePicker(true);
+  };
+
+  const handleTimeRangeSelect = (selectedTimeRange: any) => {
+    setTimeRange(selectedTimeRange);
+    if (selectedTimeRange.startDateTime && selectedTimeRange.endDateTime && selectedHotel) {
+      const searchParams = new URLSearchParams();
+      searchParams.append('guests', '2');
+      searchParams.append('checkIn', selectedTimeRange.startDateTime);
+      searchParams.append('checkOut', selectedTimeRange.endDateTime);
+      searchParams.append('bookingType', 'hourly');
+      
+      router.push(`/hotels/${selectedHotel.id}?${searchParams.toString()}`);
+      setShowTimeRangePicker(false);
+    }
   };
 
   const renderHotelCard = (hotel: any) => (
@@ -851,6 +862,16 @@ export default function HotelBookingApp() {
         {/* Bottom spacing */}
         <View className="h-8" />
       </ScrollView>
+
+      {/* TimeRangePicker Modal */}
+      <TimeRangePicker
+        value={timeRange}
+        onTimeRangeSelect={handleTimeRangeSelect}
+        minHours={selectedHours}
+        placeholder="Select check-in & check-out"
+        visible={showTimeRangePicker}
+        onClose={() => setShowTimeRangePicker(false)}
+      />
     </View>
   )
 }

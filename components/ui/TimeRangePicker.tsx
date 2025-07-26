@@ -15,17 +15,30 @@ interface TimeRangePickerProps {
   onTimeRangeSelect: (timeRange: TimeRange) => void;
   placeholder?: string;
   minHours?: number; // Minimum booking duration in hours
+  visible?: boolean; // External control for modal visibility
+  onClose?: () => void; // Callback when modal should close
 }
 
 export function TimeRangePicker({ 
   value, 
   onTimeRangeSelect, 
   placeholder = "Select check-in & check-out",
-  minHours = 2
+  minHours = 2,
+  visible = false,
+  onClose
 }: TimeRangePickerProps) {
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(visible);
   const [selectedData, setSelectedData] = useState<TimeRange>(value);
   const [currentStep, setCurrentStep] = useState<'date' | 'checkin' | 'checkout'>('date');
+
+  // Update modal visibility when prop changes
+  useEffect(() => {
+    setIsModalVisible(visible);
+    if (visible) {
+      setCurrentStep('date');
+      setSelectedData(value);
+    }
+  }, [visible, value]);
 
   // Get current time rounded to next hour
   const getCurrentTimeSlot = () => {
@@ -247,6 +260,7 @@ export function TimeRangePicker({
     if (selectedData.selectedDate && selectedData.startDateTime && selectedData.endDateTime) {
       onTimeRangeSelect(selectedData);
       setIsModalVisible(false);
+      onClose?.();
     }
   };
 
@@ -261,6 +275,11 @@ export function TimeRangePicker({
     setSelectedData(clearedData);
     onTimeRangeSelect(clearedData);
     setCurrentStep('date');
+  };
+
+  const handleModalClose = () => {
+    setIsModalVisible(false);
+    onClose?.();
   };
 
   const dateOptions = generateDateOptions();
@@ -306,7 +325,7 @@ export function TimeRangePicker({
         visible={isModalVisible}
         animationType="slide"
         presentationStyle="pageSheet"
-        onRequestClose={() => setIsModalVisible(false)}
+        onRequestClose={handleModalClose}
       >
         <View className="flex-1 bg-gray-50">
           {/* Header */}
@@ -326,7 +345,7 @@ export function TimeRangePicker({
                   Step {currentStep === 'date' ? '1' : currentStep === 'checkin' ? '2' : '3'} of 3
                 </Text>
               </View>
-              <TouchableOpacity onPress={() => setIsModalVisible(false)}>
+              <TouchableOpacity onPress={handleModalClose}>
                 <X size={24} color="#6B7280" />
               </TouchableOpacity>
             </View>
