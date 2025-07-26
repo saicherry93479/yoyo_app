@@ -176,7 +176,7 @@ export function useHotels(filters?: SearchFilters) {
 }
 
 // Hook for nearby hotels
-export function useNearbyHotels(coordinates: { lat: number; lng: number } | null) {
+export function useNearbyHotels(coordinates: { lat: number; lng: number } | null, filters?: SearchFilters) {
   const [hotels, setHotels] = useState<MockHotel[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -201,8 +201,9 @@ export function useNearbyHotels(coordinates: { lat: number; lng: number } | null
 
       const params: any = { 
         limit: 10,
-        lat:coordinates.lat,
-        lng:coordinates.lng
+        lat: coordinates.lat,
+        lng: coordinates.lng,
+        ...filters
       };
 
       const response = await apiService.get('/search/nearby', { params });
@@ -238,7 +239,7 @@ export function useNearbyHotels(coordinates: { lat: number; lng: number } | null
       setLoading(false);
       setHotels([]);
     }
-  }, [coordinates?.lat, coordinates?.lng]);
+  }, [coordinates?.lat, coordinates?.lng, filters]);
 
   return {
     hotels,

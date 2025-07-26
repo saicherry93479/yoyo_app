@@ -6,12 +6,15 @@ import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
 import { Search, Star, Heart, MapPin, Clock, Users, ArrowUpDown, ChevronDown, X, ListFilter as Filter } from "lucide-react-native"
 import * as Location from 'expo-location'
+import AsyncStorage from '@react-native-async-storage/async-storage'
 import { useNearbyHotels } from '@/hooks/useHotels'
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { HeartIcon } from '@/components/ui/HeartIcon'
 import { useBookings } from '@/hooks/useBookings'
 import { SafeAreaView } from "react-native-safe-area-context"
+import { TimeRangePicker } from '@/components/ui/TimeRangePicker'
+import { LoadingSpinner } from '@/components/ui/LoadingSpinner'
 
 // SVG Icons as components
 const MagnifyingGlassIcon = ({ size = 24, color = "currentColor" }) => (
@@ -42,6 +45,7 @@ interface LocationState {
   permissionDenied: boolean
   loading: boolean
   error: string | null
+  fromCache: boolean
 }
 
 interface SearchFilters {
@@ -89,8 +93,9 @@ export default function HotelBookingApp() {
     coordinates: null,
     hasPermission: false,
     permissionDenied: false,
-    loading: false,
-    error: null
+    loading: true,
+    error: null,
+    fromCache: false
   })
   const [filters, setFilters] = useState<SearchFilters>({
     sortBy: 'recommended'
@@ -165,12 +170,49 @@ export default function HotelBookingApp() {
     }
   }
 
-  // Location permission and fetching logic
-  const requestLocationPermission = async () => {
+  // Location management with caching
+  const loadCachedLocation = async () => {
     try {
-      setLocation(prev => ({ ...prev, loading: true, error: null }))
+      const cachedLocation = await AsyncStorage.getItem('user_location');
+      if (cachedLocation) {
+        const parsedLocation = JSON.parse(cachedLocation);
+        setLocation(prev => ({
+          ...prev,
+          coordinates: parsedLocation,
+          fromCache: true,
+          loading: false
+        }));
+        return parsedLocation;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error loading cached location:', error);
+      return null;
+    }
+  };
 
-      const { status } = await Location.requestForegroundPermissionsAsync()
+  const saveLocationToCache = async (coordinates: { lat: number; lng: number }) => {
+    try {
+      await AsyncStorage.setItem('user_location', JSON.stringify(coordinates));
+    } catch (error) {
+      console.error('Error saving location to cache:', error);
+    }
+  };
+
+  const shouldUpdateLocation = (cached: { lat: number; lng: number }, current: { lat: number; lng: number }) => {
+    const distance = Math.sqrt(
+      Math.pow(cached.lat - current.lat, 2) + Math.pow(cached.lng - current.lng, 2)
+    );
+    return distance > 0.01; // Update if moved more than ~1km
+  };
+
+  const requestLocationPermission = async (skipCache = false) => {
+    try {
+      if (!skipCache) {
+        setLocation(prev => ({ ...prev, loading: true, error: null }));
+      }
+
+      const { status } = await Location.requestForegroundPermissionsAsync();
 
       if (status !== 'granted') {
         setLocation(prev => ({
@@ -179,53 +221,68 @@ export default function HotelBookingApp() {
           permissionDenied: true,
           loading: false,
           error: 'Location permission denied'
-        }))
-        return
+        }));
+        return;
       }
 
       const currentLocation = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
-      })
+      });
+
+      const newCoordinates = {
+        lat: currentLocation.coords.latitude,
+        lng: currentLocation.coords.longitude
+      };
+
+      // Check if we need to update cached location
+      const cachedLocation = location.coordinates;
+      if (!cachedLocation || shouldUpdateLocation(cachedLocation, newCoordinates)) {
+        await saveLocationToCache(newCoordinates);
+      }
 
       setLocation({
-        coordinates: {
-          lat: currentLocation.coords.latitude,
-          lng: currentLocation.coords.longitude
-        },
+        coordinates: newCoordinates,
         hasPermission: true,
         permissionDenied: false,
         loading: false,
-        error: null
-      })
+        error: null,
+        fromCache: false
+      });
     } catch (error) {
       setLocation(prev => ({
         ...prev,
         loading: false,
         error: 'Failed to get location'
-      }))
+      }));
     }
-  }
+  };
 
   const checkLocationPermission = async () => {
     try {
-      const { status } = await Location.getForegroundPermissionsAsync()
+      // First load cached location
+      const cached = await loadCachedLocation();
+      
+      const { status } = await Location.getForegroundPermissionsAsync();
 
       if (status === 'granted') {
-        await requestLocationPermission()
+        // Get fresh location in background
+        requestLocationPermission(true);
       } else {
         setLocation(prev => ({
           ...prev,
           hasPermission: false,
-          permissionDenied: status === 'denied'
-        }))
+          permissionDenied: status === 'denied',
+          loading: false
+        }));
       }
     } catch (error) {
       setLocation(prev => ({
         ...prev,
-        error: 'Failed to check location permission'
-      }))
+        error: 'Failed to check location permission',
+        loading: false
+      }));
     }
-  }
+  };
 
   // Initialize location on component mount
   useEffect(() => {
@@ -449,6 +506,34 @@ export default function HotelBookingApp() {
     );
   };
 
+  // Handle hourly booking selection
+  const handleHourlyBooking = (hotel: any, hours: number) => {
+    const timeRange = {
+      selectedDate: null,
+      startDateTime: null,
+      endDateTime: null,
+      startTime: null,
+      endTime: null
+    };
+
+    SheetManager.show('time-range-picker', {
+      payload: {
+        value: timeRange,
+        initialStep: 'checkout', // Start directly at checkout step
+        minHours: hours,
+        onTimeRangeSelect: (selectedTimeRange: any) => {
+          const searchParams = new URLSearchParams();
+          searchParams.append('guests', '2');
+          searchParams.append('checkIn', selectedTimeRange.startDateTime);
+          searchParams.append('checkOut', selectedTimeRange.endDateTime);
+          searchParams.append('bookingType', 'hourly');
+          
+          router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
+        }
+      }
+    });
+  };
+
   const renderHotelCard = (hotel: any) => (
     <Pressable
       onPress={() => {
@@ -462,6 +547,7 @@ export default function HotelBookingApp() {
 
         searchParams.append('checkIn', checkIn.toISOString().split('T')[0] + 'T12:00:00');
         searchParams.append('checkOut', checkOut.toISOString().split('T')[0] + 'T12:00:00');
+        searchParams.append('bookingType', 'daily');
 
         router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
       }}
@@ -526,32 +612,50 @@ export default function HotelBookingApp() {
 
         {/* Hourly Pricing Boxes */}
         <View className="flex-row gap-2">
-          <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
+          <TouchableOpacity 
+            className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+            onPress={(e) => {
+              e.stopPropagation();
+              handleHourlyBooking(hotel, 3);
+            }}
+          >
             <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               3hrs
             </Text>
             <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               ₹{Math.round(hotel.price * 0.3).toLocaleString()}
             </Text>
-          </View>
+          </TouchableOpacity>
 
-          <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
+          <TouchableOpacity 
+            className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+            onPress={(e) => {
+              e.stopPropagation();
+              handleHourlyBooking(hotel, 6);
+            }}
+          >
             <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               6hrs
             </Text>
             <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               ₹{Math.round(hotel.price * 0.5).toLocaleString()}
             </Text>
-          </View>
+          </TouchableOpacity>
 
-          <View className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1">
+          <TouchableOpacity 
+            className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+            onPress={(e) => {
+              e.stopPropagation();
+              handleHourlyBooking(hotel, 9);
+            }}
+          >
             <Text className="text-xs text-gray-600 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               9hrs
             </Text>
             <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
               ₹{Math.round(hotel.price * 0.7).toLocaleString()}
             </Text>
-          </View>
+          </TouchableOpacity>
         </View>
       </View>
     </Pressable>
@@ -683,11 +787,19 @@ export default function HotelBookingApp() {
 
         {/* Hotel Listings - Only show when filters are applied or initially */}
         <View className="px-4">
-          {nearbyData.loading ? (
+          {(nearbyData.loading || location.loading) ? (
             <View className="gap-6">
               <HotelCardSkeleton />
               <HotelCardSkeleton />
               <HotelCardSkeleton />
+              {location.loading && (
+                <View className="flex-row items-center justify-center py-4">
+                  <LoadingSpinner size="small" />
+                  <Text className="ml-2 text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    Getting your location...
+                  </Text>
+                </View>
+              )}
             </View>
           ) : nearbyData.error ? (
             <View className="flex-1 items-center justify-center py-12 px-6">

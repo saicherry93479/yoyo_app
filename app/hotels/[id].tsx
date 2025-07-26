@@ -1,4 +1,4 @@
-import React, { useLayoutEffect } from 'react';
+import React, { useLayoutEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   SafeAreaView,
   StatusBar,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useNavigation } from 'expo-router';
@@ -40,6 +41,7 @@ const HotelDetails = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const imageScrollViewRef = useRef(null);
   const [searchParams, setSearchParams] = useState({
     guests: (guests as string) || '2',
     checkIn: (checkIn as string) || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
@@ -360,13 +362,29 @@ const HotelDetails = () => {
 
       <ScrollView className="flex-1">
         <View className="relative">
-          <Image
-            source={{
-              uri: imageUrls[currentImageIndex]
+          <ScrollView
+            ref={imageScrollViewRef}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onMomentumScrollEnd={(event) => {
+              const contentOffset = event.nativeEvent.contentOffset.x;
+              const viewSize = event.nativeEvent.layoutMeasurement.width;
+              const pageIndex = Math.round(contentOffset / viewSize);
+              setCurrentImageIndex(pageIndex);
             }}
-            className="w-full h-80"
-            style={{ resizeMode: 'cover' }}
-          />
+            className="h-80"
+          >
+            {imageUrls.map((imageUrl, index) => (
+              <View key={index} style={{ width: Dimensions.get('window').width }}>
+                <Image
+                  source={{ uri: imageUrl }}
+                  className="w-full h-80"
+                  style={{ resizeMode: 'cover' }}
+                />
+              </View>
+            ))}
+          </ScrollView>
 
           {/* Overlay */}
           <View className="absolute inset-0 bg-black/40" />
@@ -383,7 +401,17 @@ const HotelDetails = () => {
           {imageUrls.length > 1 && (
             <View className="absolute bottom-5 left-0 right-0 flex-row justify-center gap-2">
               {imageUrls.map((_, index) => (
-                <View key={index} className={`h-2 rounded-full ${index === currentImageIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`} />
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setCurrentImageIndex(index);
+                    imageScrollViewRef.current?.scrollTo({
+                      x: index * Dimensions.get('window').width,
+                      animated: true
+                    });
+                  }}
+                  className={`h-2 rounded-full ${index === currentImageIndex ? 'w-8 bg-white' : 'w-2 bg-white/50'}`}
+                />
               ))}
             </View>
           )}
