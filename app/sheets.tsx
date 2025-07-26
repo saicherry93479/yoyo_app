@@ -10,6 +10,10 @@ import { ReviewsActionSheet } from '@/components/ui/ReviewsActionSheet';
 import { EditStayActionSheet } from '@/components/ui/EditStayActionSheet';
 import { CouponsActionSheet } from '@/components/ui/CouponsActionSheet';
 import { AddonSelectionSheet } from '@/components/ui/AddonSelectionSheet';
+import { SortActionSheet } from '@/components/ui/SortActionSheet';
+import { PriceFilterActionSheet } from '@/components/ui/PriceFilterActionSheet';
+import { RatingFilterActionSheet } from '@/components/ui/RatingFilterActionSheet';
+import { AmenitiesFilterActionSheet } from '@/components/ui/AmenitiesFilterActionSheet';
 
 registerSheet('profile-options', CustomActionSheet);
 registerSheet('amenities', AmenitiesActionSheet);
@@ -22,6 +26,10 @@ registerSheet('modify-booking', ModifyBookingActionSheet);
 registerSheet('filters', FiltersActionSheet);
 registerSheet('coupons-sheet', CouponsActionSheet);
 registerSheet('addon-selection', AddonSelectionSheet);
+registerSheet('sort-options', SortActionSheet);
+registerSheet('price-filter', PriceFilterActionSheet);
+registerSheet('rating-filter', RatingFilterActionSheet);
+registerSheet('amenities-filter', AmenitiesFilterActionSheet);
 
 // Export the sheet IDs for type safety
 export const SHEET_IDS = {
