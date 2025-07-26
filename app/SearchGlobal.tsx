@@ -443,18 +443,12 @@ export default function SearchGlobalScreen() {
         {/* Hourly Stays Option - Only show for daily search */}
         {currentSearchData?.bookingType === 'daily' && (
           <View className="mt-3 pt-3 border-t border-gray-100">
-            <View className="flex-row items-center justify-between">
-              <View>
-                <Text className="text-sm text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                  Hourly Stays Available
-                </Text>
-                <Text className="text-xs text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  Starting from ₹{Math.round((hotel.pricing?.startingFrom || 0) / 8)}/hour
-                </Text>
-              </View>
-              <TouchableOpacity
-                onPress={() => {
-                  // Navigate to hourly booking for this hotel
+            {/* Hourly Pricing Boxes */}
+            <View className="flex-row gap-2 mb-2">
+              <TouchableOpacity 
+                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+                onPress={(e) => {
+                  e.stopPropagation();
                   SheetManager.show('time-range-picker', {
                     payload: {
                       onTimeRangeSelect: (timeRange: any) => {
@@ -472,10 +466,72 @@ export default function SearchGlobalScreen() {
                     }
                   });
                 }}
-                className="bg-black px-3 py-1.5 rounded-full"
               >
-                <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                  Book Hourly
+                <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  3hrs
+                </Text>
+                <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  ₹{Math.round((hotel.pricing?.startingFrom || 0) * 0.3).toLocaleString()}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+                onPress={(e) => {
+                  e.stopPropagation();
+                  SheetManager.show('time-range-picker', {
+                    payload: {
+                      onTimeRangeSelect: (timeRange: any) => {
+                        const searchParams = new URLSearchParams();
+                        if (currentSearchData?.guests) {
+                          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
+                          searchParams.append('guests', totalGuests.toString());
+                        }
+                        searchParams.append('checkIn', timeRange.startDateTime);
+                        searchParams.append('checkOut', timeRange.endDateTime);
+                        searchParams.append('bookingType', 'hourly');
+                        const url = `/hotels/${hotel.id}?${searchParams.toString()}`;
+                        router.push(url);
+                      }
+                    }
+                  });
+                }}
+              >
+                <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  6hrs
+                </Text>
+                <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  ₹{Math.round((hotel.pricing?.startingFrom || 0) * 0.5).toLocaleString()}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+                onPress={(e) => {
+                  e.stopPropagation();
+                  SheetManager.show('time-range-picker', {
+                    payload: {
+                      onTimeRangeSelect: (timeRange: any) => {
+                        const searchParams = new URLSearchParams();
+                        if (currentSearchData?.guests) {
+                          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
+                          searchParams.append('guests', totalGuests.toString());
+                        }
+                        searchParams.append('checkIn', timeRange.startDateTime);
+                        searchParams.append('checkOut', timeRange.endDateTime);
+                        searchParams.append('bookingType', 'hourly');
+                        const url = `/hotels/${hotel.id}?${searchParams.toString()}`;
+                        router.push(url);
+                      }
+                    }
+                  });
+                }}
+              >
+                <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  9hrs
+                </Text>
+                <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  ₹{Math.round((hotel.pricing?.startingFrom || 0) * 0.7).toLocaleString()}
                 </Text>
               </TouchableOpacity>
             </View>

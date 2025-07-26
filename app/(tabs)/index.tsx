@@ -357,11 +357,12 @@ export default function HotelBookingApp() {
     onPress: () => void, 
     onClear?: () => void,
     icon?: React.ReactNode,
-    isSort?: boolean
+    isSort?: boolean,
+    shouldNotReopenOnClear?: boolean
   ) => (
     <View className="flex-row items-center">
       <TouchableOpacity
-        className={`px-2 py-2 rounded-[10px] flex-row items-center border ${
+        className={`px-4 py-2 rounded-full flex-row items-center border ${
           isActive 
             ? isSort 
               ? 'bg-gray-100 border-black' 
@@ -376,7 +377,7 @@ export default function HotelBookingApp() {
           </View>
         )}
         <Text
-          className={`${isActive ? (isSort ? 'text-black' : 'text-white') : 'text-gray-700'} text-sm`}
+          className={`${isActive ? (isSort ? 'text-black' : 'text-white') : 'text-gray-700'}`}
           style={{ fontFamily: 'PlusJakartaSans-Medium' }}
         >
           {label}
@@ -386,14 +387,16 @@ export default function HotelBookingApp() {
             onPress={(e) => {
               e.stopPropagation();
               onClear();
-              // Re-open the action sheet after clearing
-              setTimeout(() => {
-                onPress();
-              }, 100);
+              // Only re-open if shouldNotReopenOnClear is not true
+              if (!shouldNotReopenOnClear) {
+                setTimeout(() => {
+                  onPress();
+                }, 100);
+              }
             }} 
             className="ml-2"
           >
-            <X size={10} color="white" />
+            <X size={14} color="white" />
           </TouchableOpacity>
         ) : (
           <View className="ml-2">
@@ -416,7 +419,7 @@ export default function HotelBookingApp() {
       <View className="bg-white "
       //  style={{ elevation: 2, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
        >
-        <View className="flex-row items-center ">
+        <View className="flex-row items-center px-4">
           {/* Scrollable filter tags */}
           <ScrollView
             horizontal
@@ -434,9 +437,9 @@ export default function HotelBookingApp() {
                     onSortSelect: (sortBy: string) => handleFilterChange({ sortBy })
                   }
                 }),
-                undefined,
+                undefined, // No clear function for sort
                 <ArrowUpDown size={14} color={isSortActive ? "black" : "#6B7280"} />,
-                true
+                true // isSort flag
               )}
 
               {renderFilterTag(
@@ -449,7 +452,9 @@ export default function HotelBookingApp() {
                   }
                 }),
                 isPriceActive ? () => clearFilter('price') : undefined,
-                <Text className={`text-sm ${isPriceActive ? 'text-white' : 'text-gray-600'}`}>₹</Text>
+                <Text className={`text-sm ${isPriceActive ? 'text-white' : 'text-gray-600'}`}>₹</Text>,
+                false,
+                true // shouldNotReopenOnClear
               )}
 
               {renderFilterTag(
@@ -462,7 +467,9 @@ export default function HotelBookingApp() {
                   }
                 }),
                 isRatingActive ? () => clearFilter('rating') : undefined,
-                <Star size={14} color={isRatingActive ? "white" : "#6B7280"} />
+                <Star size={14} color={isRatingActive ? "white" : "#6B7280"} />,
+                false,
+                true // shouldNotReopenOnClear
               )}
 
               {renderFilterTag(
@@ -475,7 +482,9 @@ export default function HotelBookingApp() {
                   }
                 }),
                 isAmenitiesActive ? () => clearFilter('amenities') : undefined,
-                <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />
+                <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />,
+                false,
+                true // shouldNotReopenOnClear
               )}
             </View>
           </ScrollView>
