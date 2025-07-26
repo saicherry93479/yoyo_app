@@ -37,14 +37,14 @@ export function PriceFilterActionSheet({ sheetId, payload }: PriceFilterActionSh
 
   return (
     <ActionSheet
-      id={sheetId}
-      containerStyle={{
-        paddingHorizontal: 0,
-        paddingBottom: 0,
-      }}
-      closable={true}
-      closeOnTouchBackdrop={true}
-      snapPoints={[60]}
+    id={sheetId}
+    containerStyle={{
+      paddingHorizontal: 0,
+      paddingBottom: 0,
+    }}
+    // gestureEnabled={true}
+    closable={true}
+    closeOnTouchBackdrop={true}
     >
       <View className="rounded-t-2xl bg-white pt-3">
         {/* Handle */}

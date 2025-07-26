@@ -44,9 +44,9 @@ export function RatingFilterActionSheet({ sheetId, payload }: RatingFilterAction
         paddingHorizontal: 0,
         paddingBottom: 0,
       }}
+      // gestureEnabled={true}
       closable={true}
       closeOnTouchBackdrop={true}
-      snapPoints={[50]}
     >
       <View className="rounded-t-2xl bg-white pt-3">
         {/* Handle */}

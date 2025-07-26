@@ -40,9 +40,10 @@ export function SortActionSheet({ sheetId, payload }: SortActionSheetProps) {
         paddingHorizontal: 0,
         paddingBottom: 0,
       }}
+      // gestureEnabled={true}
       closable={true}
       closeOnTouchBackdrop={true}
-      snapPoints={[50]}
+    // snapPoints={[80]}
     >
       <View className="rounded-t-2xl bg-white pt-3">
         {/* Handle */}

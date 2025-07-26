@@ -22,6 +22,22 @@
           }
         },
         {
+          "client_id": "555333996320-i546md888pei4qrs9d0ba8o6jrd9r4a3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cherry93479.yoyo_app_bolt",
+            "certificate_hash": "93a51f1aaf773212c119db25e8419b86414673e4"
+          }
+        },
+        {
+          "client_id": "555333996320-nh359v6maieq1q8pq41l55njnq6pulr6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.cherry93479.yoyo_app_bolt",
+            "certificate_hash": "70c333602dcd1fef058b25017e8283e91b2fb4bb"
+          }
+        },
+        {
           "client_id": "555333996320-ffeihcnb76mjs8d7l17csjsqmgsq62v9.apps.googleusercontent.com",
           "client_type": 3
         }
