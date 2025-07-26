@@ -9,6 +9,7 @@ import { useWishlist } from '@/contexts/WishlistContext';
 import { HeartIcon } from '@/components/ui/HeartIcon';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { TimeRangePicker } from '@/components/ui/TimeRangePicker';
 
 interface SearchFilters {
   priceRange?: {
@@ -78,6 +79,15 @@ export default function SearchGlobalScreen() {
   });
   const [showMapView, setShowMapView] = useState(false);
   const [selectedMapHotel, setSelectedMapHotel] = useState<Hotel | null>(null);
+  const [showTimeRangePicker, setShowTimeRangePicker] = useState(false);
+  const [selectedHotelForBooking, setSelectedHotelForBooking] = useState<Hotel | null>(null);
+  const [timeRange, setTimeRange] = useState({
+    selectedDate: null,
+    startDateTime: null,
+    endDateTime: null,
+    startTime: null,
+    endTime: null
+  });
 
   const navigation = useNavigation();
   const params = useLocalSearchParams();
@@ -268,6 +278,11 @@ export default function SearchGlobalScreen() {
     }
   };
 
+  const handleTimeRangeSelect = (selectedTimeRange: any) => {
+    setTimeRange(selectedTimeRange);
+    setShowTimeRangePicker(false);
+  };
+
   const renderFilterTag = (
     label: string, 
     isActive: boolean, 
@@ -449,22 +464,8 @@ export default function SearchGlobalScreen() {
                 className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
                 onPress={(e) => {
                   e.stopPropagation();
-                  SheetManager.show('time-range-picker', {
-                    payload: {
-                      onTimeRangeSelect: (timeRange: any) => {
-                        const searchParams = new URLSearchParams();
-                        if (currentSearchData?.guests) {
-                          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
-                          searchParams.append('guests', totalGuests.toString());
-                        }
-                        searchParams.append('checkIn', timeRange.startDateTime);
-                        searchParams.append('checkOut', timeRange.endDateTime);
-                        searchParams.append('bookingType', 'hourly');
-                        const url = `/hotels/${hotel.id}?${searchParams.toString()}`;
-                        router.push(url);
-                      }
-                    }
-                  });
+                  setSelectedHotelForBooking(hotel);
+                  setShowTimeRangePicker(true);
                 }}
               >
                 <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -479,22 +480,8 @@ export default function SearchGlobalScreen() {
                 className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
                 onPress={(e) => {
                   e.stopPropagation();
-                  SheetManager.show('time-range-picker', {
-                    payload: {
-                      onTimeRangeSelect: (timeRange: any) => {
-                        const searchParams = new URLSearchParams();
-                        if (currentSearchData?.guests) {
-                          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
-                          searchParams.append('guests', totalGuests.toString());
-                        }
-                        searchParams.append('checkIn', timeRange.startDateTime);
-                        searchParams.append('checkOut', timeRange.endDateTime);
-                        searchParams.append('bookingType', 'hourly');
-                        const url = `/hotels/${hotel.id}?${searchParams.toString()}`;
-                        router.push(url);
-                      }
-                    }
-                  });
+                  setSelectedHotelForBooking(hotel);
+                  setShowTimeRangePicker(true);
                 }}
               >
                 <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -509,22 +496,8 @@ export default function SearchGlobalScreen() {
                 className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
                 onPress={(e) => {
                   e.stopPropagation();
-                  SheetManager.show('time-range-picker', {
-                    payload: {
-                      onTimeRangeSelect: (timeRange: any) => {
-                        const searchParams = new URLSearchParams();
-                        if (currentSearchData?.guests) {
-                          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
-                          searchParams.append('guests', totalGuests.toString());
-                        }
-                        searchParams.append('checkIn', timeRange.startDateTime);
-                        searchParams.append('checkOut', timeRange.endDateTime);
-                        searchParams.append('bookingType', 'hourly');
-                        const url = `/hotels/${hotel.id}?${searchParams.toString()}`;
-                        router.push(url);
-                      }
-                    }
-                  });
+                  setSelectedHotelForBooking(hotel);
+                  setShowTimeRangePicker(true);
                 }}
               >
                 <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
@@ -921,6 +894,36 @@ export default function SearchGlobalScreen() {
           )}
         </ScrollView>
       )}
+
+      {/* TimeRangePicker Modal */}
+      <TimeRangePicker
+        value={timeRange}
+        onTimeRangeSelect={(selectedTimeRange) => {
+          handleTimeRangeSelect(selectedTimeRange);
+          // Navigate to hotel details with the selected time range
+          if (selectedTimeRange.startDateTime && selectedTimeRange.endDateTime && selectedHotelForBooking) {
+            const searchParams = new URLSearchParams();
+            if (currentSearchData?.guests) {
+              const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
+              searchParams.append('guests', totalGuests.toString());
+            }
+            searchParams.append('checkIn', selectedTimeRange.startDateTime);
+            searchParams.append('checkOut', selectedTimeRange.endDateTime);
+            searchParams.append('bookingType', 'hourly');
+            
+            const url = `/hotels/${selectedHotelForBooking.id}?${searchParams.toString()}`;
+            router.push(url);
+            setSelectedHotelForBooking(null);
+          }
+        }}
+        placeholder="Select check-in & check-out"
+        visible={showTimeRangePicker}
+        onClose={() => {
+          setShowTimeRangePicker(false);
+          setSelectedHotelForBooking(null);
+        }}
+        showButton={false}
+      />
     </SafeAreaView>
   );
 }
