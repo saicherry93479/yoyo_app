@@ -1,5 +1,5 @@
 import 'react-native-get-random-values';
-import { DarkTheme, DefaultTheme, ThemeProvider} from '@react-navigation/native';
+import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -39,10 +39,10 @@ export default function RootLayout() {
     // Register for push notifications and set up listeners
     const initializeNotifications = async () => {
       await NotificationService.registerDeviceToken();
-      
+
       // Set up notification listeners
       const cleanup = NotificationService.setupNotificationListeners();
-      
+
       // Return cleanup function for useEffect
       return cleanup;
     };
@@ -68,10 +68,11 @@ export default function RootLayout() {
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
                 <Stack.Screen name="onboarding" options={{ headerShown: true }} />
                 <Stack.Screen name="hotels" options={{ headerShown: true }} />
-                <Stack.Screen name="checkout" options={{ headerShown: true }} />
-                <Stack.Screen name="contactus" options={{ headerShown: true }} />
-                <Stack.Screen name="personal-info" options={{ headerShown: true }} />
-                <Stack.Screen name="notifications" options={{ headerShown: true }} />
+                <Stack.Screen name="checkout" options={{ headerShown: true, presentation: 'card' }} />
+                <Stack.Screen name="contactus" options={{ headerShown: true, presentation: 'card' }} />
+                <Stack.Screen name="personal-info" options={{ headerShown: true, presentation: 'card' }} />
+                <Stack.Screen name="notifications" options={{ headerShown: true , presentation: 'modal'}} />
+
                 <Stack.Screen name="+not-found" />
               </Stack>
               <StatusBar style="dark" />

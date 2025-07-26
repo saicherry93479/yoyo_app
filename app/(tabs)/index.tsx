@@ -4,9 +4,9 @@ import { Svg, Path, Line, Circle } from "react-native-svg"
 import { useNavigation } from "@react-navigation/native"
 import { router } from "expo-router"
 import { SheetManager } from "react-native-actions-sheet"
-import { Search, Star, Heart, MapPin, Clock, Users } from "lucide-react-native"
+import { Search, Star, Heart, MapPin, Clock, Users, ArrowUpDown, ChevronDown, X, ListFilter as Filter } from "lucide-react-native"
 import * as Location from 'expo-location'
-import { useNearbyHotels, useLatestHotels, useOffersHotels } from '@/hooks/useHotels'
+import { useNearbyHotels } from '@/hooks/useHotels'
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader'
 import { useWishlist } from '@/contexts/WishlistContext'
 import { HeartIcon } from '@/components/ui/HeartIcon'
@@ -44,6 +44,17 @@ interface LocationState {
   error: string | null
 }
 
+interface SearchFilters {
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+  rating?: number;
+  amenities?: string[];
+  propertyType?: string[];
+  sortBy?: string;
+}
+
 const cityData = [
   {
     id: 'nearby',
@@ -73,14 +84,7 @@ const cityData = [
   }
 ];
 
-const quickPicksData = [
-  { id: 'recommended', label: 'Recommended', active: true },
-  { id: 'company', label: 'Company-Serviced', active: false },
-  { id: 'super', label: 'Super OYO', active: false },
-];
-
 export default function HotelBookingApp() {
-  const [activeQuickPick, setActiveQuickPick] = useState('recommended')
   const [location, setLocation] = useState<LocationState>({
     coordinates: null,
     hasPermission: false,
@@ -88,8 +92,16 @@ export default function HotelBookingApp() {
     loading: false,
     error: null
   })
+  const [filters, setFilters] = useState<SearchFilters>({
+    sortBy: 'recommended'
+  });
+  const [filtersApplied, setFiltersApplied] = useState(false);
+  const [stickyHeaderVisible, setStickyHeaderVisible] = useState(false);
+  
   const navigation = useNavigation()
   const scrollY = useRef(new Animated.Value(0)).current
+  const filterSectionY = useRef(0);
+  
   const { addToWishlist, removeFromWishlistByHotelId, isInWishlist, forceRefresh } = useWishlist()
   const { getUpcomingBookings } = useBookings()
 
@@ -97,26 +109,45 @@ export default function HotelBookingApp() {
   const upcomingBookings = getUpcomingBookings()
   const nextBooking = upcomingBookings.length > 0 ? upcomingBookings[0] : null
 
-  // Use hooks for hotel data
-  const nearbyData = useNearbyHotels(location.coordinates)
-  const latestData = useLatestHotels()
-  const offersData = useOffersHotels()
+  // Use only nearby hotels hook
+  const nearbyData = useNearbyHotels(location.coordinates, filters)
 
-  // Get current data based on active quick pick
-  const getCurrentData = () => {
-    switch (activeQuickPick) {
-      case 'recommended':
-        return nearbyData
-      case 'company':
-        return latestData
-      case 'super':
-        return offersData
-      default:
-        return nearbyData
+  // Count active filters
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 999999)) count++;
+    if (filters.rating && filters.rating > 0) count++;
+    if (filters.amenities && filters.amenities.length > 0) count++;
+    if (filters.sortBy && filters.sortBy !== 'recommended') count++;
+    return count;
+  };
+
+  // Clear specific filter
+  const clearFilter = (filterType: string) => {
+    const newFilters = { ...filters };
+    switch (filterType) {
+      case 'price':
+        delete newFilters.priceRange;
+        break;
+      case 'rating':
+        delete newFilters.rating;
+        break;
+      case 'amenities':
+        delete newFilters.amenities;
+        break;
+      case 'sort':
+        newFilters.sortBy = 'recommended';
+        break;
     }
-  }
+    setFilters(newFilters);
+    setFiltersApplied(getActiveFiltersCount() > 0);
+  };
 
-  const currentData = getCurrentData()
+  const handleFilterChange = (newFilters: SearchFilters) => {
+    const updatedFilters = { ...filters, ...newFilters };
+    setFilters(updatedFilters);
+    setFiltersApplied(getActiveFiltersCount() > 0);
+  };
 
   // Wishlist handlers
   const handleWishlistToggle = async (hotel: any) => {
@@ -202,7 +233,6 @@ export default function HotelBookingApp() {
   }, [])
 
   const handleSearchFromSheet = (searchData: any) => {
-
     router.push({
       pathname: '/(tabs)/search',
       params: {
@@ -211,7 +241,17 @@ export default function HotelBookingApp() {
     });
   };
 
-
+  // Handle scroll for sticky header
+  const handleScroll = Animated.event(
+    [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+    { 
+      useNativeDriver: false,
+      listener: (event: any) => {
+        const currentY = event.nativeEvent.contentOffset.y;
+        setStickyHeaderVisible(currentY > filterSectionY.current);
+      }
+    }
+  );
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -245,13 +285,169 @@ export default function HotelBookingApp() {
       )
     })
   }, [navigation])
+
   const handleRefresh = () => {
     if (!location.hasPermission) {
       requestLocationPermission()
     } else {
-      currentData.refresh()
+      nearbyData.refresh()
     }
   }
+
+  const renderFilterTag = (
+    label: string, 
+    isActive: boolean, 
+    onPress: () => void, 
+    onClear?: () => void,
+    icon?: React.ReactNode,
+    isSort?: boolean
+  ) => (
+    <View className="flex-row items-center">
+      <TouchableOpacity
+        className={`px-2 py-2 rounded-[10px] flex-row items-center border ${
+          isActive 
+            ? isSort 
+              ? 'bg-gray-100 border-black' 
+              : 'bg-black border-black'
+            : 'bg-white border-gray-200'
+        }`}
+        onPress={onPress}
+      >
+        {icon && (
+          <View className="mr-2">
+            {icon}
+          </View>
+        )}
+        <Text
+          className={`${isActive ? (isSort ? 'text-black' : 'text-white') : 'text-gray-700'} text-sm`}
+          style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+        >
+          {label}
+        </Text>
+        {isActive && onClear && !isSort ? (
+          <TouchableOpacity 
+            onPress={(e) => {
+              e.stopPropagation();
+              onClear();
+              // Re-open the action sheet after clearing
+              setTimeout(() => {
+                onPress();
+              }, 100);
+            }} 
+            className="ml-2"
+          >
+            <X size={10} color="white" />
+          </TouchableOpacity>
+        ) : (
+          <View className="ml-2">
+            <ChevronDown size={14} color={isActive ? (isSort ? "black" : "white") : "#6B7280"} />
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
+  // Sticky filter bar component
+  const renderStickyFilterBar = () => {
+    const activeFiltersCount = getActiveFiltersCount();
+    const isPriceActive = filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 999999);
+    const isRatingActive = filters.rating && filters.rating > 0;
+    const isAmenitiesActive = filters.amenities && filters.amenities.length > 0;
+    const isSortActive = filters.sortBy && filters.sortBy !== 'recommended';
+
+    return (
+      <View className="bg-white "
+      //  style={{ elevation: 2, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
+       >
+        <View className="flex-row items-center ">
+          {/* Scrollable filter tags */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="flex-1 py-3"
+            contentContainerStyle={{ paddingRight: 6 }}
+          >
+            <View className="flex-row gap-3">
+              {renderFilterTag(
+                'Sort',
+                isSortActive,
+                () => SheetManager.show('sort-options', {
+                  payload: {
+                    currentSort: filters.sortBy || 'recommended',
+                    onSortSelect: (sortBy: string) => handleFilterChange({ sortBy })
+                  }
+                }),
+                undefined,
+                <ArrowUpDown size={14} color={isSortActive ? "black" : "#6B7280"} />,
+                true
+              )}
+
+              {renderFilterTag(
+                'Price',
+                isPriceActive,
+                () => SheetManager.show('price-filter', {
+                  payload: {
+                    currentPriceRange: filters.priceRange,
+                    onPriceSelect: (priceRange: any) => handleFilterChange({ priceRange })
+                  }
+                }),
+                isPriceActive ? () => clearFilter('price') : undefined,
+                <Text className={`text-sm ${isPriceActive ? 'text-white' : 'text-gray-600'}`}>₹</Text>
+              )}
+
+              {renderFilterTag(
+                'Rating',
+                isRatingActive,
+                () => SheetManager.show('rating-filter', {
+                  payload: {
+                    currentRating: filters.rating || 0,
+                    onRatingSelect: (rating: number) => handleFilterChange({ rating })
+                  }
+                }),
+                isRatingActive ? () => clearFilter('rating') : undefined,
+                <Star size={14} color={isRatingActive ? "white" : "#6B7280"} />
+              )}
+
+              {renderFilterTag(
+                'Amenities',
+                isAmenitiesActive,
+                () => SheetManager.show('amenities-filter', {
+                  payload: {
+                    currentAmenities: filters.amenities || [],
+                    onAmenitiesSelect: (amenities: string[]) => handleFilterChange({ amenities })
+                  }
+                }),
+                isAmenitiesActive ? () => clearFilter('amenities') : undefined,
+                <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />
+              )}
+            </View>
+          </ScrollView>
+
+          {/* Fixed filter icon on the right */}
+          <View className="right-0 top-0 bottom-0 bg-white flex-row items-center">
+            <TouchableOpacity
+              className="flex-row items-center bg-gray-100 px-3 py-2 rounded-full relative"
+              onPress={() => SheetManager.show('filters', {
+                payload: {
+                  currentFilters: filters,
+                  onApplyFilters: handleFilterChange
+                }
+              })}
+            >
+              <Filter size={16} color="#6B7280" />
+              {activeFiltersCount > 0 && (
+                <View className="absolute -top-1 -right-1 bg-black rounded-full w-5 h-5 items-center justify-center">
+                  <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {activeFiltersCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    );
+  };
 
   const renderHotelCard = (hotel: any) => (
     <Pressable
@@ -264,8 +460,8 @@ export default function HotelBookingApp() {
         const checkOut = new Date();
         checkOut.setDate(checkOut.getDate() + 3);
 
-        searchParams.append('checkIn', checkIn.toISOString());
-        searchParams.append('checkOut', checkOut.toISOString());
+        searchParams.append('checkIn', checkIn.toISOString().split('T')[0] + 'T12:00:00');
+        searchParams.append('checkOut', checkOut.toISOString().split('T')[0] + 'T12:00:00');
 
         router.push(`/hotels/${hotel.id}?${searchParams.toString()}`);
       }}
@@ -321,21 +517,10 @@ export default function HotelBookingApp() {
               <Text className="text-xl text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 ₹{hotel.price.toLocaleString()}
               </Text>
-
             </View>
             <Text className="text-xs text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
               per night
             </Text>
-            {/* {hotel.originalPrice && (
-              <View className="items-end mt-1">
-                <Text className="text-sm text-gray-400 line-through" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  ₹{hotel.originalPrice.toLocaleString()}
-                </Text>
-                <Text className="text-xs text-black" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                  {Math.round(((hotel.originalPrice - hotel.price) / hotel.originalPrice) * 100)}% OFF
-                </Text>
-              </View>
-            )} */}
           </View>
         </View>
 
@@ -413,7 +598,6 @@ export default function HotelBookingApp() {
     );
   };
 
-
   const renderBanner = () => (
     <View className="mx-4 mb-6">
       <ImageBackground
@@ -438,172 +622,123 @@ export default function HotelBookingApp() {
   );
 
   return (
-
-    <ScrollView
-      className="flex-1 bg-white"
-      showsVerticalScrollIndicator={false}
-      onScroll={Animated.event(
-        [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-        { useNativeDriver: false }
-      )}
-      scrollEventThrottle={16}
-      refreshControl={
-        <RefreshControl
-          refreshing={currentData.refreshing}
-          onRefresh={handleRefresh}
-          colors={['#000000']}
-          tintColor="#FF5A5F"
-        />
-      }
-    >
-      {/* Cities Section */}
-      <View className="px-4 mb-6 hidden">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row gap-4">
-            {cityData.map((city) => (
-              <TouchableOpacity key={city.id} className="items-center">
-                <View className="w-16 h-16 rounded-full overflow-hidden mb-2 border-2 border-gray-200">
-                  {city.icon ? (
-                    <View className="w-full h-full bg-black items-center justify-center">
-                      <Text className="text-2xl">{city.icon}</Text>
-                    </View>
-                  ) : (
-                    <Image
-                      source={{ uri: city.image }}
-                      className="w-full h-full"
-                      style={{ resizeMode: 'cover' }}
-                    />
-                  )}
-                </View>
-                <Text className="text-sm text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  {city.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-
-      {/* Banner */}
-      {renderBanner()}
-
-      {/* Next Trip */}
-      {renderNextTrip()}
-
-      {/* Quick Picks */}
-      <View className="px-4 mb-4">
-        <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-          Quick picks for you
-        </Text>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View className="flex-row gap-3">
-            {quickPicksData.map((pick) => (
-              <TouchableOpacity
-                key={pick.id}
-                className={`px-4 py-2 rounded-full border ${activeQuickPick === pick.id
-                  ? 'bg-black border-black'
-                  : 'bg-white border-gray-300'
-                  }`}
-                onPress={() => setActiveQuickPick(pick.id)}
-              >
-                <Text
-                  className={`text-sm ${activeQuickPick === pick.id ? 'text-white' : 'text-gray-700'
-                    }`}
-                  style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}
-                >
-                  {pick.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </ScrollView>
-      </View>
-
-      {/* Hotel Listings */}
-      <View className="px-4">
-        {currentData.loading ? (
-          <View className="gap-6">
-            <HotelCardSkeleton />
-            <HotelCardSkeleton />
-            <HotelCardSkeleton />
-          </View>
-        ) : currentData.error ? (
-          <View className="flex-1 items-center justify-center py-12 px-6">
-            <Text className="text-6xl mb-4">⚠️</Text>
-            <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              Something went wrong
-            </Text>
-            <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              {currentData.error}
-            </Text>
-            <TouchableOpacity
-              className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
-              onPress={handleRefresh}
-            >
-              <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                Try Again
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : currentData.hotels.length === 0 ? (
-          <View className="flex-1 items-center justify-center py-12 px-6">
-            <Text className="text-6xl mb-4">🏨</Text>
-            <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              No hotels found
-            </Text>
-            <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Try refreshing or check back later.
-            </Text>
-            <TouchableOpacity
-              className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
-              onPress={() => SheetManager.show('search', {
-                payload: {
-                  onSearch: handleSearchFromSheet
-                }
-              })}
-            >
-              <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                Search Hotels
-              </Text>
-            </TouchableOpacity>
-          </View>
-        ) : (
-          <View className="gap-4">
-            {currentData.hotels.map(renderHotelCard)}
-          </View>
-        )}
-      </View>
-
-      {/* Continue Your Search */}
-      <View className="px-4 mb-6 hidden">
-        <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-          Continue your search
-        </Text>
-        <TouchableOpacity
-          className="bg-white rounded-xl border border-gray-200 p-4"
-          onPress={() => SheetManager.show('search', {
-            payload: {
-              onSearch: handleSearchFromSheet
-            }
-          })}
+    <View className="flex-1 bg-white">
+      {/* Sticky Filter Header */}
+      {stickyHeaderVisible && (
+        <Animated.View 
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            backgroundColor: 'white',
+          }}
         >
-          <View className="flex-row items-center justify-between">
-            <View>
-              <Text className="text-base text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                Bangalore
-              </Text>
-              <Text className="text-sm text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                Today - Tomorrow
-              </Text>
+          <SafeAreaView edges={['top']}>
+            {renderStickyFilterBar()}
+          </SafeAreaView>
+        </Animated.View>
+      )}
+
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        onScroll={handleScroll}
+        scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={nearbyData.refreshing}
+            onRefresh={handleRefresh}
+            colors={['#000000']}
+            tintColor="#FF5A5F"
+          />
+        }
+      >
+        {/* Banner */}
+        {renderBanner()}
+
+        {/* Next Trip */}
+        {renderNextTrip()}
+
+        {/* Nearby Hotels Title */}
+        {/* <View className="px-4 mb-4">
+          <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Nearby Hotels
+          </Text>
+        </View> */}
+
+        {/* Quick Picks Filters */}
+        <View 
+          className="px-4 mb-4"
+          onLayout={(event) => {
+            filterSectionY.current = event.nativeEvent.layout.y;
+          }}
+        >
+          <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+            Quick picks for you
+          </Text>
+          {renderStickyFilterBar()}
+        </View>
+
+        {/* Hotel Listings - Only show when filters are applied or initially */}
+        <View className="px-4">
+          {nearbyData.loading ? (
+            <View className="gap-6">
+              <HotelCardSkeleton />
+              <HotelCardSkeleton />
+              <HotelCardSkeleton />
             </View>
-            <Text className="text-gray-400">›</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
+          ) : nearbyData.error ? (
+            <View className="flex-1 items-center justify-center py-12 px-6">
+              <Text className="text-6xl mb-4">⚠️</Text>
+              <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                Something went wrong
+              </Text>
+              <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                {nearbyData.error}
+              </Text>
+              <TouchableOpacity
+                className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+                onPress={handleRefresh}
+              >
+                <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Try Again
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : nearbyData.hotels.length === 0 ? (
+            <View className="flex-1 items-center justify-center py-12 px-6">
+              <Text className="text-6xl mb-4">🏨</Text>
+              <Text className="text-xl text-gray-900 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                No hotels found
+              </Text>
+              <Text className="text-base text-gray-600 text-center mb-6" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Try adjusting your filters or check back later.
+              </Text>
+              <TouchableOpacity
+                className="bg-[#FF5A5F] px-6 py-3 rounded-lg"
+                onPress={() => SheetManager.show('search', {
+                  payload: {
+                    onSearch: handleSearchFromSheet
+                  }
+                })}
+              >
+                <Text className="text-white text-base" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Search Hotels
+                </Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View className="gap-4">
+              {nearbyData.hotels.map(renderHotelCard)}
+            </View>
+          )}
+        </View>
 
-      {/* Bottom spacing */}
-      <View className="h-8" />
-    </ScrollView>
-
+        {/* Bottom spacing */}
+        <View className="h-8" />
+      </ScrollView>
+    </View>
   )
 }

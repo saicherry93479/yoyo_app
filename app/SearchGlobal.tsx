@@ -1,13 +1,13 @@
-
 import React, { useState, useLayoutEffect, useEffect } from 'react';
 import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Alert } from 'react-native';
 import { useNavigation, router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Star, ListFilter as Filter, Heart, ArrowLeft } from 'lucide-react-native';
+import { Search, MapPin, Star, ListFilter as Filter, Heart, ArrowLeft, X, ArrowUpDown, ChevronDown } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
 import { apiService } from '@/services/api';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { HeartIcon } from '@/components/ui/HeartIcon';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 interface SearchFilters {
   priceRange?: {
@@ -102,9 +102,9 @@ export default function SearchGlobalScreen() {
       const dateRange = currentSearchData.dateRange;
       if (dateRange?.startDate && dateRange?.endDate) {
         const formatDate = (dateString: string) => {
-          return new Date(dateString).toLocaleDateString('en-US', { 
-            month: 'short', 
-            day: 'numeric' 
+          return new Date(dateString).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric'
           });
         };
         return `${location} • Daily • ${formatDate(dateRange.startDate)} - ${formatDate(dateRange.endDate)}`;
@@ -113,18 +113,42 @@ export default function SearchGlobalScreen() {
     }
   };
 
+  // Count active filters
+  const getActiveFiltersCount = () => {
+    let count = 0;
+    if (filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 999999)) count++;
+    if (filters.rating && filters.rating > 0) count++;
+    if (filters.amenities && filters.amenities.length > 0) count++;
+    if (filters.sortBy && filters.sortBy !== 'recommended') count++;
+    return count;
+  };
+
+  // Clear specific filter
+  const clearFilter = (filterType: string) => {
+    const newFilters = { ...filters };
+    switch (filterType) {
+      case 'price':
+        delete newFilters.priceRange;
+        break;
+      case 'rating':
+        delete newFilters.rating;
+        break;
+      case 'amenities':
+        delete newFilters.amenities;
+        break;
+      case 'sort':
+        newFilters.sortBy = 'recommended';
+        break;
+    }
+    setFilters(newFilters);
+    if (currentSearchData) {
+      performSearch(currentSearchData, newFilters);
+    }
+  };
+
   useLayoutEffect(() => {
     navigation.setOptions({
-      headerShadowVisible: false,
-      headerTitle: () => (
-        <Text className="text-2xl text-[#121516]" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>Search Results</Text>
-      ),
-      headerTitleAlign: 'center',
-      headerLeft: () => (
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
-          <ArrowLeft size={24} color="#000" />
-        </TouchableOpacity>
-      ),
+      headerShown: false,
     });
   }, [navigation]);
 
@@ -162,7 +186,6 @@ export default function SearchGlobalScreen() {
     date.setHours(12, 0, 0, 0);  // 12:00 PM local time
     return date.toISOString().split('T')[0] + 'T12:00:00';
   }
-  
 
   const performSearch = async (searchData: any, searchFilters: SearchFilters = {}) => {
     if (!searchData) return;
@@ -176,16 +199,16 @@ export default function SearchGlobalScreen() {
         coordinates: searchData.location?.coordinates || { lat: 0, lng: 0 },
         city: searchData.location?.name || '',
         radius: 50,
-        dateRange: searchData.bookingType === 'daily' 
-        ? {
+        dateRange: searchData.bookingType === 'daily'
+          ? {
             startDate: searchData.dateRange?.startDate || getTodayAtNoonISO(),
             endDate: searchData.dateRange?.endDate || getTodayAtNoonISO(),
-          } 
-        : {
+          }
+          : {
             startDate: searchData.timeRange?.startDateTime || getTodayAtNoonISO(),
             endDate: searchData.timeRange?.endDateTime || getTodayAtNoonISO(),
           },
-      
+
         guests: searchData.guests || { adults: 1, children: 0, infants: 0 },
         bookingType: searchData.bookingType || 'daily',
         priceRange: searchFilters.priceRange || { min: 0, max: 999999 },
@@ -200,7 +223,7 @@ export default function SearchGlobalScreen() {
 
       const response = await apiService.post('/search/search', requestBody);
 
-      console.log('response ',response)
+      console.log('response ', response)
 
       console.log('Search response:', JSON.stringify(response, null, 2));
 
@@ -237,27 +260,78 @@ export default function SearchGlobalScreen() {
     }
   };
 
+  const renderFilterTag = (
+    label: string, 
+    isActive: boolean, 
+    onPress: () => void, 
+    onClear?: () => void,
+    icon?: React.ReactNode,
+    isSort?: boolean
+  ) => (
+    <View className="flex-row items-center">
+      <TouchableOpacity
+        className={`px-4 py-2 rounded-full flex-row items-center border ${
+          isActive 
+            ? isSort 
+              ? 'bg-gray-100 border-black' 
+              : 'bg-black border-black'
+            : 'bg-white border-gray-200'
+        }`}
+        onPress={onPress}
+      >
+        {icon && (
+          <View className="mr-2">
+            {icon}
+          </View>
+        )}
+        <Text
+          className={`${isActive ? (isSort ? 'text-black' : 'text-white') : 'text-gray-700'}`}
+          style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+        >
+          {label}
+        </Text>
+        {isActive && onClear && !isSort ? (
+          <TouchableOpacity 
+            onPress={(e) => {
+              e.stopPropagation();
+              onClear();
+              // Re-open the action sheet after clearing
+              setTimeout(() => {
+                onPress();
+              }, 100);
+            }} 
+            className="ml-2"
+          >
+            <X size={14} color="white" />
+          </TouchableOpacity>
+        ) : (
+          <View className="ml-2">
+            <ChevronDown size={14} color={isActive ? (isSort ? "black" : "white") : "#6B7280"} />
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
+  );
+
   const renderHotelCard = (hotel: Hotel) => (
-    <TouchableOpacity 
+    <TouchableOpacity
       key={hotel.id}
       className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
       onPress={() => {
-
-        console.log('currentSearchData ',currentSearchData)
+        console.log('currentSearchData ', currentSearchData)
         const searchParams = new URLSearchParams();
         if (currentSearchData?.guests) {
           const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
           searchParams.append('guests', totalGuests.toString());
         }
-        if(currentSearchData.bookingType==='hourly'){
+        if (currentSearchData.bookingType === 'hourly') {
           if (currentSearchData.timeRange?.startDateTime) {
             searchParams.append('checkIn', currentSearchData.timeRange?.startDateTime);
           }
           if (currentSearchData.timeRange?.endDateTime) {
             searchParams.append('checkOut', currentSearchData.timeRange?.endDateTime);
           }
-
-        }else{
+        } else {
           if (currentSearchData?.dateRange?.startDate) {
             searchParams.append('checkIn', currentSearchData.dateRange.startDate);
           }
@@ -265,8 +339,7 @@ export default function SearchGlobalScreen() {
             searchParams.append('checkOut', currentSearchData.dateRange.endDate);
           }
         }
-        searchParams.append('bookingType',currentSearchData.bookingType)
-
+        searchParams.append('bookingType', currentSearchData.bookingType)
 
         const queryString = searchParams.toString();
         const url = queryString ? `/hotels/${hotel.id}?${queryString}` : `/hotels/${hotel.id}`;
@@ -414,104 +487,145 @@ export default function SearchGlobalScreen() {
     </View>
   );
 
-  return (
-    <View className="flex-1 bg-gray-50">
-      {/* Search Bar */}
-      <View className="bg-white px-4 py-3 border-b border-gray-100">
-        <TouchableOpacity 
-          className="flex-row items-center bg-gray-100 rounded-full px-4 py-3"
-          onPress={() => router.back()}
-        >
-          <Search size={20} color="#6B7280" />
-          <Text className="text-gray-600 ml-3 flex-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            {getSearchDisplayText()}
-          </Text>
-        </TouchableOpacity>
-      </View>
+  // Sticky filter bar component
+  const renderStickyFilterBar = () => {
+    const activeFiltersCount = getActiveFiltersCount();
+    const isPriceActive = filters.priceRange && (filters.priceRange.min > 0 || filters.priceRange.max < 999999);
+    const isRatingActive = filters.rating && filters.rating > 0;
+    const isAmenitiesActive = filters.amenities && filters.amenities.length > 0;
+    const isSortActive = filters.sortBy && filters.sortBy !== 'recommended';
 
-      {/* Filter Bar - Only show if we have results */}
-      {!loading && !error && hotels.length > 0 && (
-        <View className="bg-white px-4 py-3 border-b border-gray-100">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+    return (
+      <View className="bg-white "
+      //  style={{ elevation: 2, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
+       >
+        <View className="flex-row items-center px-4">
+          {/* Scrollable filter tags */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            className="flex-1 py-3"
+            contentContainerStyle={{ paddingRight: 6 }}
+          >
             <View className="flex-row gap-3">
-              <TouchableOpacity 
-                className="flex-row items-center bg-gray-100 px-4 py-2 rounded-full"
-                onPress={() => SheetManager.show('filters', {
-                  payload: {
-                    currentFilters: filters,
-                    onApplyFilters: handleFilterChange
-                  }
-                })}
-              >
-                <Filter size={16} color="#6B7280" />
-                <Text className="text-gray-700 ml-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  Filters
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                className="bg-gray-100 px-4 py-2 rounded-full"
-                onPress={() => SheetManager.show('sort-options', {
+              {renderFilterTag(
+                'Sort',
+                isSortActive,
+                () => SheetManager.show('sort-options', {
                   payload: {
                     currentSort: filters.sortBy || 'recommended',
                     onSortSelect: (sortBy: string) => handleFilterChange({ sortBy })
                   }
-                })}
-              >
-                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  Sort
-                </Text>
-              </TouchableOpacity>
+                }),
+                undefined, // No clear function for sort
+                <ArrowUpDown size={14} color={isSortActive ? "black" : "#6B7280"} />,
+                true // isSort flag
+              )}
 
-              <TouchableOpacity 
-                className="bg-gray-100 px-4 py-2 rounded-full"
-                onPress={() => SheetManager.show('price-filter', {
+              {renderFilterTag(
+                'Price',
+                isPriceActive,
+                () => SheetManager.show('price-filter', {
                   payload: {
                     currentPriceRange: filters.priceRange,
                     onPriceSelect: (priceRange: any) => handleFilterChange({ priceRange })
                   }
-                })}
-              >
-                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  Price
-                </Text>
-              </TouchableOpacity>
+                }),
+                isPriceActive ? () => clearFilter('price') : undefined,
+                <Text className={`text-sm ${isPriceActive ? 'text-white' : 'text-gray-600'}`}>₹</Text>
+              )}
 
-              <TouchableOpacity 
-                className="bg-gray-100 px-4 py-2 rounded-full"
-                onPress={() => SheetManager.show('rating-filter', {
+              {renderFilterTag(
+                'Rating',
+                isRatingActive,
+                () => SheetManager.show('rating-filter', {
                   payload: {
                     currentRating: filters.rating || 0,
                     onRatingSelect: (rating: number) => handleFilterChange({ rating })
                   }
-                })}
-              >
-                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  Rating
-                </Text>
-              </TouchableOpacity>
+                }),
+                isRatingActive ? () => clearFilter('rating') : undefined,
+                <Star size={14} color={isRatingActive ? "white" : "#6B7280"} />
+              )}
 
-              <TouchableOpacity 
-                className="bg-gray-100 px-4 py-2 rounded-full"
-                onPress={() => SheetManager.show('amenities-filter', {
+              {renderFilterTag(
+                'Amenities',
+                isAmenitiesActive,
+                () => SheetManager.show('amenities-filter', {
                   payload: {
                     currentAmenities: filters.amenities || [],
                     onAmenitiesSelect: (amenities: string[]) => handleFilterChange({ amenities })
                   }
-                })}
-              >
-                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  Amenities
-                </Text>
-              </TouchableOpacity>
+                }),
+                isAmenitiesActive ? () => clearFilter('amenities') : undefined,
+                <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />
+              )}
             </View>
           </ScrollView>
+
+          {/* Fixed filter icon on the right */}
+          <View className="right-0 top-0 bottom-0 bg-white flex-row items-center">
+            <TouchableOpacity
+              className="flex-row items-center bg-gray-100 px-3 py-2 rounded-full relative"
+              onPress={() => SheetManager.show('filters', {
+                payload: {
+                  currentFilters: filters,
+                  onApplyFilters: handleFilterChange
+                }
+              })}
+            >
+              <Filter size={16} color="#6B7280" />
+              {activeFiltersCount > 0 && (
+                <View className="absolute -top-1 -right-1 bg-black rounded-full w-5 h-5 items-center justify-center">
+                  <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    {activeFiltersCount}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
-      )}
+      </View>
+    );
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50">
+      {/* Custom Header */}
+      <View className="bg-white px-4 py-3 border-b border-gray-100">
+        <View className="flex-row items-center">
+          <TouchableOpacity
+            onPress={() => router.back()}
+            className="mr-3 p-1"
+          >
+            <ArrowLeft size={24} color="#000" />
+          </TouchableOpacity>
+          
+          <View className="flex-1 ">
+            <TouchableOpacity
+              className="flex flex-row items-center  bg-gray-100 rounded-full px-3 py-4"
+              onPress={() => router.back()}
+            >
+              <Search size={16} color="#6B7280" />
+              <Text
+                className="text-gray-600 ml-2 flex-1"
+                style={{ fontFamily: 'PlusJakartaSans-Regular', fontSize: 14 }}
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
+                {getSearchDisplayText()}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+
+      {/* Sticky Filter Bar - Always visible when there's search data */}
+      {currentSearchData && renderStickyFilterBar()}
 
       {/* Results */}
-      <ScrollView 
-        className="flex-1 px-4 py-4" 
+      <ScrollView
+        className="flex-1 px-4 py-4"
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
@@ -530,7 +644,7 @@ export default function SearchGlobalScreen() {
           </View>
         ) : error ? (
           renderErrorState()
-        ) : hotels.length === 0 ? (
+        ) : hotels.length === 0 && currentSearchData ? (
           renderEmptyState()
         ) : (
           <View>
@@ -538,6 +652,6 @@ export default function SearchGlobalScreen() {
           </View>
         )}
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

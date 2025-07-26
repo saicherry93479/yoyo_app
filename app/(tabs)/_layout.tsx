@@ -30,10 +30,28 @@ export default function TabLayout() {
           ios: {
             // Use a transparent background on iOS to show the blur effect
             position: 'absolute',
+            height: 90, // Increased height
+            borderTopLeftRadius: 20, // Curved top left corner
+            borderTopRightRadius: 20, // Curved top right corner
+            paddingBottom: 34, // Account for iOS safe area
+            paddingTop: 10, // Add some top padding
           },
           default: {
             backgroundColor: Colors.light.card,
             borderTopColor: Colors.light.border,
+            height: 80, // Increased height for Android
+            borderTopLeftRadius: 20, // Curved top left corner
+            borderTopRightRadius: 20, // Curved top right corner
+            paddingBottom: 10, // Add some bottom padding
+            paddingTop: 10, // Add some top padding
+            elevation: 8, // Add shadow on Android
+            shadowColor: '#000', // Shadow for better visual separation
+            shadowOffset: {
+              width: 0,
+              height: -2,
+            },
+            shadowOpacity: 0.1,
+            shadowRadius: 8,
           },
         }),
       }}>
@@ -46,9 +64,11 @@ export default function TabLayout() {
       />
       <Tabs.Screen
         name="search"
+        
         options={{
           title: 'Explore',
           tabBarIcon: ({ color, size }) => <SearchIcon size={size} color={color} />,
+          // headerShown:false
         }}
       />
       <Tabs.Screen
