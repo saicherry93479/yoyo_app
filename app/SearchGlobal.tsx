@@ -1,13 +1,14 @@
 import React, { useState, useLayoutEffect, useEffect } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Image, RefreshControl, Alert, Dimensions } from 'react-native';
 import { useNavigation, router, useLocalSearchParams } from 'expo-router';
-import { Search, MapPin, Star, ListFilter as Filter, Heart, ArrowLeft, X, ArrowUpDown, ChevronDown, Tag } from 'lucide-react-native';
+import { Search, MapPin, Star, ListFilter as Filter, Heart, ArrowLeft, X, ArrowUpDown, ChevronDown, Tag, Map } from 'lucide-react-native';
 import { HotelCardSkeleton } from '@/components/ui/SkeletonLoader';
 import { SheetManager } from 'react-native-actions-sheet';
 import { apiService } from '@/services/api';
 import { useWishlist } from '@/contexts/WishlistContext';
 import { HeartIcon } from '@/components/ui/HeartIcon';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 
 interface SearchFilters {
   priceRange?: {
@@ -75,6 +76,8 @@ export default function SearchGlobalScreen() {
   const [filters, setFilters] = useState<SearchFilters>({
     sortBy: 'recommended'
   });
+  const [showMapView, setShowMapView] = useState(false);
+  const [selectedMapHotel, setSelectedMapHotel] = useState<Hotel | null>(null);
 
   const navigation = useNavigation();
   const params = useLocalSearchParams();
@@ -432,10 +435,52 @@ export default function SearchGlobalScreen() {
               </Text>
             )}
             <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              /night
+              /{currentSearchData?.bookingType === 'hourly' ? 'hour' : 'night'}
             </Text>
           </View>
         </View>
+
+        {/* Hourly Stays Option - Only show for daily search */}
+        {currentSearchData?.bookingType === 'daily' && (
+          <View className="mt-3 pt-3 border-t border-gray-100">
+            <View className="flex-row items-center justify-between">
+              <View>
+                <Text className="text-sm text-gray-900" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Hourly Stays Available
+                </Text>
+                <Text className="text-xs text-gray-500" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Starting from ₹{Math.round((hotel.pricing?.startingFrom || 0) / 8)}/hour
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  // Navigate to hourly booking for this hotel
+                  SheetManager.show('time-range-picker', {
+                    payload: {
+                      onTimeRangeSelect: (timeRange: any) => {
+                        const searchParams = new URLSearchParams();
+                        if (currentSearchData?.guests) {
+                          const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
+                          searchParams.append('guests', totalGuests.toString());
+                        }
+                        searchParams.append('checkIn', timeRange.startDateTime);
+                        searchParams.append('checkOut', timeRange.endDateTime);
+                        searchParams.append('bookingType', 'hourly');
+                        const url = `/hotels/${hotel.id}?${searchParams.toString()}`;
+                        router.push(url);
+                      }
+                    }
+                  });
+                }}
+                className="bg-black px-3 py-1.5 rounded-full"
+              >
+                <Text className="text-white text-xs" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Book Hourly
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        )}
       </View>
     </TouchableOpacity>
   );
@@ -654,6 +699,14 @@ export default function SearchGlobalScreen() {
               </Text>
             </TouchableOpacity>
           </View>
+          
+          {/* Map Toggle Button */}
+          <TouchableOpacity
+            onPress={() => setShowMapView(!showMapView)}
+            className="ml-3 p-2 bg-white rounded-full border border-gray-200"
+          >
+            <Map size={20} color={showMapView ? "#000" : "#6B7280"} />
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -661,34 +714,157 @@ export default function SearchGlobalScreen() {
       {currentSearchData && renderStickyFilterBar()}
 
       {/* Results */}
-      <ScrollView
-        className="flex-1 px-4 py-4"
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={handleRefresh}
-            colors={['#000000']}
-            tintColor="#000000"
-          />
-        }
-      >
-        {loading ? (
-          <View>
-            {Array.from({ length: 4 }).map((_, index) => (
-              <HotelCardSkeleton key={index} />
+      {showMapView ? (
+        <View className="flex-1 relative">
+          {/* Close Map Button */}
+          <TouchableOpacity
+            onPress={() => setShowMapView(false)}
+            className="absolute top-4 left-4 z-10 bg-white rounded-full p-3 shadow-lg"
+          >
+            <X size={20} color="#000" />
+          </TouchableOpacity>
+
+          <MapView
+            provider={PROVIDER_GOOGLE}
+            className="flex-1"
+            initialRegion={{
+              latitude: hotels.length > 0 ? hotels[0].coordinates.lat : 19.0760,
+              longitude: hotels.length > 0 ? hotels[0].coordinates.lng : 72.8777,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            showsUserLocation={true}
+            showsMyLocationButton={true}
+          >
+            {hotels.map((hotel) => (
+              <Marker
+                key={hotel.id}
+                coordinate={{
+                  latitude: hotel.coordinates.lat,
+                  longitude: hotel.coordinates.lng,
+                }}
+                title={hotel.name}
+                description={`₹${hotel.pricing?.startingFrom || 0}/night`}
+                onPress={() => setSelectedMapHotel(hotel)}
+              >
+                <View className="bg-black px-3 py-2 rounded-full">
+                  <Text className="text-white text-xs font-bold">
+                    ₹{hotel.pricing?.startingFrom || 0}
+                  </Text>
+                </View>
+              </Marker>
             ))}
-          </View>
-        ) : error ? (
-          renderErrorState()
-        ) : hotels.length === 0 && currentSearchData ? (
-          renderEmptyState()
-        ) : (
-          <View>
-            {hotels.map(renderHotelCard)}
-          </View>
-        )}
-      </ScrollView>
+          </MapView>
+
+          {/* Hotel Details Action Sheet */}
+          {selectedMapHotel && (
+            <View className="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-lg">
+              <View className="p-4">
+                <View className="flex-row">
+                  <Image
+                    source={{ uri: selectedMapHotel.images.primary || 'https://via.placeholder.com/100x100' }}
+                    className="w-20 h-20 rounded-lg"
+                    style={{ resizeMode: 'cover' }}
+                  />
+                  <View className="flex-1 ml-3">
+                    <Text className="text-lg text-gray-900" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                      {selectedMapHotel.name}
+                    </Text>
+                    <View className="flex-row items-center mt-1">
+                      <MapPin size={12} color="#6B7280" />
+                      <Text className="text-sm text-gray-500 ml-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                        {selectedMapHotel.address}
+                      </Text>
+                    </View>
+                    <View className="flex-row items-center mt-1">
+                      <Star size={12} color="#FCD34D" fill="#FCD34D" />
+                      <Text className="text-sm text-gray-900 ml-1" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                        {selectedMapHotel.rating.average.toFixed(1)}
+                      </Text>
+                      <Text className="text-lg text-gray-900 ml-auto" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                        ₹{selectedMapHotel.pricing?.startingFrom || 0}
+                      </Text>
+                    </View>
+                  </View>
+                </View>
+                
+                <View className="flex-row gap-3 mt-4">
+                  <TouchableOpacity
+                    onPress={() => setSelectedMapHotel(null)}
+                    className="flex-1 bg-gray-100 py-3 rounded-lg items-center"
+                  >
+                    <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                      Close
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const searchParams = new URLSearchParams();
+                      if (currentSearchData?.guests) {
+                        const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
+                        searchParams.append('guests', totalGuests.toString());
+                      }
+                      if (currentSearchData.bookingType === 'hourly') {
+                        if (currentSearchData.timeRange?.startDateTime) {
+                          searchParams.append('checkIn', currentSearchData.timeRange?.startDateTime);
+                        }
+                        if (currentSearchData.timeRange?.endDateTime) {
+                          searchParams.append('checkOut', currentSearchData.timeRange?.endDateTime);
+                        }
+                      } else {
+                        if (currentSearchData?.dateRange?.startDate) {
+                          searchParams.append('checkIn', currentSearchData.dateRange.startDate);
+                        }
+                        if (currentSearchData?.dateRange?.endDate) {
+                          searchParams.append('checkOut', currentSearchData.dateRange.endDate);
+                        }
+                      }
+                      searchParams.append('bookingType', currentSearchData.bookingType);
+                      const queryString = searchParams.toString();
+                      const url = queryString ? `/hotels/${selectedMapHotel.id}?${queryString}` : `/hotels/${selectedMapHotel.id}`;
+                      router.push(url);
+                    }}
+                    className="flex-1 bg-black py-3 rounded-lg items-center"
+                  >
+                    <Text className="text-white" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                      Open
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          )}
+        </View>
+      ) : (
+        <ScrollView
+          className="flex-1 px-4 py-4"
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              colors={['#000000']}
+              tintColor="#000000"
+            />
+          }
+        >
+          {loading ? (
+            <View>
+              {Array.from({ length: 4 }).map((_, index) => (
+                <HotelCardSkeleton key={index} />
+              ))}
+            </View>
+          ) : error ? (
+            renderErrorState()
+          ) : hotels.length === 0 && currentSearchData ? (
+            renderEmptyState()
+          ) : (
+            <View>
+              {hotels.map(renderHotelCard)}
+            </View>
+          )}
+        </ScrollView>
+      )}
     </SafeAreaView>
   );
 }

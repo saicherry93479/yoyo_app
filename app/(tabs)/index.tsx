@@ -102,11 +102,11 @@ export default function HotelBookingApp() {
   });
   const [filtersApplied, setFiltersApplied] = useState(false);
   const [stickyHeaderVisible, setStickyHeaderVisible] = useState(false);
-  
+
   const navigation = useNavigation()
   const scrollY = useRef(new Animated.Value(0)).current
   const filterSectionY = useRef(0);
-  
+
   const { addToWishlist, removeFromWishlistByHotelId, isInWishlist, forceRefresh } = useWishlist()
   const { getUpcomingBookings } = useBookings()
 
@@ -261,7 +261,7 @@ export default function HotelBookingApp() {
     try {
       // First load cached location
       const cached = await loadCachedLocation();
-      
+
       const { status } = await Location.getForegroundPermissionsAsync();
 
       if (status === 'granted') {
@@ -539,7 +539,7 @@ export default function HotelBookingApp() {
       searchParams.append('checkIn', selectedTimeRange.startDateTime);
       searchParams.append('checkOut', selectedTimeRange.endDateTime);
       searchParams.append('bookingType', 'hourly');
-      
+
       router.push(`/hotels/${selectedHotel.id}?${searchParams.toString()}`);
       setShowTimeRangePicker(false);
     }
@@ -736,6 +736,12 @@ export default function HotelBookingApp() {
     </View>
   );
 
+  const [tabs, setTabs] = useState([
+    { id: 'hourly', label: 'Hourly Stays' },
+    { id: 'daily', label: 'Daily Stays' }
+  ]);
+  const [activeTab, setActiveTab] = useState('hourly');
+
   return (
     <View className="flex-1 bg-white">
       {/* Sticky Filter Header */}
@@ -793,6 +799,38 @@ export default function HotelBookingApp() {
           <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
             Quick picks for you
           </Text>
+          {/* Filter Tabs */}
+        <View className="mb-4">
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            className="px-4"
+            contentContainerStyle={{ paddingRight: 20 }}
+          >
+            <View className="flex-row gap-3">
+              {tabs.map((tab) => (
+                <TouchableOpacity
+                  key={tab.id}
+                  onPress={() => setActiveTab(tab.id)}
+                  className={`px-4 py-2 rounded-full border ${
+                    activeTab === tab.id 
+                      ? 'bg-black border-black' 
+                      : 'bg-white border-gray-200'
+                  }`}
+                >
+                  <Text
+                    className={`${
+                      activeTab === tab.id ? 'text-white' : 'text-gray-700'
+                    }`}
+                    style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+                  >
+                    {tab.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
           {renderStickyFilterBar()}
         </View>
 

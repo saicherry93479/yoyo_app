@@ -150,7 +150,28 @@ const HotelDetails = () => {
     if (!images || images.length === 0) {
       return ['https://via.placeholder.com/400x300?text=No+Image'];
     }
-    return images.map(img => getImageUrl(img));
+    
+    // Handle different image formats from backend
+    let imageUrls = [];
+    
+    if (Array.isArray(images)) {
+      imageUrls = images.map(img => getImageUrl(img));
+    } else if (images.primary) {
+      // Backend format with primary and gallery
+      imageUrls.push(images.primary);
+      if (images.gallery && Array.isArray(images.gallery)) {
+        imageUrls.push(...images.gallery);
+      }
+    }
+    
+    // Filter out null/undefined URLs and ensure we have at least one image
+    imageUrls = imageUrls.filter(url => url && url.trim() !== '');
+    
+    if (imageUrls.length === 0) {
+      return ['https://via.placeholder.com/400x300?text=No+Image'];
+    }
+    
+    return imageUrls;
   };
 
   // Helper function to format dates
