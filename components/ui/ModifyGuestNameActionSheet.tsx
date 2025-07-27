@@ -36,16 +36,14 @@ export function ModifyGuestNameActionSheet({ sheetId, payload }: ModifyGuestName
     try {
       setLoading(true);
 
-      const response = await apiService.put(`/bookings/${payload?.bookingId}/guest-name`, {
-        guestName: guestName.trim()
-      });
+      const response = await payload?.onGuestNameUpdated(guestName.trim());
 
-      if (response.success) {
+      if (response) {
         payload?.onGuestNameUpdated(guestName.trim());
         Alert.alert('Success', 'Guest name updated successfully');
         handleClose();
       } else {
-        Alert.alert('Error', response.error || 'Failed to update guest name');
+        Alert.alert('Error', 'Failed to update guest name');
       }
     } catch (error: any) {
       Alert.alert('Error', error.message || 'Failed to update guest name');

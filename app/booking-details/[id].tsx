@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useNavigation, router } from 'expo-router';
 import { SheetManager } from 'react-native-actions-sheet';
-import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, X, Plus, CreditCard, Clock, User, Copy } from 'lucide-react-native';
+import { Calendar, MapPin, Users, Phone, Mail, MessageCircle, Download, X, Plus, CreditCard, Clock, User, Copy, CheckCircle, RefreshCw } from 'lucide-react-native';
 import { apiService } from '@/services/api';
 import { MockBooking } from '@/services/mockData';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
@@ -87,7 +87,6 @@ const BookingDetails = () => {
     });
   };
 
-
   const handlePayNow = async () => {
     if (!booking || !booking.onlinePaymentEnabled) return;
 
@@ -142,14 +141,11 @@ const BookingDetails = () => {
 
           await handlePaymentSuccess(orderId, verifyPaymentData.razorpayPaymentId, verifyPaymentData.razorpaySignature || '');
 
-
         } else {
           Alert.alert('Payment Cancelled', 'Payment was cancelled or failed.');
         }
 
-
         // Open Razorpay checkout
-
 
       } else {
         Alert.alert('Payment Error', orderResponse.error || 'Failed to create payment order');
@@ -202,9 +198,27 @@ const BookingDetails = () => {
       payload: {
         bookingId: booking?.id,
         currentGuestName: booking?.guestName || 'Guest',
-        onGuestNameUpdated: (newName: string) => {
+        onGuestNameUpdated: async (newName: string) => {
           if (booking) {
-            setBooking({ ...booking, guestName: newName });
+            try {
+              const response = await apiService.put(`/bookings/${booking.id}/guest-details`, {
+                guestName: booking?.guestName,
+                guestEmail: booking?.guestEmail,
+                guestPhone: booking?.guestPhone
+
+              })
+              console.log('response in guestdetail update  ', response)
+              if (response.success) {
+                setBooking({ ...booking, guestName: newName });
+                return true;
+              }
+              return false
+
+            } catch (e) {
+              console.log('e ', e)
+              return false
+            }
+
           }
         }
       }
@@ -240,6 +254,52 @@ const BookingDetails = () => {
       minute: '2-digit',
       hour12: true
     });
+  };
+
+  // Refund helper functions
+  const getRefundStatusIcon = (status) => {
+    switch (status) {
+      case 'completed':
+        return <CheckCircle size={20} color="#10B981" />;
+      case 'pending':
+        return <Clock size={20} color="#F59E0B" />;
+      case 'processing':
+        return <RefreshCw size={20} color="#3B82F6" />;
+      case 'rejected':
+        return <X size={20} color="#EF4444" />;
+      default:
+        return <Clock size={20} color="#6B7280" />;
+    }
+  };
+
+  const getRefundStatusColor = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'text-green-800 bg-green-100 border-green-300';
+      case 'pending':
+        return 'text-yellow-800 bg-yellow-100 border-yellow-300';
+      case 'processing':
+        return 'text-blue-800 bg-blue-100 border-blue-300';
+      case 'rejected':
+        return 'text-red-800 bg-red-100 border-red-300';
+      default:
+        return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
+  };
+
+  const getRefundStatusText = (status) => {
+    switch (status) {
+      case 'completed':
+        return 'Refund Completed';
+      case 'pending':
+        return 'Refund Pending';
+      case 'processing':
+        return 'Refund Processing';
+      case 'rejected':
+        return 'Refund Rejected';
+      default:
+        return 'Refund Status Unknown';
+    }
   };
 
   const generateReceiptHTML = (booking: MockBooking) => {
@@ -485,6 +545,15 @@ const BookingDetails = () => {
     );
   }
 
+  const handleAddGstin = () => {
+    Alert.alert(
+      'Info',
+      'We are not yet maintaining GSTIN details.',
+      [{ text: 'OK', onPress: () => console.log('OK Pressed') }]
+    );
+  };
+
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'confirmed':
@@ -509,21 +578,23 @@ const BookingDetails = () => {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         {/* Payment Section - Show at top if payment is pending */}
 
-
         {/* Hotel Image and Status */}
-        <View className="relative">
-          <Image
-            source={{ uri: booking.image }}
-            className="w-full h-64"
-            style={{ resizeMode: 'cover' }}
-          />
-          <View className="absolute inset-0 bg-black/20" />
-          <View className={`absolute top-4 right-4 px-3 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
-            <Text className="text-sm capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              {booking.status}
-            </Text>
+        {
+          !booking.refundInfo && <View className="relative">
+            <Image
+              source={{ uri: booking.image }}
+              className="w-full h-64"
+              style={{ resizeMode: 'cover' }}
+            />
+            <View className="absolute inset-0 bg-black/20" />
+            <View className={`absolute top-4 right-4 px-3 py-1 rounded-full border ${getStatusColor(booking.status)}`}>
+              <Text className="text-sm capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                {booking.status}
+              </Text>
+            </View>
           </View>
-        </View>
+        }
+
         {/* Hotel Information */}
         <View className="px-6 py-6">
           <Text className="text-2xl text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
@@ -536,75 +607,79 @@ const BookingDetails = () => {
                 {booking.address}
               </Text>
             </View>
-            <TouchableOpacity
-              className="ml-3 p-2 bg-black rounded-full"
-              onPress={() => {
-                const address = encodeURIComponent(booking.address);
-                const url = Platform.OS === 'ios'
-                  ? `maps://maps.google.com/maps?q=${address}`
-                  : `geo:0,0?q=${address}`;
+            {
+              !booking.refundInfo && <TouchableOpacity
+                className="ml-3 p-2 bg-black rounded-full"
+                onPress={() => {
+                  const address = encodeURIComponent(booking.address);
+                  const url = Platform.OS === 'ios'
+                    ? `maps://maps.google.com/maps?q=${address}`
+                    : `geo:0,0?q=${address}`;
 
-                Linking.canOpenURL(url).then(supported => {
-                  if (supported) {
-                    Linking.openURL(url);
-                  } else {
-                    // Fallback to web maps
-                    Linking.openURL(`https://maps.google.com/maps?q=${address}`);
-                  }
-                });
-              }}
-            >
-              <MapPin size={16} color="white" />
-            </TouchableOpacity>
+                  Linking.canOpenURL(url).then(supported => {
+                    if (supported) {
+                      Linking.openURL(url);
+                    } else {
+                      // Fallback to web maps
+                      Linking.openURL(`https://maps.google.com/maps?q=${address}`);
+                    }
+                  });
+                }}
+              >
+                <MapPin size={16} color="white" />
+              </TouchableOpacity>
+            }
           </View>
           <Text className="text-lg text-gray-800 mb-4" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
             {booking.roomType}
           </Text>
         </View>
 
-        {/* Quick Actions */}
-        <View className="px-6 pb-6">
-          <View className="flex-row justify-between">
-            <TouchableOpacity className="flex-1 items-center py-3 mx-1">
-              <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
-                <Calendar size={24} color="#6B7280" />
-              </View>
-              <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Check-in
-              </Text>
-            </TouchableOpacity>
+        {/* Quick Actions - Hide when refund info exists */}
+        {!booking.refundInfo && (
+          <View className="px-6 pb-6">
+            <View className="flex-row justify-between">
+              <TouchableOpacity className="flex-1 items-center py-3 mx-1">
+                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
+                  <Calendar size={24} color="#6B7280" />
+                </View>
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Check-in
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 items-center py-3 mx-1">
-              <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
-                <MapPin size={24} color="#6B7280" />
-              </View>
-              <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Directions
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity className="flex-1 items-center py-3 mx-1">
+                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
+                  <MapPin size={24} color="#6B7280" />
+                </View>
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Directions
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              className="flex-1 items-center py-3 mx-1"
-              onPress={handleContactHotel}
-            >
-              <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
-                <Phone size={24} color="#6B7280" />
-              </View>
-              <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Call hotel
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity
+                className="flex-1 items-center py-3 mx-1"
+                onPress={handleContactHotel}
+              >
+                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
+                  <Phone size={24} color="#6B7280" />
+                </View>
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Call hotel
+                </Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity className="flex-1 items-center py-3 mx-1">
-              <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
-                <MessageCircle size={24} color="#6B7280" />
-              </View>
-              <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Need help
-              </Text>
-            </TouchableOpacity>
+              <TouchableOpacity className="flex-1 items-center py-3 mx-1">
+                <View className="w-12 h-12 bg-gray-100 rounded-full items-center justify-center mb-2">
+                  <MessageCircle size={24} color="#6B7280" />
+                </View>
+                <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Need help
+                </Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Trip Details */}
         <View className="px-6 py-6 border-t border-gray-100">
@@ -640,6 +715,163 @@ const BookingDetails = () => {
             </View>
           </View>
         </View>
+
+        {/* Refund Information Section */}
+        {booking.refundInfo && (
+          <View className="px-6 py-6 border-t border-gray-100">
+            <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Refund Information
+            </Text>
+
+            {/* Refund Status */}
+            <View className="bg-gray-50 rounded-lg p-4 mb-4">
+              <View className="flex-row items-center justify-between mb-3">
+                <View className="flex-row items-center">
+                  {getRefundStatusIcon(booking.refundInfo.status)}
+                  <Text className="text-base text-gray-900 ml-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                    {getRefundStatusText(booking.refundInfo.status)}
+                  </Text>
+                </View>
+                <View className={`px-3 py-1 rounded-full border ${getRefundStatusColor(booking.refundInfo.status)}`}>
+                  <Text className="text-sm capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                    {booking.refundInfo.status}
+                  </Text>
+                </View>
+              </View>
+
+              {booking.refundInfo.refundReason && (
+                <View className="mb-3">
+                  <Text className="text-sm text-gray-600 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    Reason for Cancellation:
+                  </Text>
+                  <Text className="text-sm text-gray-800" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {booking.refundInfo.refundReason}
+                  </Text>
+                </View>
+              )}
+
+              {booking.refundInfo.status === 'rejected' && booking.refundInfo.rejectionReason && (
+                <View className="bg-red-50 border border-red-200 rounded-lg p-3 mb-3">
+                  <Text className="text-sm text-red-800 mb-1" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    Rejection Reason:
+                  </Text>
+                  <Text className="text-sm text-red-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    {booking.refundInfo.rejectionReason}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Refund Details */}
+            <View className="gap-3">
+              <View className="flex-row justify-between">
+                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Original Amount
+                </Text>
+                <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  ₹{booking.refundInfo.originalAmount.toLocaleString()}
+                </Text>
+              </View>
+
+              {booking.refundInfo.cancellationFeeAmount > 0 && (
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    Cancellation Fee ({booking.refundInfo.cancellationFeePercentage}%)
+                  </Text>
+                  <Text className="text-red-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                    -₹{booking.refundInfo.cancellationFeeAmount.toLocaleString()}
+                  </Text>
+                </View>
+              )}
+
+              <View className="border-t border-gray-200 pt-3">
+                <View className="flex-row justify-between">
+                  <Text className="text-gray-900 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    Refund Amount
+                  </Text>
+                  <Text className="text-green-600 text-lg" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    ₹{booking.refundInfo.refundAmount.toLocaleString()}
+                  </Text>
+                </View>
+              </View>
+            </View>
+
+            {/* Processing Information */}
+            <View className="mt-4 bg-blue-50 rounded-lg p-4">
+              <View className="flex-row items-start">
+                <View className="ml-3 flex-1">
+                  <Text className="text-sm text-blue-800 mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    Refund Processing Information
+                  </Text>
+
+                  <View className="gap-2">
+                    <View className="flex-row justify-between">
+                      <Text className="text-xs text-blue-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                        Refund Method:
+                      </Text>
+                      <Text className="text-xs text-blue-800 capitalize" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                        {booking.refundInfo.refundMethod}
+                      </Text>
+                    </View>
+
+                    <View className="flex-row justify-between">
+                      <Text className="text-xs text-blue-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                        Expected Processing Time:
+                      </Text>
+                      <Text className="text-xs text-blue-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                        {booking.refundInfo.expectedProcessingDays} business days
+                      </Text>
+                    </View>
+
+                    <View className="flex-row justify-between">
+                      <Text className="text-xs text-blue-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                        Initiated On:
+                      </Text>
+                      <Text className="text-xs text-blue-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                        {formatDate(booking.refundInfo.createdAt)}
+                      </Text>
+                    </View>
+
+                    {booking.refundInfo.processedAt && (
+                      <View className="flex-row justify-between">
+                        <Text className="text-xs text-blue-700" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                          Processed On:
+                        </Text>
+                        <Text className="text-xs text-blue-800" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                          {formatDate(booking.refundInfo.processedAt)}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+
+                  {booking.refundInfo.status === 'pending' && (
+                    <Text className="text-xs text-blue-700 mt-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                      Your refund is being processed and will be credited to your original payment method within {booking.refundInfo.expectedProcessingDays} business days.
+                    </Text>
+                  )}
+
+                  {booking.refundInfo.status === 'completed' && (
+                    <Text className="text-xs text-green-700 mt-2" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                      Your refund has been successfully processed and credited to your original payment method.
+                    </Text>
+                  )}
+                </View>
+              </View>
+            </View>
+
+            {/* Contact Support for Refund Issues */}
+            {(booking.refundInfo.status === 'rejected' || booking.refundInfo.status === 'pending') && (
+              <TouchableOpacity className="mt-4 p-3 border border-gray-300 rounded-lg">
+                <Text className="text-center text-gray-700" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Need Help with Refund?
+                </Text>
+                <Text className="text-center text-sm text-gray-500 mt-1" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                  Contact our support team
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
 
         {/* Booking ID */}
         <View className="px-6 py-4 border-t border-gray-100">
@@ -729,52 +961,54 @@ const BookingDetails = () => {
           </Text>
         </View>
 
-        {/* Manage Your Booking */}
-        <View className="px-6 py-6 border-t border-gray-100">
-          <Text className="text-sm text-gray-500 mb-4 uppercase tracking-wider" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-            MANAGE YOUR BOOKING
-          </Text>
+        {/* Manage Your Booking - Hide when refund info exists */}
+        {!booking.refundInfo && (
+          <View className="px-6 py-6 border-t border-gray-100">
+            <Text className="text-sm text-gray-500 mb-4 uppercase tracking-wider" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+              MANAGE YOUR BOOKING
+            </Text>
 
-          <TouchableOpacity
-            className="flex-row items-center justify-between py-4 border-b border-gray-100"
-            onPress={handleModifyGuestName}
-          >
-            <View className="flex-row items-center">
-              <Clock size={20} color="#6B7280" />
-              <Text className="text-base text-gray-900 ml-3" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Modify guest name
+            <TouchableOpacity
+              className="flex-row items-center justify-between py-4 border-b border-gray-100"
+              onPress={handleModifyGuestName}
+            >
+              <View className="flex-row items-center">
+                <Clock size={20} color="#6B7280" />
+                <Text className="text-base text-gray-900 ml-3" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Modify guest name
+                </Text>
+              </View>
+              <Text className="text-gray-400">›</Text>
+            </TouchableOpacity>
+
+            <View className="py-4 border-b border-gray-100">
+              <Text className="text-base text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                Avail GST credit on this booking
               </Text>
+              <Text className="text-sm text-gray-600 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Add GSTIN details to get GST credit on this and future bookings
+              </Text>
+              <TouchableOpacity onPress={handleAddGstin}>
+                <Text className="text-blue-600" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
+                  Add GSTIN details
+                </Text>
+              </TouchableOpacity>
             </View>
-            <Text className="text-gray-400">›</Text>
-          </TouchableOpacity>
 
-          <View className="py-4 border-b border-gray-100">
-            <Text className="text-base text-gray-900 mb-2" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-              Avail GST credit on this booking
-            </Text>
-            <Text className="text-sm text-gray-600 mb-3" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-              Add GSTIN details to get GST credit on this and future bookings
-            </Text>
-            <TouchableOpacity>
-              <Text className="text-blue-600" style={{ fontFamily: 'PlusJakartaSans-SemiBold' }}>
-                Add GSTIN details
-              </Text>
+            <TouchableOpacity
+              className="flex-row items-center justify-between py-4"
+              onPress={handleCancelBooking}
+            >
+              <View className="flex-row items-center">
+                <Calendar size={20} color="#EF4444" />
+                <Text className="text-base text-gray-900 ml-3" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                  Cancel booking
+                </Text>
+              </View>
+              <Text className="text-gray-400">›</Text>
             </TouchableOpacity>
           </View>
-
-          <TouchableOpacity
-            className="flex-row items-center justify-between py-4"
-            onPress={handleCancelBooking}
-          >
-            <View className="flex-row items-center">
-              <Calendar size={20} color="#EF4444" />
-              <Text className="text-base text-gray-900 ml-3" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                Cancel booking
-              </Text>
-            </View>
-            <Text className="text-gray-400">›</Text>
-          </TouchableOpacity>
-        </View>
+        )}
 
         {/* Add-ons Section */}
         {booking.addons && booking.addons.length > 0 && (
@@ -869,24 +1103,26 @@ const BookingDetails = () => {
           </View>
         </View>
 
-        {/* Amenities */}
-        <View className="px-6 py-6 border-t border-gray-100">
-          <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            Amenities
-          </Text>
-          <View className="flex-row flex-wrap gap-2">
-            {booking.amenities.map((amenity, index) => (
-              <View key={index} className="bg-gray-100 px-3 py-2 rounded-full">
-                <Text className="text-sm text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
-                  {amenity}
-                </Text>
-              </View>
-            ))}
+        {/* Amenities - Hide when refund info exists */}
+        {!booking.refundInfo && (
+          <View className="px-6 py-6 border-t border-gray-100">
+            <Text className="text-lg text-gray-900 mb-4" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+              Amenities
+            </Text>
+            <View className="flex-row flex-wrap gap-2">
+              {booking.amenities.map((amenity, index) => (
+                <View key={index} className="bg-gray-100 px-3 py-2 rounded-full">
+                  <Text className="text-sm text-gray-700" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                    {amenity}
+                  </Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
+        )}
 
         {/* Action Buttons */}
-        <View className="px-6 py-6 border-t border-gray-100 gap-3">
+        {!booking.refundInfo && <View className="px-6 py-6 border-t border-gray-100 gap-3">
           <TouchableOpacity
             className="w-full h-12 bg-black rounded-lg items-center justify-center"
             onPress={handleContactHotel}
@@ -921,69 +1157,62 @@ const BookingDetails = () => {
             </TouchableOpacity>
           </View>
         </View>
+        }
 
         {/* Bottom spacing */}
         <View className="h-8" />
       </ScrollView>
 
-      <View className=" px-6 py-4">
-
-
-        <View className="bg-white rounded-xl p-4">
-          <View className="flex-row gap-3">
-            {/* Pay at Hotel Button - Always show */}
-            {booking.paymentStaus === 'pending' && <TouchableOpacity className="flex-1 py-2 px-4 rounded-lg border border-gray-300 bg-gray-50">
-              <Text className="text-center text-black text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                Pay at hotel
-              </Text>
-
-            </TouchableOpacity>
-            }
-
-            {
-              booking.paymentStaus === 'completed' &&
-              <TouchableOpacity
-                className="flex-1 py-2 px-4 rounded-lg bg-green-500 relative"
-
-              >
-
-
-                <>
-                  <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    Payment Sucessful
-                  </Text>
-
-                </>
-
+      {/* Bottom Payment Section - Hide when refund info exists */}
+      {!booking.refundInfo && (
+        <View className=" px-6 py-4">
+          <View className="bg-white rounded-xl p-4">
+            <View className="flex-row gap-3">
+              {/* Pay at Hotel Button - Always show */}
+              {booking.paymentStaus === 'pending' && <TouchableOpacity className="flex-1 py-2 px-4 rounded-lg border border-gray-300 bg-gray-50">
+                <Text className="text-center text-black text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                  Pay at hotel
+                </Text>
               </TouchableOpacity>
-            }
+              }
 
-            {/* Pay Now Button - Only show if onlinePaymentEnabled is true */}
-            {booking.onlinePaymentEnabled && booking.paymentStaus === 'pending' && (
-              <TouchableOpacity
-                className="flex-1 py-2 px-4 rounded-lg bg-black relative"
-                onPress={handlePayNow}
-                disabled={paymentLoading}
-              >
-
-
-                {paymentLoading ? (
-                  <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                    Loading...
-                  </Text>
-                ) : (
+              {
+                booking.paymentStaus === 'completed' &&
+                <TouchableOpacity
+                  className="flex-1 py-2 px-4 rounded-lg bg-green-500 relative"
+                >
                   <>
                     <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                      Pay now
+                      Payment Sucessful
                     </Text>
-
                   </>
-                )}
-              </TouchableOpacity>
-            )}
+                </TouchableOpacity>
+              }
+
+              {/* Pay Now Button - Only show if onlinePaymentEnabled is true */}
+              {booking.onlinePaymentEnabled && booking.paymentStaus === 'pending' && (
+                <TouchableOpacity
+                  className="flex-1 py-2 px-4 rounded-lg bg-black relative"
+                  onPress={handlePayNow}
+                  disabled={paymentLoading}
+                >
+                  {paymentLoading ? (
+                    <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                      Loading...
+                    </Text>
+                  ) : (
+                    <>
+                      <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                        Pay now
+                      </Text>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
         </View>
-      </View>
+      )}
 
     </SafeAreaView>
   );
