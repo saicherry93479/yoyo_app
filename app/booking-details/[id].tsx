@@ -707,7 +707,7 @@ const BookingDetails = () => {
                   This booking is non-refundable
                 </Text>
                 <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  Amount paid via OYO Money or OYO Rupee will not be refunded.
+                  Amount paid via YOYO Money or YOYO Rupee will not be refunded.
                 </Text>
               </View>
             </View>
@@ -725,7 +725,7 @@ const BookingDetails = () => {
           </View>
 
           <Text className="text-sm text-gray-600" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-            In case you don't show up at the property, there will be no refund of OYO Money or OYO Rupee.
+            In case you don't show up at the property, there will be no refund of YOYO Money or YOYO Rupee.
           </Text>
         </View>
 
@@ -925,63 +925,66 @@ const BookingDetails = () => {
         {/* Bottom spacing */}
         <View className="h-8" />
       </ScrollView>
-      {showPaymentSection && (
-        <View className=" px-6 py-4">
+
+      <View className=" px-6 py-4">
 
 
-          <View className="bg-white rounded-xl p-4">
-            <View className="flex-row gap-3">
-              {/* Pay at Hotel Button - Always show */}
-              <TouchableOpacity className="flex-1 py-2 px-4 rounded-lg border border-gray-300 bg-gray-50">
-                <Text className="text-center text-black text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  Pay at hotel
-                </Text>
-
-              </TouchableOpacity>
-
-              {/* Pay Now Button - Only show if onlinePaymentEnabled is true */}
-              {booking.onlinePaymentEnabled && (
-                <TouchableOpacity
-                  className="flex-1 py-2 px-4 rounded-lg bg-black relative"
-                  onPress={handlePayNow}
-                  disabled={paymentLoading}
-                >
-
-
-                  {paymentLoading ? (
-                    <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                      Loading...
-                    </Text>
-                  ) : (
-                    <>
-                      <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                        Pay now
-                      </Text>
-
-                    </>
-                  )}
-                </TouchableOpacity>
-              )}
-            </View>
-          </View>
-        </View>
-      )}
-
-      {/* Show only Pay at Hotel if online payment is disabled */}
-      {!showPaymentSection && (
-        <View className="px-6 py-4">
-
-
-          <View className="bg-white rounded-xl p-4">
-            <TouchableOpacity className="w-full py-2 px-4 rounded-lg border border-gray-300 bg-gray-50">
+        <View className="bg-white rounded-xl p-4">
+          <View className="flex-row gap-3">
+            {/* Pay at Hotel Button - Always show */}
+            {booking.paymentStaus === 'pending' && <TouchableOpacity className="flex-1 py-2 px-4 rounded-lg border border-gray-300 bg-gray-50">
               <Text className="text-center text-black text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
                 Pay at hotel
               </Text>
 
             </TouchableOpacity>
+            }
+
+            {
+              booking.paymentStaus === 'completed' &&
+              <TouchableOpacity
+                className="flex-1 py-2 px-4 rounded-lg bg-green-500 relative"
+
+              >
+
+
+                <>
+                  <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    Payment Sucessful
+                  </Text>
+
+                </>
+
+              </TouchableOpacity>
+            }
+
+            {/* Pay Now Button - Only show if onlinePaymentEnabled is true */}
+            {booking.onlinePaymentEnabled && booking.paymentStaus === 'pending' && (
+              <TouchableOpacity
+                className="flex-1 py-2 px-4 rounded-lg bg-black relative"
+                onPress={handlePayNow}
+                disabled={paymentLoading}
+              >
+
+
+                {paymentLoading ? (
+                  <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                    Loading...
+                  </Text>
+                ) : (
+                  <>
+                    <Text className="text-center text-white text-lg mb-1" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                      Pay now
+                    </Text>
+
+                  </>
+                )}
+              </TouchableOpacity>
+            )}
           </View>
         </View>
-      )}
+      </View>
+
     </SafeAreaView>
   );
 };
