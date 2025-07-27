@@ -15,6 +15,7 @@ import { PriceFilterActionSheet } from '@/components/ui/PriceFilterActionSheet';
 import { RatingFilterActionSheet } from '@/components/ui/RatingFilterActionSheet';
 import { AmenitiesFilterActionSheet } from '@/components/ui/AmenitiesFilterActionSheet';
 import { OffersActionSheet } from '@/components/ui/OffersActionSheet';
+import { ModifyGuestNameActionSheet } from '@/components/ui/ModifyGuestNameActionSheet';
 
 
 registerSheet('profile-options', CustomActionSheet);
@@ -33,6 +34,7 @@ registerSheet('price-filter', PriceFilterActionSheet);
 registerSheet('rating-filter', RatingFilterActionSheet);
 registerSheet('amenities-filter', AmenitiesFilterActionSheet);
 registerSheet('offers-filter', OffersActionSheet);
+registerSheet('modify-guest-name', ModifyGuestNameActionSheet);
 
 // Export the sheet IDs for type safety
 export const SHEET_IDS = {
