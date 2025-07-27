@@ -237,13 +237,11 @@ export default function SearchGlobalScreen() {
         limit: 20
       };
 
-      console.log('Search request body:', JSON.stringify(requestBody, null, 2));
+     
 
       const response = await apiService.post('/search/search', requestBody);
 
-      console.log('response ', response)
-
-      console.log('Search response:', JSON.stringify(response, null, 2));
+  
 
       if (response.success) {
         setHotels(response.data.hotels || []);
@@ -344,7 +342,7 @@ export default function SearchGlobalScreen() {
       key={hotel.id}
       className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
       onPress={() => {
-        console.log('currentSearchData ', currentSearchData)
+  
         const searchParams = new URLSearchParams();
         if (currentSearchData?.guests) {
           const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);

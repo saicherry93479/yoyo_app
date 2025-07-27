@@ -192,7 +192,7 @@ export default function NotificationsScreen() {
       const response = await apiService.post('/notifications/test', {
         message: 'This is a test notification from your hotel booking app!'
       });
-      console.log('response in notificcation test ',response)
+    
       if (response.success) {
         Alert.alert('Success', 'Test notification sent successfully!');
       } else {

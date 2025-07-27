@@ -154,7 +154,7 @@ export default function SearchScreen() {
   }, [navigation]);
 
   const handleTabPress = (tab: number) => {
-    console.log('tab pressed:', tab);
+
     setActiveTab(tab);
 
     setSearchData(prev => {
@@ -208,8 +208,6 @@ export default function SearchScreen() {
     if (!isSearchEnabled) return;
 
     setIsSearching(true);
-
-    console.log('searchData in search screen', searchData);
 
     // Navigate to SearchGlobal with the search data
     router.push({

@@ -58,7 +58,7 @@ const ContactUsScreen = () => {
 
   const handleBackPress = () => {
     // Handle back navigation
-    console.log('Back button pressed');
+
   };
 
   useLayoutEffect(() => {

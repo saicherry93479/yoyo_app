@@ -81,17 +81,16 @@ export default function LoginSignupScreen() {
 
   const handleGoogleSignIn = () => {
     // Handle Google sign in
-    console.log('Google sign in');
+
   };
 
   const handleGitHubSignIn = () => {
-    // Handle GitHub sign in
-    console.log('GitHub sign in');
+
   };
 
   const handleEmailSignIn = () => {
     // Handle email sign in
-    console.log('Email sign in');
+
   };
 
   return (

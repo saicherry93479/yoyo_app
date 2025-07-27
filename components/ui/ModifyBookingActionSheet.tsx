@@ -27,7 +27,7 @@ export function ModifyBookingActionSheet({ sheetId, payload }: ModifyBookingActi
         { text: 'Cancel', style: 'cancel' },
         { text: 'Continue', onPress: () => {
           // Implement date modification logic
-          console.log('Modify dates for booking:', bookingId);
+      
           handleClose();
         }}
       ]

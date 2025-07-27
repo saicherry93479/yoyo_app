@@ -59,7 +59,7 @@ const CheckoutScreen = () => {
             return [];
         } catch (error) {
             console.error('Error parsing selectedAddons:', error);
-            console.log('selectedAddons value:', params.selectedAddons);
+          
             return [];
         }
     };
@@ -173,10 +173,10 @@ const CheckoutScreen = () => {
           bookingType: bookingData.bookingType, // Include booking type in request
         }; 
 
-        console.log('booking request ', bookingRequest);
+      
 
         const response = await apiService.post('/bookings/', bookingRequest);
-        console.log('response in checkout ', response);
+ 
         
         if (response.success) {
           Alert.alert(

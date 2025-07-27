@@ -78,8 +78,7 @@ export function FiltersActionSheet({ sheetId, payload }: FiltersActionSheetProps
 
   const [filters, setFilters] = useState<FilterOptions>(initialFilters);
 
-  console.log('payload ', payload);
-  console.log('initial filters ', initialFilters);
+
 
   const handleClose = () => {
     SheetManager.hide(sheetId);

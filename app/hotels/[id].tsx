@@ -78,7 +78,7 @@ const HotelDetails = () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('searchParams  in details ',searchParams)
+
       // Build query parameters
       const params = new URLSearchParams();
       params.append('guests', searchParams.guests);
@@ -89,11 +89,11 @@ const HotelDetails = () => {
       const queryString = params.toString();
       const url = `/hotels/${id}/details?${queryString}`;
 
-      console.log('url is ',url)
+
 
       const response = await apiService.get(url);
 
-      console.log('response from backend for hotel ', JSON.stringify(response))
+
 
       if (response.success) {
         setHotel(response.data.hotel);
@@ -341,7 +341,6 @@ const HotelDetails = () => {
       bookingType:searchParams.bookingType
     };
 
-    console.log('bookingData ', bookingData);
 
     router.push({
       pathname: '/checkout',

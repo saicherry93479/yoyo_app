@@ -157,7 +157,7 @@ export default function PersonalInfoScreen() {
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   
-  console.log('user in personal infor ',user)
+
   // Form state
   const [formData, setFormData] = useState({
     name: user?.name || '',
