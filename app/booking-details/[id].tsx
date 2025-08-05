@@ -99,7 +99,7 @@ const BookingDetails = () => {
         amount: booking.paymentAmount || booking.totalAmount,
         currency: 'INR'
       });
-
+      console.log('orderResponse ',orderResponse)
       if (orderResponse.success) {
         const { orderId, amount, currency } = orderResponse.data;
 
@@ -108,7 +108,7 @@ const BookingDetails = () => {
           description: `Payment for ${booking.hotelName}`,
           image: booking.image || 'https://your-logo-url.com/logo.png', // Replace with your logo
           currency: currency,
-          key: 'rzp_live_zOjuJaoBGy4ZSN', // Replace with your Razorpay key
+          key: 'rzp_live_P9WrcJVu8pueod', // Replace with your Razorpay key
           amount: amount * 100, // Amount in paise
           name: 'YOYO stays', // Replace with your app name
           order_id: orderId,

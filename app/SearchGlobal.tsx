@@ -237,11 +237,11 @@ export default function SearchGlobalScreen() {
         limit: 20
       };
 
-     
+
 
       const response = await apiService.post('/search/search', requestBody);
 
-  
+      console.log('response from search is ', JSON.stringify(response))
 
       if (response.success) {
         setHotels(response.data.hotels || []);
@@ -281,10 +281,17 @@ export default function SearchGlobalScreen() {
     setShowTimeRangePicker(false);
   };
 
+  const getUniqueAmenities = (hotels: Hotel[]) => {
+    const allAmenities = hotels.flatMap(hotel => hotel.amenities || []);
+    console.log('allAmenities ', allAmenities)
+    const uniqueAmenities = [...new Set(allAmenities)].sort();
+    return uniqueAmenities;
+  };
+
   const renderFilterTag = (
-    label: string, 
-    isActive: boolean, 
-    onPress: () => void, 
+    label: string,
+    isActive: boolean,
+    onPress: () => void,
     onClear?: () => void,
     icon?: React.ReactNode,
     isSort?: boolean,
@@ -292,14 +299,21 @@ export default function SearchGlobalScreen() {
   ) => (
     <View className="flex-row items-center">
       <TouchableOpacity
-        className={`px-4 py-2 rounded-full flex-row items-center border ${
-          isActive 
-            ? isSort 
-              ? 'bg-gray-100 border-black' 
-              : 'bg-black border-black'
-            : 'bg-white border-gray-200'
-        }`}
-        onPress={onPress}
+        className={`px-4 py-2 rounded-full flex-row items-center border ${isActive
+          ? isSort
+            ? 'bg-gray-100 border-black'
+            : 'bg-black border-black'
+          : 'bg-white border-gray-200'
+          }`}
+        onPress={() => {
+          // If filter is active and has a clear function, clear it instead of opening
+          if (isActive && onClear && !isSort) {
+            onClear();
+          } else {
+            // Otherwise open the action sheet
+            onPress();
+          }
+        }}
       >
         {icon && (
           <View className="mr-2">
@@ -312,22 +326,12 @@ export default function SearchGlobalScreen() {
         >
           {label}
         </Text>
+
+        {/* Show X icon when active (except for sort), otherwise show chevron */}
         {isActive && onClear && !isSort ? (
-          <TouchableOpacity 
-            onPress={(e) => {
-              e.stopPropagation();
-              onClear();
-              // Only re-open if shouldNotReopenOnClear is not true
-              if (!shouldNotReopenOnClear) {
-                setTimeout(() => {
-                  onPress();
-                }, 100);
-              }
-            }} 
-            className="ml-2"
-          >
+          <View className="ml-2">
             <X size={14} color="white" />
-          </TouchableOpacity>
+          </View>
         ) : (
           <View className="ml-2">
             <ChevronDown size={14} color={isActive ? (isSort ? "black" : "white") : "#6B7280"} />
@@ -342,7 +346,7 @@ export default function SearchGlobalScreen() {
       key={hotel.id}
       className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden"
       onPress={() => {
-  
+
         const searchParams = new URLSearchParams();
         if (currentSearchData?.guests) {
           const totalGuests = (currentSearchData.guests.adults || 0) + (currentSearchData.guests.children || 0) + (currentSearchData.guests.infants || 0);
@@ -455,26 +459,12 @@ export default function SearchGlobalScreen() {
 
         {/* Hourly Stays Option - Only show for daily search */}
         {currentSearchData?.bookingType === 'daily' && (
-          <View className="mt-3 pt-3 border-t border-gray-100">
-            {/* Hourly Pricing Boxes */}
-            <View className="flex-row gap-2 mb-2">
-              <TouchableOpacity 
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
-                onPress={(e) => {
-                  e.stopPropagation();
-                  setSelectedHotelForBooking(hotel);
-                  setShowTimeRangePicker(true);
-                }}
-              >
-                <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  3hrs
-                </Text>
-                <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  ₹{Math.round((hotel.pricing?.startingFrom || 0) * 0.3).toLocaleString()}
-                </Text>
-              </TouchableOpacity>
+          // <View className="mt-3 pt-3 border-t border-gray-100">
 
-              <TouchableOpacity 
+          <View className="flex-row gap-2">
+            {
+              hotel.hourlyStays && hotel.hourlyStays.length >= 3 &&
+              hotel.hourlyStays.slice(0, 3).map((h) => <TouchableOpacity
                 className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
                 onPress={(e) => {
                   e.stopPropagation();
@@ -483,30 +473,17 @@ export default function SearchGlobalScreen() {
                 }}
               >
                 <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  6hrs
+                  {h.hours}
                 </Text>
                 <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  ₹{Math.round((hotel.pricing?.startingFrom || 0) * 0.5).toLocaleString()}
+                  ₹{Math.round(hotel.minPrice * 0.3).toLocaleString()}
                 </Text>
-              </TouchableOpacity>
+              </TouchableOpacity>)
 
-              <TouchableOpacity 
-                className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
-                onPress={(e) => {
-                  e.stopPropagation();
-                  setSelectedHotelForBooking(hotel);
-                  setShowTimeRangePicker(true);
-                }}
-              >
-                <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
-                  9hrs
-                </Text>
-                <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                  ₹{Math.round((hotel.pricing?.startingFrom || 0) * 0.7).toLocaleString()}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            }
           </View>
+
+          // </View>
         )}
       </View>
     </TouchableOpacity>
@@ -586,7 +563,7 @@ export default function SearchGlobalScreen() {
     return (
       <View className="bg-white "
       //  style={{ elevation: 2, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
-       >
+      >
         <View className="flex-row items-center px-4">
           {/* Scrollable filter tags */}
           <ScrollView
@@ -643,19 +620,25 @@ export default function SearchGlobalScreen() {
               {renderFilterTag(
                 'Amenities',
                 isAmenitiesActive,
-                () => SheetManager.show('amenities-filter', {
-                  payload: {
-                    currentAmenities: filters.amenities || [],
-                    onAmenitiesSelect: (amenities: string[]) => handleFilterChange({ amenities })
-                  }
-                }),
+                () => {
+                  const availableAmenities = getUniqueAmenities(hotels);
+                  SheetManager.show('amenities-filter', {
+                    payload: {
+                      currentAmenities: filters.amenities || [],
+                      availableAmenities: availableAmenities, // Pass the extracted amenities
+                      onAmenitiesSelect: (amenities: string[]) => handleFilterChange({ amenities })
+                    }
+                  });
+                },
                 isAmenitiesActive ? () => clearFilter('amenities') : undefined,
                 <Filter size={14} color={isAmenitiesActive ? "white" : "#6B7280"} />,
                 false,
                 true // shouldNotReopenOnClear
               )}
 
-              {renderFilterTag(
+
+
+              {/* {renderFilterTag(
                 getOffersDisplayText(),
                 isOffersActive,
                 () => SheetManager.show('offers-filter', {
@@ -668,7 +651,7 @@ export default function SearchGlobalScreen() {
                 <Tag size={14} color={isOffersActive ? "white" : "#6B7280"} />,
                 false,
                 true // shouldNotReopenOnClear
-              )}
+              )} */}
             </View>
           </ScrollView>
 
@@ -676,12 +659,16 @@ export default function SearchGlobalScreen() {
           <View className="right-0 top-0 bottom-0 bg-white flex-row items-center">
             <TouchableOpacity
               className="flex-row items-center bg-gray-100 px-3 py-2 rounded-full relative"
-              onPress={() => SheetManager.show('filters', {
-                payload: {
-                  currentFilters: filters,
-                  onApplyFilters: handleFilterChange
-                }
-              })}
+              onPress={() => {
+                const availableAmenities = getUniqueAmenities(hotels);
+                SheetManager.show('filters', {
+                  payload: {
+                    currentFilters: filters,
+                    availableAmenities: availableAmenities, // Add this line
+                    onApplyFilters: handleFilterChange
+                  }
+                });
+              }}
             >
               <Filter size={16} color="#6B7280" />
               {activeFiltersCount > 0 && (
@@ -709,7 +696,7 @@ export default function SearchGlobalScreen() {
           >
             <ArrowLeft size={24} color="#000" />
           </TouchableOpacity>
-          
+
           <View className="flex-1 ">
             <TouchableOpacity
               className="flex flex-row items-center  bg-gray-100 rounded-full px-3 py-4"
@@ -726,7 +713,7 @@ export default function SearchGlobalScreen() {
               </Text>
             </TouchableOpacity>
           </View>
-          
+
           {/* Map Toggle Button */}
           <TouchableOpacity
             onPress={() => setShowMapView(!showMapView)}
@@ -814,7 +801,7 @@ export default function SearchGlobalScreen() {
                     </View>
                   </View>
                 </View>
-                
+
                 <View className="flex-row gap-3 mt-4">
                   <TouchableOpacity
                     onPress={() => setSelectedMapHotel(null)}
@@ -908,7 +895,7 @@ export default function SearchGlobalScreen() {
             searchParams.append('checkIn', selectedTimeRange.startDateTime);
             searchParams.append('checkOut', selectedTimeRange.endDateTime);
             searchParams.append('bookingType', 'hourly');
-            
+
             const url = `/hotels/${selectedHotelForBooking.id}?${searchParams.toString()}`;
             router.push(url);
             setSelectedHotelForBooking(null);

@@ -102,6 +102,7 @@ class RazorpayService {
             resolve(data);
           })
         .catch((error: any) => {
+            console.log('error in opening ',error)
             reject(error);
           });
       });

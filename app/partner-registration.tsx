@@ -80,18 +80,20 @@ const PartnerRegistrationScreen = () => {
 
     try {
       setLoading(true);
-      
-      const response = await apiService.post('/partners/register', {
+
+      // Map form data to API schema
+      const bookingRequest = {
         hotelName: formData.hotelName.trim(),
-        ownerName: formData.ownerName.trim(),
-        email: formData.email.trim(),
-        phone: formData.phone.trim(),
+        numberOfRooms: parseInt(formData.roomCount) || 0,
+        hotelDescription: formData.description.trim() || undefined,
+        ownerFullName: formData.ownerName.trim(),
+        ownerEmail: formData.email.trim(),
+        ownerPhone: formData.phone.trim(),
         address: formData.address.trim(),
         city: formData.city.trim(),
-        description: formData.description.trim(),
-        roomCount: parseInt(formData.roomCount) || 0,
-        experience: formData.experience.trim(),
-      });
+      };
+
+      const response = await apiService.post('/partner-contacts/', bookingRequest);
 
       if (response.success) {
         Alert.alert(

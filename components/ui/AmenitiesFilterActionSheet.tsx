@@ -1,39 +1,113 @@
-
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ActionSheet, { SheetManager } from 'react-native-actions-sheet';
 import { View, Text, TouchableOpacity, FlatList } from 'react-native';
-import { Wifi, Waves, Car, Tv, ChefHat, WashingMachine, Wind, Flame, Dumbbell, Microwave, Refrigerator, Coffee, Wine, Armchair, UtensilsCrossed, Shield, TriangleAlert as AlertTriangle, Plus, Sun, Lock, X, Utensils } from 'lucide-react-native';
+import { Wifi, Waves, Car, Tv, ChefHat, WashingMachine, Wind, Flame, Dumbbell, Microwave, Refrigerator, Coffee, Wine, Armchair, UtensilsCrossed, Shield, TriangleAlert as AlertTriangle, Plus, Sun, Lock, X, Utensils, CheckSquare, Square } from 'lucide-react-native';
 
 interface AmenitiesFilterActionSheetProps {
   sheetId: string;
   payload?: {
     currentAmenities: string[];
+    availableAmenities: string[]; // All unique amenities from hotels
     onAmenitiesSelect: (amenities: string[]) => void;
   };
 }
 
-const amenitiesList = [
-  { id: 'wifi', label: 'Free WiFi', icon: Wifi },
-  { id: 'parking', label: 'Free Parking', icon: Car },
-  { id: 'restaurant', label: 'Restaurant', icon: Utensils },
-  { id: 'pool', label: 'Swimming Pool', icon: Waves },
-  { id: 'gym', label: 'Fitness Center', icon: Dumbbell },
-  { id: 'spa', label: 'Spa', icon: ChefHat },
-];
+// Icon mapping for common amenities
+const amenityIconMap: { [key: string]: any } = {
+  'wifi': Wifi,
+  'free wifi': Wifi,
+  'parking': Car,
+  'free parking': Car,
+  'restaurant': Utensils,
+  'pool': Waves,
+  'swimming pool': Waves,
+  'gym': Dumbbell,
+  'fitness center': Dumbbell,
+  'fitness centre': Dumbbell,
+  'spa': ChefHat,
+  'tv': Tv,
+  'television': Tv,
+  'air conditioning': Wind,
+  'ac': Wind,
+  'laundry': WashingMachine,
+  'heating': Flame,
+  'microwave': Microwave,
+  'refrigerator': Refrigerator,
+  'fridge': Refrigerator,
+  'coffee': Coffee,
+  'bar': Wine,
+  'lounge': Armchair,
+  'room service': UtensilsCrossed,
+  'security': Shield,
+  'terrace': Sun,
+  'balcony': Sun,
+  'safe': Lock,
+};
 
-const renderAmenityItem = (amenity) => {
-  const IconComponent = amenity.icon;
+const getAmenityIcon = (amenityName: string) => {
+  const normalizedName = amenityName.toLowerCase().trim();
+  
+  // Try exact match first
+  if (amenityIconMap[normalizedName]) {
+    return amenityIconMap[normalizedName];
+  }
+  
+  // Try partial matches
+  for (const key in amenityIconMap) {
+    if (normalizedName.includes(key) || key.includes(normalizedName)) {
+      return amenityIconMap[key];
+    }
+  }
+  
+  // Default icon for unknown amenities
+  return Plus;
+};
+
+const renderAmenityItem = (amenity: string, isSelected: boolean, onToggle: () => void) => {
+  const IconComponent = getAmenityIcon(amenity);
 
   return (
-    <View key={amenity.id} className="flex-row items-center gap-4 py-3">
-      <IconComponent size={24} color="#8A8A8A" strokeWidth={2} />
-      <Text className="text-base text-black " style={{ fontFamily: 'PlusJakartaSans-Medium' }}>{amenity.name}</Text>
-    </View>
+    <TouchableOpacity 
+      key={amenity} 
+      className={`flex-row items-center justify-between p-4 border rounded-lg ${
+        isSelected ? 'border-black bg-gray-50' : 'border-gray-200 bg-white'
+      }`}
+      onPress={onToggle}
+    >
+      <View className="flex-row items-center gap-3 flex-1">
+        <IconComponent 
+          size={20} 
+          color={isSelected ? "#000" : "#8A8A8A"} 
+          strokeWidth={2} 
+        />
+        <Text 
+          className={`text-base ${isSelected ? 'text-black' : 'text-gray-700'}`}
+          style={{ fontFamily: 'PlusJakartaSans-Medium' }}
+          numberOfLines={1}
+        >
+          {amenity}
+        </Text>
+      </View>
+      
+      {/* Checkbox */}
+      <View className="ml-2">
+        {isSelected ? (
+          <CheckSquare size={20} color="#000" />
+        ) : (
+          <Square size={20} color="#8A8A8A" />
+        )}
+      </View>
+    </TouchableOpacity>
   );
 };
 
 export function AmenitiesFilterActionSheet({ sheetId, payload }: AmenitiesFilterActionSheetProps) {
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(payload?.currentAmenities || []);
+  const availableAmenities = payload?.availableAmenities || [];
+ 
+  useEffect(() => {
+    console.log('selectedAmenities', selectedAmenities);
+  }, [selectedAmenities]);
 
   const handleClose = () => {
     SheetManager.hide(sheetId);
@@ -44,11 +118,11 @@ export function AmenitiesFilterActionSheet({ sheetId, payload }: AmenitiesFilter
     handleClose();
   };
 
-  const toggleAmenity = (amenityId: string) => {
+  const toggleAmenity = (amenity: string) => {
     setSelectedAmenities(prev =>
-      prev.includes(amenityId)
-        ? prev.filter(id => id !== amenityId)
-        : [...prev, amenityId]
+      prev.includes(amenity)
+        ? prev.filter(item => item !== amenity)
+        : [...prev, amenity]
     );
   };
 
@@ -63,11 +137,10 @@ export function AmenitiesFilterActionSheet({ sheetId, payload }: AmenitiesFilter
         paddingHorizontal: 0,
         paddingBottom: 0,
       }}
-      // gestureEnabled={true}
       closable={true}
       closeOnTouchBackdrop={true}
     >
-      <View className="rounded-t-2xl bg-white pt-3">
+      <View className="rounded-t-2xl bg-white pt-3 h-[80%]">
         {/* Handle */}
         <View className="flex h-5 w-full items-center justify-center">
           <View className="h-1.5 w-10 rounded-full bg-gray-200" />
@@ -81,7 +154,7 @@ export function AmenitiesFilterActionSheet({ sheetId, payload }: AmenitiesFilter
             </Text>
           </TouchableOpacity>
           <Text className="text-xl text-black" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-            Amenities
+            Amenities 
           </Text>
           <TouchableOpacity onPress={handleClose} className="p-2">
             <X size={24} color="#8A8A8A" />
@@ -90,38 +163,49 @@ export function AmenitiesFilterActionSheet({ sheetId, payload }: AmenitiesFilter
 
         {/* Amenities Content */}
         <View className="flex-1">
-          <FlatList
-            data={amenitiesList}
-            keyExtractor={(item, index) => `${item.id}_${index}`}
-            numColumns={2}
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{
-              paddingVertical: 16,
-              paddingBottom: 20,
-              paddingHorizontal: 16,
+          {availableAmenities.length > 0 ? (
+            <FlatList
+              data={availableAmenities}
+              keyExtractor={(item, index) => `${item}_${index}`}
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{
+                paddingVertical: 16,
+                paddingHorizontal: 16,
+                paddingBottom: 100, // Space for apply button
+              }}
+              renderItem={({ item }) => (
+                <View className="mb-3">
+                  {renderAmenityItem(
+                    item, 
+                    selectedAmenities.includes(item), 
+                    () => toggleAmenity(item)
+                  )}
+                </View>
+              )}
+            />
+          ) : (
+            <View className="flex-1 items-center justify-center px-6">
+              <Text className="text-lg text-gray-500 text-center mb-2" style={{ fontFamily: 'PlusJakartaSans-Medium' }}>
+                No amenities available
+              </Text>
+              <Text className="text-sm text-gray-400 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                Amenities will appear here based on your search results
+              </Text>
+            </View>
+          )}
 
-            }}
-            renderItem={({ item }) => (
-              <View className="w-[48%] mb-4 mr-[4%]">
-                {renderAmenityItem(item)}
-              </View>
-            )}
-            columnWrapperStyle={{
-              justifyContent: 'space-between'
-            }}
-          />
-
-          {/* Apply Button */}
-          {/* <View className="px-6 py-4 border-t border-gray-200 bg-white">
+          {/* Apply Button - Fixed at bottom */}
+          <View className="absolute bottom-0 left-0 right-0 px-6 py-4 border-t border-gray-200 bg-white">
             <TouchableOpacity
               onPress={handleApply}
               className="w-full h-12 bg-black rounded-lg items-center justify-center"
+              disabled={availableAmenities.length === 0}
             >
               <Text className="text-base text-white" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-                Apply ({selectedAmenities.length})
+                Apply {selectedAmenities.length > 0 ? `(${selectedAmenities.length})` : ''}
               </Text>
             </TouchableOpacity>
-          </View> */}
+          </View>
         </View>
       </View>
     </ActionSheet>

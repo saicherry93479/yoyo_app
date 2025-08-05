@@ -301,7 +301,7 @@ export default function HotelBookingApp() {
   // Handle scroll for sticky header
   const handleScroll = Animated.event(
     [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-    { 
+    {
       useNativeDriver: false,
       listener: (event: any) => {
         const currentY = event.nativeEvent.contentOffset.y;
@@ -352,9 +352,9 @@ export default function HotelBookingApp() {
   }
 
   const renderFilterTag = (
-    label: string, 
-    isActive: boolean, 
-    onPress: () => void, 
+    label: string,
+    isActive: boolean,
+    onPress: () => void,
     onClear?: () => void,
     icon?: React.ReactNode,
     isSort?: boolean,
@@ -362,13 +362,12 @@ export default function HotelBookingApp() {
   ) => (
     <View className="flex-row items-center">
       <TouchableOpacity
-        className={`px-4 py-2 rounded-full flex-row items-center border ${
-          isActive 
-            ? isSort 
-              ? 'bg-gray-100 border-black' 
-              : 'bg-black border-black'
-            : 'bg-white border-gray-200'
-        }`}
+        className={`px-4 py-2 rounded-full flex-row items-center border ${isActive
+          ? isSort
+            ? 'bg-gray-100 border-black'
+            : 'bg-black border-black'
+          : 'bg-white border-gray-200'
+          }`}
         onPress={onPress}
       >
         {icon && (
@@ -383,7 +382,7 @@ export default function HotelBookingApp() {
           {label}
         </Text>
         {isActive && onClear && !isSort ? (
-          <TouchableOpacity 
+          <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
               onClear();
@@ -393,7 +392,7 @@ export default function HotelBookingApp() {
                   onPress();
                 }, 100);
               }
-            }} 
+            }}
             className="ml-2"
           >
             <X size={14} color="white" />
@@ -418,7 +417,7 @@ export default function HotelBookingApp() {
     return (
       <View className="bg-white "
       //  style={{ elevation: 2, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.1, shadowRadius: 4 }}
-       >
+      >
         <View className="flex-row items-center px-4">
           {/* Scrollable filter tags */}
           <ScrollView
@@ -632,7 +631,27 @@ export default function HotelBookingApp() {
 
         {/* Hourly Pricing Boxes */}
         <View className="flex-row gap-2">
-          <TouchableOpacity 
+          {
+            hotel.hourlyStays && hotel.hourlyStays.length >= 3 &&
+            hotel.hourlyStays.slice(0, 3).map((h) => <TouchableOpacity
+              className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
+              onPress={(e) => {
+                e.stopPropagation();
+                handleHourlyBooking(hotel, 3);
+              }}
+            >
+              <Text className="text-xs text-gray-800 text-center" style={{ fontFamily: 'PlusJakartaSans-Regular' }}>
+                {h.hours}
+              </Text>
+              <Text className="text-sm text-black text-center" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
+                ₹{Math.round(hotel.minPrice * 0.3).toLocaleString()}
+              </Text>
+            </TouchableOpacity>)
+
+          }
+        </View>
+        {/* <View className="flex-row gap-2">
+          <TouchableOpacity
             className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
             onPress={(e) => {
               e.stopPropagation();
@@ -647,7 +666,7 @@ export default function HotelBookingApp() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
             onPress={(e) => {
               e.stopPropagation();
@@ -662,7 +681,7 @@ export default function HotelBookingApp() {
             </Text>
           </TouchableOpacity>
 
-          <TouchableOpacity 
+          <TouchableOpacity
             className="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 flex-1 active:bg-gray-100"
             onPress={(e) => {
               e.stopPropagation();
@@ -676,7 +695,7 @@ export default function HotelBookingApp() {
               ₹{Math.round(hotel.price * 0.7).toLocaleString()}
             </Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </View>
     </Pressable>
   );
@@ -699,12 +718,12 @@ export default function HotelBookingApp() {
               Your next trip
             </Text>
             <Text className="text-white text-sm" style={{ fontFamily: 'PlusJakartaSans-Bold' }}>
-              {checkInDate.toLocaleDateString('en-IN', { 
-                month: 'short', 
-                day: 'numeric' 
-              })} - {checkOutDate.toLocaleDateString('en-IN', { 
-                month: 'short', 
-                day: 'numeric' 
+              {checkInDate.toLocaleDateString('en-IN', {
+                month: 'short',
+                day: 'numeric'
+              })} - {checkOutDate.toLocaleDateString('en-IN', {
+                month: 'short',
+                day: 'numeric'
               })}
             </Text>
             <View className="flex-row items-center gap-1">
@@ -745,13 +764,13 @@ export default function HotelBookingApp() {
     </View>
   );
 
- 
+
 
   return (
     <View className="flex-1 bg-white">
       {/* Sticky Filter Header */}
       {stickyHeaderVisible && (
-        <Animated.View 
+        <Animated.View
           style={{
             position: 'absolute',
             top: 0,
@@ -795,7 +814,7 @@ export default function HotelBookingApp() {
         </View> */}
 
         {/* Quick Picks Filters */}
-        <View 
+        <View
           className="px-4 mb-4"
           onLayout={(event) => {
             filterSectionY.current = event.nativeEvent.layout.y;
@@ -805,7 +824,7 @@ export default function HotelBookingApp() {
             Quick picks for you
           </Text>
           {/* Filter Tabs */}
-        
+
           {renderStickyFilterBar()}
         </View>
 
@@ -885,7 +904,7 @@ export default function HotelBookingApp() {
         visible={showTimeRangePicker}
         onClose={() => setShowTimeRangePicker(false)}
         showButton={false}
-        
+
       />
     </View>
   )
